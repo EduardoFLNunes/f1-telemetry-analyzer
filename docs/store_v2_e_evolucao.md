@@ -119,6 +119,38 @@ Decidida pelo Eduardo em 17/11 e registrada antes do código e da rodada.
   - a checagem do período e as outras checagens;
   - nenhuma volta sai do store, e nenhuma gravação muda.
 
+#### Emenda de 18/11/2026 (pedido 54, depois da Parte B): a linha do jogo medida de novo a partir de 31/10
+
+Decidida pelo Eduardo em 18/11 ("registra a nova medida pela data, sem o teste") e registrada antes do código e da rodada.
+
+- **Por que:**
+  - a Parte B do pedido 54 mediu a linha do jogo em todas as 171 sessões de Interlagos (1.221 voltas);
+  - a partir de 31/10/2026 às 19:52, a linha fica cerca de 0,11 m mais longe do s = 0, em todas as 16 sessões seguintes. Isso vale para os dois apps, as duas pastas, a pista original e a cópia, e as voltas do Eduardo e da IA;
+  - **a causa provável é o CSP 0.3.1** (build 4302), instalado nessa hora. **Ela não foi confirmada:** a versão do app mudou no mesmo dia, e o Eduardo decidiu, em 18/11, não fazer o teste com o CSP desligado;
+  - **com a margem de 2,0 ms sozinha,** uma sessão nova com passagem mais lenta pela linha reprovaria o store de novo.
+- **A regra, dois valores registrados, pela data** (`store_checks.check_game_line`):
+
+  | sessões que começam | linha registrada | de onde |
+  |---|---|---|
+  | antes de 31/10/2026, 19:52 | **1,463 m** | pedido 33, 138 voltas |
+  | a partir de 31/10/2026, 19:52 | **1,601 m** | pedido 54, Parte B: a mediana de 141 voltas em 16 sessões, com o desvio de 0,033 m e o p5 a p95 de 1,558 a 1,638 m (`docs/handoff/2026-11-17_54_trava-do-store-v2_parteb_voltas.csv`) |
+
+  - **O começo da sessão** é a data e a hora do `session_id` (`AAAA-MM-DD_HH-MM-SS`, hora local), a mesma do relógio da instalação do CSP.
+  - **Cada sessão** é conferida contra o valor da época dela, com a mesma tolerância de 0,10 m.
+  - **A margem de 2,0 ms** (emenda de 17/11) continua como reserva, agora em relação ao valor da época.
+  - **A mediana de todas as voltas** passa a ser conferida por época: a mediana das voltas de cada época tem de ficar a até 0,10 m do valor dela.
+- **O que se espera da rodada, escrito antes:**
+  - as três sessões do store depois de 31/10 (01/11 com 1,606 m, 07/11 com 1,581 m e 12/11 com 1,573 m) passam a ficar dentro da tolerância, sem a margem;
+  - a lista `sessoes_aceitas_com_margem` fica vazia;
+  - as sessões de antes continuam como estão.
+- **O meta do store** ganha a chave `linha_do_jogo_regimes`, uma lista com `desde`, `registrada_m`, `origem` e `causa`. As chaves `sessoes_aceitas_com_margem` e `margem_linha_do_jogo_ms` continuam.
+- **O que não muda:**
+  - a tolerância de 0,10 m;
+  - a checagem do período, que já usa a linha medida nas próprias voltas;
+  - as outras checagens;
+  - nenhuma volta sai do store, e nenhuma gravação muda.
+- **Se a causa for confirmada ou descartada depois,** a regra é revista num pedido próprio.
+
 ### 1.4 Regras do relatório de evolução
 
 - **Voltas:**

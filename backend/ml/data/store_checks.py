@@ -16,6 +16,7 @@ mas nao travam: toda volta e o microsetor 0 sobem ~26 ms, o resto quase nao muda
 
 from __future__ import annotations
 
+import re
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -54,6 +55,31 @@ GAME_LINE_MIN_LAPS = 3
 # volta (onde a linha e medida); o numero da sessao e a mediana desses efeitos.
 GAME_LINE_MARGIN_MS = 2.0
 GAME_LINE_MARGIN_DECIDED = "2026-11-17"
+# Pedido 54, emenda de 18/11 (decisao do Eduardo, "registra a nova medida pela data,
+# sem o teste"): a linha do jogo andou ~0,11 m a partir de 31/10/2026 19:52, a hora
+# em que o CSP 0.3.1 foi instalado (causa provavel, nao confirmada). Cada sessao e
+# conferida contra o valor da epoca dela, pela data e hora do `session_id`.
+GAME_LINE_REGIMES = (
+    {"desde": None, "registrada_m": GAME_LINE_REGISTERED_M, "origem": "pedido 33: 138 voltas", "causa": None},
+    {"desde": "2026-10-31_19-52-00", "registrada_m": 1.601,
+     "origem": "pedido 54, Parte B: a mediana de 141 voltas em 16 sessoes, de 31/10 a 16/11",
+     "causa": "CSP 0.3.1 instalado em 31/10 19:52 (provavel, nao confirmada)"},
+)
+_SESSION_START = re.compile(r"^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}")
+
+
+def regime_of(session_id: str, regimes=GAME_LINE_REGIMES) -> Dict[str, object]:
+    """A epoca da linha do jogo de uma sessao, pela data e hora do comeco no `session_id`.
+
+    Um `session_id` sem a data no comeco fica na primeira epoca.
+    """
+    match = _SESSION_START.match(str(session_id))
+    chosen = regimes[0]
+    if match:
+        for regime in regimes[1:]:
+            if regime["desde"] is not None and match.group(0) >= regime["desde"]:
+                chosen = regime
+    return chosen
 EXPECTED_SHIFT_MS = (20.0, 35.0)
 OTHER_SECTORS_LIMIT_MS = 5.0
 
@@ -167,22 +193,27 @@ def margin_effect_ms(difference_m: float, start_speeds_kmh: pd.Series) -> Option
     return float(np.median(1000.0 * difference_m / speed.to_numpy()))
 
 
-def check_game_line(laps: pd.DataFrame, registered_m: float = GAME_LINE_REGISTERED_M,
+def check_game_line(laps: pd.DataFrame, registered_m: Optional[float] = None,
                     tolerance_m: float = GAME_LINE_TOLERANCE_M,
                     min_laps: int = GAME_LINE_MIN_LAPS,
-                    margin_ms: float = GAME_LINE_MARGIN_MS) -> Dict[str, object]:
-    """A linha do jogo fica onde foi medida no pedido 33, sessao a sessao (pedido 34).
+                    margin_ms: float = GAME_LINE_MARGIN_MS,
+                    regimes=GAME_LINE_REGIMES) -> Dict[str, object]:
+    """A linha do jogo fica onde foi medida, sessao a sessao (pedido 34).
 
     Cada sessao com pelo menos `min_laps` voltas medidas tem de ficar a ate
-    `tolerance_m` de `registered_m`, e a mediana de todas tambem. Se a geometria
-    oficial ou a linha do jogo mudarem, a checagem reprova e diz onde.
+    `tolerance_m` do valor registrado para a epoca dela (`regime_of`), e a mediana
+    das voltas de cada epoca tambem. Se a geometria oficial ou a linha do jogo
+    mudarem, a checagem reprova e diz onde. Com `registered_m`, vale uma epoca so.
 
     Pedido 54: uma sessao fora da tolerancia, mas com o efeito no tempo
     (`margin_effect_ms`) em ate `margin_ms` em modulo, e "aceita com margem": nao
     reprova, e vai para `aceitas_com_margem` com a diferenca e o efeito.
     """
+    if registered_m is not None:
+        regimes = ({"desde": None, "registrada_m": float(registered_m), "origem": "valor passado", "causa": None},)
     column = laps["linha_do_jogo_m"] if "linha_do_jogo_m" in laps.columns else pd.Series(np.nan, index=laps.index)
     values = pd.to_numeric(column, errors="coerce")
+    regime_by_lap = laps["session_id"].map(lambda sid: regime_of(sid, regimes)["desde"] or "")
     start_speed = (laps["v_linha_inicio_kmh"] if "v_linha_inicio_kmh" in laps.columns
                    else pd.Series(np.nan, index=laps.index))
     sessions: Dict[str, Dict[str, object]] = {}
@@ -191,7 +222,8 @@ def check_game_line(laps: pd.DataFrame, registered_m: float = GAME_LINE_REGISTER
     notes: List[str] = []
     for session_id, group in values.groupby(laps["session_id"]):
         measured = group.dropna()
-        entry: Dict[str, object] = {"voltas_medidas": int(len(measured))}
+        registered_m = float(regime_of(session_id, regimes)["registrada_m"])
+        entry: Dict[str, object] = {"voltas_medidas": int(len(measured)), "registrada_m": registered_m}
         if len(measured) >= min_laps:
             median = float(measured.median())
             inside = abs(median - registered_m) <= tolerance_m
@@ -222,14 +254,23 @@ def check_game_line(laps: pd.DataFrame, registered_m: float = GAME_LINE_REGISTER
             entry["dentro"] = None                      # poucas voltas medidas: sem veredito
         sessions[str(session_id)] = entry
     pooled = game_line_m(laps)
+    regime_rows = []
     if pooled is None:
         reasons.append("nenhuma volta tem a medida da linha do jogo")
-    elif abs(pooled - registered_m) > tolerance_m:
-        reasons.append(f"a mediana de todas as voltas ficou a {pooled:.3f} m do s = 0, e a registrada e "
-                       f"{registered_m:.3f} m (tolerancia {tolerance_m:.2f} m)")
+    for regime in regimes:
+        key = regime["desde"] or ""
+        in_regime = values[(regime_by_lap == key).to_numpy()].dropna()
+        row = {**regime, "voltas_medidas": int(len(in_regime)),
+               "medida_m": round(float(in_regime.median()), 4) if len(in_regime) else None}
+        regime_rows.append(row)
+        if len(in_regime) and abs(float(in_regime.median()) - float(regime["registrada_m"])) > tolerance_m:
+            since = f"desde {regime['desde']}" if regime["desde"] else "da primeira epoca"
+            reasons.append(f"a mediana das voltas {since} ficou a {float(in_regime.median()):.3f} m do s = 0, e a "
+                           f"registrada e {float(regime['registrada_m']):.3f} m (tolerancia {tolerance_m:.2f} m)")
     return {
         "checagem": "a linha do jogo fica onde foi medida (pedido 34)",
-        "registrada_m": registered_m,
+        "registrada_m": float(regimes[0]["registrada_m"]),
+        "regimes": regime_rows,
         "tolerancia_m": tolerance_m,
         "medida_m": round(pooled, 4) if pooled is not None else None,
         "voltas_medidas": int(values.notna().sum()),
@@ -246,8 +287,12 @@ def check_game_line(laps: pd.DataFrame, registered_m: float = GAME_LINE_REGISTER
 def margin_meta(checks: Dict[str, Dict[str, object]]) -> Dict[str, object]:
     """As chaves do meta do store com as sessoes aceitas com margem (pedido 54; o pedido 42 le estas)."""
     line = checks["linha_do_jogo"]
+    regimes = line.get("regimes") or list(GAME_LINE_REGIMES)
     return {"sessoes_aceitas_com_margem": list(line.get("aceitas_com_margem", [])),
-            "margem_linha_do_jogo_ms": line.get("margem_ms", GAME_LINE_MARGIN_MS)}
+            "margem_linha_do_jogo_ms": line.get("margem_ms", GAME_LINE_MARGIN_MS),
+            # Pedido 54, emenda de 18/11: os valores da linha do jogo por epoca.
+            "linha_do_jogo_regimes": [{k: r.get(k) for k in ("desde", "registrada_m", "origem", "causa")}
+                                      for r in regimes]}
 
 
 def check_no_box(store: StoredLaps, sectors: Microsectors) -> Dict[str, object]:

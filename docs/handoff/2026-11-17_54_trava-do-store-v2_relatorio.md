@@ -7,7 +7,9 @@
   - O pedido 42 pode retomar.
   - **A Parte B está feita.** A causa provável é o CSP 0.3.1, instalado em 31/10 às 19:52: a linha do jogo andou +0,11 m em todas as sessões depois dele.
     - Não está confirmada, porque a versão do app mudou no mesmo dia.
-    - A confirmação e a correção são decisão sua (B.4).
+  - **A sua decisão de 18/11, às 21:03,** foi registrar a nova medida pela data, sem o teste: **1,601 m a partir de 31/10, às 19:52.** As sessões A e B ficaram desistidas.
+    - O registro, o código e os testes estão feitos.
+    - A rodada foi liberada por você (veja "A nova medida, pela data, sem o teste").
   - A parada antes da rodada (A.5) está registrada abaixo, como foi escrita.
 - **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47`.
 - **Branch:** `etapa/trava-do-store-v2`, a partir de `develop` em `14fe1ca0`.
@@ -417,6 +419,213 @@ Escritas antes de qualquer conta da Parte B, enquanto o passo 6 da rodada rodava
   Os vínculos reais de `data\reference_models` são ignorados pelo git (`data/reference_models/*.json`).
 - **Só a branch do pedido vai,** como branch nova e sem `--force`. `develop`, `main` e as tags não vão antes do merge.
 - **O hash local e o remoto** estão no chat, conferidos com `git ls-remote origin`.
+
+## Depois do pedido: a confirmação da causa e a nova medida (decisão do Eduardo, 18/11, 09:45)
+
+> **Este roteiro foi desistido pelo Eduardo em 18/11, às 21:03.** Valeu a nova medida pela data, sem o teste (veja "A nova medida, pela data, sem o teste", abaixo). As sessões A e B não são mais pedidas. O texto abaixo fica só como histórico.
+
+Você escolheu "Confirmar e remedir": primeiro a sessão curta que confirma a causa e, se for o CSP, a nova medida da linha. **Nada foi mudado ainda.**
+
+### O critério, registrado antes da sessão
+
+- **Duas sessões,** no mesmo dia, uma logo depois da outra:
+  - **A:** sem o CSP;
+  - **B:** com o CSP 0.3.1.
+- **Nas duas, o mesmo:**
+  - o app instalado 0.8.0;
+  - a pista original (`vhe_interlagos`);
+  - o carro do TCC;
+  - a IA dirigindo.
+- **A medida:** a mesma da Parte B (`_scripts\parteb_medida.py`, só leitura). Cada sessão precisa de pelo menos 5 voltas medidas.
+- **O CSP fica confirmado como a causa** quando a mediana da A fica dentro de 1,463 ± 0,10 m **e** a da B fica acima de 1,563 m.
+- **Fica descartado** quando a A também fica acima de 1,563 m: a linha andou sem o CSP.
+- **Qualquer outro resultado é "não conclusivo",** e a decisão volta para você.
+
+### O roteiro (você roda; eu não mexo na pasta do jogo)
+
+1. **Feche o jogo.** No Content Manager, desligue o CSP. Na página do Custom Shaders Patch, nas configurações, desmarque a opção que ativa o patch.
+   - **Se o carro ou a pista não carregarem sem o CSP** (alguns mods precisam dele), troque o CSP pela versão de antes de 31/10 na mesma página e anote qual foi.
+2. **Abra o app instalado** e deixe a aba Coleta gravando.
+3. **Sessão A:**
+   - abra o jogo com o preset de sempre, na pista **Interlagos original** (não a "[teste]"), em prática;
+   - nos boxes, aperte Ctrl+C para a IA dirigir, e deixe-a dar **7 voltas** completas;
+   - feche o jogo.
+4. **Religue o CSP 0.3.1** no Content Manager (ou volte para ele, se tiver trocado de versão).
+5. **Sessão B:** a mesma coisa (pista original, IA, 7 voltas), e feche o jogo.
+6. **Avise "rodei a confirmação da linha".**
+   - Eu meço as duas sessões, só lendo, e digo o resultado pelo critério acima.
+   - **Se o CSP for confirmado,** eu proponho a nova medida (abaixo), e ela só entra com o seu ok.
+
+**As duas sessões entram no coach e no store** como sessões da IA. **A A só dá aprovação limpa se o CSP for a causa,** e a B entra pela margem. **Não aperte "Atualizar coach e relatório" antes de eu medir.**
+
+### A nova medida, se o CSP for confirmado (o que vou propor)
+
+- **Um segundo valor registrado:** a mediana das voltas depois de 31/10, 19:52. Hoje ela é de 1,601 m, em 141 voltas; o valor final vai incluir a sessão B.
+- **Ele vale para as sessões que começam a partir dessa hora,** com a mesma tolerância de 0,10 m. As de antes continuam contra 1,463 m.
+- **A margem de 2,0 ms** fica como reserva, para sessões no limite.
+- **Será registrada antes do código,** em `docs/store_v2_e_evolucao.md` e no ADR 0007, como nesta Parte A, e depois rodada com o store.
+
+### A conferência de 18/11, 20:27: as duas sessões não aparecem nos registros
+
+O aviso "rodei a confirmação da linha" chegou pela sessão que abriu esta. Antes de medir, conferi os registros, como você pediu, e **nenhum mostra as sessões A e B:**
+
+| registro | o que mostra |
+|---|---|
+| as gravações do app instalado (`%APPDATA%\Automobilista Telemetria\data\recordings`) | a última é `2026-11-16_13-55-15_vhe_interlagos_teste_m1`, de 16/11 |
+| as gravações do app do repositório (`data\recordings`) | a última é `2026-11-12_22-57-03_vhe_interlagos`, de 12/11 |
+| qualquer `player.jsonl` em C: e D: escrito depois de 17/11, 19:10 | só arquivos de teste do pytest, em pastas temporárias |
+| o log do jogo (`Documents\Assetto Corsa\logs\log.txt`, `custom_shaders_patch.log`) | a última escrita é de 17/11, 19:09 |
+| a última corrida (`cfg\race.ini`) | 17/11, 18:54, na pista `ks_silverstone`, e não em Interlagos |
+| o CSP (`dwrite.dll` e `extension\installed.log`) | os mesmos arquivos de 29/10 e 31/10 (0.3.1, build 4302), sem sinal de ter sido desligado ou trocado |
+
+**Por isso eu parei:**
+- não medi nada;
+- não registrei a nova medida;
+- não mexi no código nem no caminho do modelo.
+
+**O backup** `data\ml\_backup_antes_pedido54\` continua lá.
+
+**O que pode ter acontecido** (para você conferir):
+- o jogo rodou sem o app gravando;
+- ou o app gravou em outra pasta, por exemplo um app de teste isolado;
+- ou o aviso se referia a outra sessão.
+
+**Se as sessões foram gravadas em outro lugar, me diga onde, e eu meço de lá. Se não foram, o roteiro acima continua valendo.**
+
+### A nova medida, pela data, sem o teste (decisão do Eduardo, 18/11, 21:03)
+
+- **A sua decisão,** repassada pela sessão que abriu esta: "registra a nova medida pela data, sem o teste". As sessões A e B ficam desistidas.
+- **O CSP 0.3.1 fica como causa provável, sem confirmar,** e isso consta no registro.
+
+**O registro, antes do código** (commit `cfa2b411`):
+- em `docs/store_v2_e_evolucao.md`, seção 1.3, na emenda de 18/11;
+- no ADR 0007, com uma linha de atualização e a linha do índice.
+
+**A regra:**
+
+| sessões que começam | linha registrada | de onde |
+|---|---|---|
+| antes de 31/10/2026, 19:52 | 1,463 m | pedido 33 |
+| a partir de 31/10/2026, 19:52 | **1,601 m** | a mediana de 141 voltas em 16 sessões (Parte B), com o desvio de 0,033 m e o p5 a p95 de 1,558 a 1,638 m |
+
+- **O começo da sessão** é a data e a hora do `session_id`.
+- **A tolerância de 0,10 m** vale para os dois valores.
+- **A margem de 2,0 ms** fica como reserva, contra o valor da época.
+- **A mediana das voltas** é conferida por época.
+
+**O código:**
+- `store_checks.py` ganhou:
+  - `GAME_LINE_REGIMES`;
+  - `regime_of(session_id)`;
+  - a checagem por época;
+  - a chave nova `linha_do_jogo_regimes` no meta (por `margin_meta`, que o construtor já usa).
+- **Para o pedido 42,** as chaves do meta passam a ser três:
+  - `sessoes_aceitas_com_margem`;
+  - `margem_linha_do_jogo_ms`;
+  - `linha_do_jogo_regimes`, uma lista com `desde`, `registrada_m`, `origem` e `causa`.
+
+**Os testes:** `test_trava_do_store_v2.py` tem agora 15 testes. Os 5 novos cobrem:
+- a época pela data, com o limite exato de 19:51:59 contra 19:52:00 e um `session_id` sem data;
+- cada sessão contra o valor da sua época;
+- a linha velha depois de 31/10, aceita com margem e com efeito negativo;
+- a mediana de cada época;
+- o meta com as duas épocas.
+
+Com os testes da checagem e do store, são 50, todos passando.
+
+**A suíte inteira, em 18/11:** `1058 passed, 37 warnings in 598.35s`, sem nenhuma falha. A saída está em `_testes.txt`, que foi substituído por esta rodada.
+
+**O que se espera da rodada,** conferido antes, só lendo: apliquei a regra nova às 721 voltas que já estão no meta do store, sem gravar nada.
+
+| | depois de 31/10 (contra 1,601 m) | antes (contra 1,463 m) |
+|---|---|---|
+| a mediana da época | 1,5986 m, em 17 voltas | 1,4949 m, em 702 voltas |
+| `2026-11-01_19-47-03` | 1,606 m, dentro, sem margem | — |
+| `2026-11-07_18-46-00` | 1,581 m, dentro, sem margem | — |
+| `2026-11-12_22-57-03` | 1,573 m, dentro, sem margem | — |
+| `2026-11-07_19-52-33` | 2 voltas, sem veredito | — |
+
+A checagem passa, e a lista `sessoes_aceitas_com_margem` fica vazia.
+
+**Os dois pontos que você pediu para a mesma rodada:**
+1. **O caminho do modelo nos JSONs do relatório de evolução:**
+   - **o app não usa esse caminho.** A tela Evolução (`EvolucaoPage.tsx`) e a de Sessões só leem `referencia.tempo_s`. O backend (`core/leitura/arquivos.py`) entrega o `resumo.json` como está. O `referencia.modelo` e o `referencia.arquivo` são só registro;
+   - **mesmo assim, eles vão apontar para a pasta principal:** na rodada, o passo 7 roda com `--modelo C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\reference_models\vhe_interlagos.json`. O `relatorio_evolucao.py` acha a volta do modelo pela pasta do modelo, e por isso os dois caminhos saem da pasta principal. O código não muda.
+2. **O backup** `data\ml\_backup_antes_pedido54\` fica até a nova medida entrar e ser conferida.
+
+### A parada antes da rodada (18/11)
+
+**A rodada, depois do seu sinal, a partir de `f1-telemetry-analyzer-47\backend`:**
+1. **Conferir** que o jogo, o app instalado e o app do repositório estão fechados, e que nenhuma sessão está sendo gravada.
+2. **O passo 6:** `python -m ml.scripts.build_lap_store_v2 --incremental`. Ele regrava o store, o meta e o relatório do construtor em `data\ml`, pela junção.
+3. **O passo 7:** `python tools/relatorio_evolucao.py --modelo C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\reference_models\vhe_interlagos.json`. Ele regrava `data\ml\evolucao`.
+4. **Conferir:**
+   - o SHA-256 dos arquivos regravados na pasta principal;
+   - o meta (`aprovado`, `linha_do_jogo_regimes` e a lista vazia);
+   - o caminho do modelo nos JSONs;
+   - o parquet, que deve ficar igual ao de antes, porque nenhuma volta muda.
+5. **O merge em `develop`,** e a pasta volta para a branch.
+
+**O que vai ser regravado:** o meta, o relatório do construtor e a pasta `evolucao`. O parquet deve sair igual. **O backup de antes continua lá.**
+
+### A rodada da nova medida (18/11, 21:18, com o seu sinal)
+
+- **O sinal:**
+  - "pode rodar a rodada do 54" chegou pela sessão que abriu esta, às 21:10;
+  - às 21:13 você respondeu aqui "Vou rodar de novo". Perguntei, e você escolheu "Rodada da nova medida".
+- **Antes de rodar:**
+  - o `acs.exe`, o app instalado, o app do repositório e o backend estavam fechados. Os únicos processos de node eram do servidor Aikido;
+  - nenhuma gravação estava em andamento: as últimas pastas de gravação são de 16/11 e 12/11;
+  - conferi isso de novo antes do passo 7.
+- **O passo 6** (`build_lap_store_v2 --incremental`) terminou com código 0, em 43 s, com o cache.
+- **O passo 7** (`relatorio_evolucao.py --modelo C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\reference_models\vhe_interlagos.json`) terminou com código 0.
+- **Os passos 1 a 5 e o modelo do coach não rodaram.**
+
+**O meta, depois** (construído em 18/11 às 21:18, no commit `85b549cf`):
+
+| | antes desta rodada (17/11) | depois (18/11) |
+|---|---|---|
+| `aprovado` | `true` | `true` |
+| `sessoes_aceitas_com_margem` | 3 sessões | **vazia** |
+| `margem_linha_do_jogo_ms` | 2,0 | 2,0 |
+| `linha_do_jogo_regimes` | — | 1,463 m (antes de 31/10 às 19:52) e 1,601 m (a partir daí; o CSP 0.3.1, provável, não confirmado) |
+| a mediana da época antiga | — | 1,4949 m, em 702 voltas |
+| a mediana da época nova | — | 1,5986 m, em 17 voltas |
+| as três sessões de 01/11, 07/11 e 12/11 | aceitas com margem | **dentro da tolerância** (1,606, 1,581 e 1,573 m contra 1,601 m) |
+| as outras checagens | passaram | passaram, com os mesmos números |
+
+**O que se esperava, registrado antes, aconteceu.**
+
+**O store:** o `laps_grid_v2.parquet` continua byte a byte igual (`8FCADDF17783D50C…`), com as mesmas 721 voltas e as mesmas contagens por origem e por pasta.
+
+**O relatório de evolução:**
+- a referência é a mesma: a volta do modelo, "Volta de referência", 1:24,552;
+- são 16 sessões, e o critério do ADR 0015 continua "ainda variando" (1,428 s);
+- os números das sessões são os mesmos da rodada de 17/11, porque o store não mudou.
+
+**O ponto 1, o caminho do modelo:**
+- **o `referencia.modelo` e o `referencia.arquivo` agora apontam para a pasta principal:**
+  - `C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\reference_models\vhe_interlagos.json`;
+  - `…\vhe_interlagos.volta_do_modelo.json`.
+- **Outros três caminhos ainda saem com `f1-telemetry-analyzer-47`:**
+  - o `store.arquivo` (o parquet);
+  - a lista `arquivos_de_sessao` do `resumo.json`;
+  - o caminho do painel no terminal.
+
+  Eles vêm da raiz do repositório desta pasta (`config.artifacts_root`), que não aceita outra raiz sem mudar o código. **O app não lê nenhum dos três:** ele lista as sessões pela pasta, e a tela só usa `referencia.tempo_s`. O arquivo apontado é o mesmo, pela junção. Se você quiser esses caminhos também na pasta principal, é uma mudança pequena no `relatorio_evolucao.py`, num pedido próprio.
+
+**A conferência pelo SHA-256 na pasta principal** (`data\ml`, os mesmos arquivos pela junção):
+
+| arquivo | SHA-256 (início) | |
+|---|---|---|
+| `laps_grid_v2.parquet` | `8FCADDF17783D50C` | igual ao backup |
+| `laps_grid_v2_meta.json` | `CE0335B9F8DA16D9` | novo |
+| `store_v2_relatorio.json` | `AF95B8CFFEDA05EE` | novo |
+| `evolucao\resumo.json` | `9C82BD83D37B8D11` | novo |
+| `evolucao\painel.html` | `CF750EFAA76CA923` | novo |
+| `evolucao\sessao_*.json` | 16 arquivos, de 21:19:25 a 21:19:32 | novos |
+
+**O ponto 2, o backup:** `data\ml\_backup_antes_pedido54\` continua lá. A nova medida entrou e foi conferida. **Apagar o backup é decisão sua;** eu não apago.
 
 ## O que falta
 
