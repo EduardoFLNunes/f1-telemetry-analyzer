@@ -1,0 +1,405 @@
+{
+ "rotulos": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rotulagem\\2026-11-20_42_rotulos_literatura.csv",
+ "por_rodada": {
+  "rodada1": {
+   "E2": {
+    "tabela": {
+     "aa": 8,
+     "an": 1,
+     "na": 0,
+     "nn": 3
+    },
+    "usadas": 12,
+    "acordo": 0.917,
+    "kappa": 0.8,
+    "rotulo_nao_sei": 5,
+    "detector_nao_conclusivo": 7,
+    "os_dois_sem_decisao": 1
+   },
+   "E3": {
+    "tabela": {
+     "aa": 4,
+     "an": 3,
+     "na": 0,
+     "nn": 0
+    },
+    "usadas": 7,
+    "acordo": 0.571,
+    "kappa": 0.0,
+    "rotulo_nao_sei": 15,
+    "detector_nao_conclusivo": 2,
+    "os_dois_sem_decisao": 6
+   },
+   "F4": {
+    "tabela": {
+     "aa": 8,
+     "an": 0,
+     "na": 2,
+     "nn": 2
+    },
+    "usadas": 12,
+    "acordo": 0.833,
+    "kappa": 0.571,
+    "rotulo_nao_sei": 12,
+    "detector_nao_conclusivo": 0,
+    "os_dois_sem_decisao": 10
+   },
+   "F5": {
+    "tabela": {
+     "aa": 3,
+     "an": 0,
+     "na": 5,
+     "nn": 8
+    },
+    "usadas": 16,
+    "acordo": 0.688,
+    "kappa": 0.375,
+    "rotulo_nao_sei": 7,
+    "detector_nao_conclusivo": 1,
+    "os_dois_sem_decisao": 7
+   },
+   "M6": {
+    "tabela": {
+     "aa": 0,
+     "an": 6,
+     "na": 0,
+     "nn": 6
+    },
+    "usadas": 12,
+    "acordo": 0.5,
+    "kappa": 0.0,
+    "rotulo_nao_sei": 10,
+    "detector_nao_conclusivo": 2,
+    "os_dois_sem_decisao": 2
+   }
+  },
+  "rodada2": {
+   "E2": {
+    "tabela": {
+     "aa": 9,
+     "an": 2,
+     "na": 0,
+     "nn": 3
+    },
+    "usadas": 14,
+    "acordo": 0.857,
+    "kappa": 0.659,
+    "rotulo_nao_sei": 5,
+    "detector_nao_conclusivo": 5,
+    "os_dois_sem_decisao": 1
+   },
+   "E3": {
+    "tabela": {
+     "aa": 4,
+     "an": 3,
+     "na": 0,
+     "nn": 0
+    },
+    "usadas": 7,
+    "acordo": 0.571,
+    "kappa": 0.0,
+    "rotulo_nao_sei": 15,
+    "detector_nao_conclusivo": 2,
+    "os_dois_sem_decisao": 6
+   },
+   "F4": {
+    "tabela": {
+     "aa": 8,
+     "an": 0,
+     "na": 2,
+     "nn": 2
+    },
+    "usadas": 12,
+    "acordo": 0.833,
+    "kappa": 0.571,
+    "rotulo_nao_sei": 12,
+    "detector_nao_conclusivo": 0,
+    "os_dois_sem_decisao": 10
+   },
+   "F5": {
+    "tabela": {
+     "aa": 1,
+     "an": 2,
+     "na": 6,
+     "nn": 7
+    },
+    "usadas": 16,
+    "acordo": 0.5,
+    "kappa": -0.085,
+    "rotulo_nao_sei": 7,
+    "detector_nao_conclusivo": 1,
+    "os_dois_sem_decisao": 7
+   },
+   "M6": {
+    "tabela": {
+     "aa": 4,
+     "an": 3,
+     "na": 0,
+     "nn": 6
+    },
+    "usadas": 13,
+    "acordo": 0.769,
+    "kappa": 0.552,
+    "rotulo_nao_sei": 10,
+    "detector_nao_conclusivo": 1,
+    "os_dois_sem_decisao": 6
+   }
+  },
+  "rodada3": {
+   "E2": {
+    "tabela": {
+     "aa": 9,
+     "an": 2,
+     "na": 0,
+     "nn": 3
+    },
+    "usadas": 14,
+    "acordo": 0.857,
+    "kappa": 0.659,
+    "rotulo_nao_sei": 5,
+    "detector_nao_conclusivo": 5,
+    "os_dois_sem_decisao": 1
+   },
+   "E3": {
+    "tabela": {
+     "aa": 4,
+     "an": 3,
+     "na": 0,
+     "nn": 0
+    },
+    "usadas": 7,
+    "acordo": 0.571,
+    "kappa": 0.0,
+    "rotulo_nao_sei": 15,
+    "detector_nao_conclusivo": 2,
+    "os_dois_sem_decisao": 6
+   },
+   "F4": {
+    "tabela": {
+     "aa": 8,
+     "an": 0,
+     "na": 2,
+     "nn": 2
+    },
+    "usadas": 12,
+    "acordo": 0.833,
+    "kappa": 0.571,
+    "rotulo_nao_sei": 12,
+    "detector_nao_conclusivo": 0,
+    "os_dois_sem_decisao": 10
+   },
+   "F5": {
+    "tabela": {
+     "aa": 3,
+     "an": 0,
+     "na": 5,
+     "nn": 8
+    },
+    "usadas": 16,
+    "acordo": 0.688,
+    "kappa": 0.375,
+    "rotulo_nao_sei": 7,
+    "detector_nao_conclusivo": 1,
+    "os_dois_sem_decisao": 7
+   },
+   "M6": {
+    "tabela": {
+     "aa": 4,
+     "an": 3,
+     "na": 0,
+     "nn": 6
+    },
+    "usadas": 13,
+    "acordo": 0.769,
+    "kappa": 0.552,
+    "rotulo_nao_sei": 10,
+    "detector_nao_conclusivo": 1,
+    "os_dois_sem_decisao": 6
+   }
+  },
+  "rodada4": {
+   "E2": {
+    "tabela": {
+     "aa": 9,
+     "an": 2,
+     "na": 0,
+     "nn": 3
+    },
+    "usadas": 14,
+    "acordo": 0.857,
+    "kappa": 0.659,
+    "rotulo_nao_sei": 5,
+    "detector_nao_conclusivo": 5,
+    "os_dois_sem_decisao": 1
+   },
+   "E3": {
+    "tabela": {
+     "aa": 4,
+     "an": 3,
+     "na": 0,
+     "nn": 0
+    },
+    "usadas": 7,
+    "acordo": 0.571,
+    "kappa": 0.0,
+    "rotulo_nao_sei": 15,
+    "detector_nao_conclusivo": 2,
+    "os_dois_sem_decisao": 6
+   },
+   "F4": {
+    "tabela": {
+     "aa": 8,
+     "an": 0,
+     "na": 2,
+     "nn": 2
+    },
+    "usadas": 12,
+    "acordo": 0.833,
+    "kappa": 0.571,
+    "rotulo_nao_sei": 12,
+    "detector_nao_conclusivo": 0,
+    "os_dois_sem_decisao": 10
+   },
+   "F5": {
+    "tabela": {
+     "aa": 3,
+     "an": 0,
+     "na": 5,
+     "nn": 8
+    },
+    "usadas": 16,
+    "acordo": 0.688,
+    "kappa": 0.375,
+    "rotulo_nao_sei": 7,
+    "detector_nao_conclusivo": 1,
+    "os_dois_sem_decisao": 7
+   },
+   "M6": {
+    "tabela": {
+     "aa": 4,
+     "an": 3,
+     "na": 0,
+     "nn": 6
+    },
+    "usadas": 13,
+    "acordo": 0.769,
+    "kappa": 0.552,
+    "rotulo_nao_sei": 10,
+    "detector_nao_conclusivo": 1,
+    "os_dois_sem_decisao": 6
+   }
+  }
+ },
+ "resumo": {
+  "E2": {
+   "rodada1": {
+    "usadas": 12,
+    "acordo": 0.917,
+    "kappa": 0.8
+   },
+   "rodada2": {
+    "usadas": 14,
+    "acordo": 0.857,
+    "kappa": 0.659
+   },
+   "rodada3": {
+    "usadas": 14,
+    "acordo": 0.857,
+    "kappa": 0.659
+   },
+   "rodada4": {
+    "usadas": 14,
+    "acordo": 0.857,
+    "kappa": 0.659
+   }
+  },
+  "E3": {
+   "rodada1": {
+    "usadas": 7,
+    "acordo": 0.571,
+    "kappa": 0.0
+   },
+   "rodada2": {
+    "usadas": 7,
+    "acordo": 0.571,
+    "kappa": 0.0
+   },
+   "rodada3": {
+    "usadas": 7,
+    "acordo": 0.571,
+    "kappa": 0.0
+   },
+   "rodada4": {
+    "usadas": 7,
+    "acordo": 0.571,
+    "kappa": 0.0
+   }
+  },
+  "F4": {
+   "rodada1": {
+    "usadas": 12,
+    "acordo": 0.833,
+    "kappa": 0.571
+   },
+   "rodada2": {
+    "usadas": 12,
+    "acordo": 0.833,
+    "kappa": 0.571
+   },
+   "rodada3": {
+    "usadas": 12,
+    "acordo": 0.833,
+    "kappa": 0.571
+   },
+   "rodada4": {
+    "usadas": 12,
+    "acordo": 0.833,
+    "kappa": 0.571
+   }
+  },
+  "F5": {
+   "rodada1": {
+    "usadas": 16,
+    "acordo": 0.688,
+    "kappa": 0.375
+   },
+   "rodada2": {
+    "usadas": 16,
+    "acordo": 0.5,
+    "kappa": -0.085
+   },
+   "rodada3": {
+    "usadas": 16,
+    "acordo": 0.688,
+    "kappa": 0.375
+   },
+   "rodada4": {
+    "usadas": 16,
+    "acordo": 0.688,
+    "kappa": 0.375
+   }
+  },
+  "M6": {
+   "rodada1": {
+    "usadas": 12,
+    "acordo": 0.5,
+    "kappa": 0.0
+   },
+   "rodada2": {
+    "usadas": 13,
+    "acordo": 0.769,
+    "kappa": 0.552
+   },
+   "rodada3": {
+    "usadas": 13,
+    "acordo": 0.769,
+    "kappa": 0.552
+   },
+   "rodada4": {
+    "usadas": 13,
+    "acordo": 0.769,
+    "kappa": 0.552
+   }
+  }
+ }
+}

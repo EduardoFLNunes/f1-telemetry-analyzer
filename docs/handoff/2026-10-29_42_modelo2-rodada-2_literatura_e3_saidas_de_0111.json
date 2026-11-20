@@ -1,0 +1,127 @@
+{
+ "referencia_do_carro": {
+  "L": 2.9636409495155203,
+  "k_delta": 0.3039644940480894,
+  "k_us_rad_por_g": 0.0014319526854746293,
+  "intercepto_rad": -0.0001669512573688505,
+  "mu": 2.742224674103748,
+  "pontos": 47192,
+  "faixa_g": [
+   0.1,
+   0.35
+  ],
+  "v_min_kmh": 50.0
+ },
+ "passagens": [
+  {
+   "volta_relatada": 3,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002",
+   "curva": "C05-esq",
+   "rotulo": "aplica",
+   "criterio": "guinada acima da referencia",
+   "valor": {
+    "contraesterco_s": 0.0,
+    "beta_max_graus": 1.88,
+    "beta_10_s": 0.0,
+    "guinada_excesso_max": 0.536,
+    "guinada_excesso_s": 1.01
+   },
+   "margem": "qualquer um dos tres sinais"
+  },
+  {
+   "volta_relatada": 3,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002",
+   "curva": "C06-dir",
+   "rotulo": "aplica",
+   "criterio": "deriva >= 10 graus + guinada acima da referencia",
+   "valor": {
+    "contraesterco_s": 0.0,
+    "beta_max_graus": 81.3,
+    "beta_10_s": 2.455,
+    "guinada_excesso_max": 1.776,
+    "guinada_excesso_s": 39.312
+   },
+   "margem": "qualquer um dos tres sinais"
+  },
+  {
+   "volta_relatada": 3,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002",
+   "curva": "C13-esq",
+   "rotulo": "aplica",
+   "criterio": "guinada acima da referencia",
+   "valor": {
+    "contraesterco_s": 0.116,
+    "beta_max_graus": 9.13,
+    "beta_10_s": 0.0,
+    "guinada_excesso_max": 3.423,
+    "guinada_excesso_s": 24.805
+   },
+   "margem": "qualquer um dos tres sinais"
+  },
+  {
+   "volta_relatada": 4,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0003",
+   "curva": "C02-dir",
+   "rotulo": "aplica",
+   "criterio": "guinada acima da referencia",
+   "valor": {
+    "contraesterco_s": 0.0,
+    "beta_max_graus": 3.11,
+    "beta_10_s": 0.0,
+    "guinada_excesso_max": 0.212,
+    "guinada_excesso_s": 0.489
+   },
+   "margem": "qualquer um dos tres sinais"
+  },
+  {
+   "volta_relatada": 4,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0003",
+   "curva": "C06-dir",
+   "rotulo": "aplica",
+   "criterio": "contraesterco + deriva >= 10 graus + guinada acima da referencia",
+   "valor": {
+    "contraesterco_s": 0.151,
+    "beta_max_graus": 82.83,
+    "beta_10_s": 2.807,
+    "guinada_excesso_max": 0.949,
+    "guinada_excesso_s": 44.794
+   },
+   "margem": "qualquer um dos tres sinais"
+  },
+  {
+   "volta_relatada": 10,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0009",
+   "curva": "C05-esq",
+   "rotulo": "aplica",
+   "criterio": "contraesterco + guinada acima da referencia",
+   "valor": {
+    "contraesterco_s": 0.222,
+    "beta_max_graus": 3.29,
+    "beta_10_s": 0.0,
+    "guinada_excesso_max": 0.488,
+    "guinada_excesso_s": 1.641
+   },
+   "margem": "qualquer um dos tres sinais"
+  },
+  {
+   "volta_relatada": 11,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0010",
+   "curva": "C01-esq",
+   "rotulo": "aplica",
+   "criterio": "contraesterco + deriva >= 10 graus + guinada acima da referencia",
+   "valor": {
+    "contraesterco_s": 0.407,
+    "beta_max_graus": 20.24,
+    "beta_10_s": 0.9,
+    "guinada_excesso_max": 3.09,
+    "guinada_excesso_s": 2.146
+   },
+   "margem": "qualquer um dos tres sinais"
+  }
+ ],
+ "aplica": 7,
+ "total": 7,
+ "as_duas_da_C06_aplicam": true,
+ "detectores_carregados": false,
+ "tempo_s": 17.1
+}

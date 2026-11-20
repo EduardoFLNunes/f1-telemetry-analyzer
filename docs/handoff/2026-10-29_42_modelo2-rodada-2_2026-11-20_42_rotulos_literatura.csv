@@ -1,0 +1,121 @@
+id,pergunta,curva,rotulo,criterio,valor,margem
+F4-01,F4,C06-dir,nao aplica,"penhasco: a descida inteira em 0,20 s ou menos",0.14,"<= 0,20 s"
+F4-02,F4,C08-esq,nao sei,"sem frenagem (freio < 0,10)",0.0,
+F4-03,F4,C12-esq,aplica,mais perto da rampa curva (DTW),"{""dtw_rampa"": 0.0153, ""dtw_degrau"": 0.2819}","rampa < 0,8 x degrau"
+F4-04,F4,C12-esq,aplica,mais perto da rampa curva (DTW),"{""dtw_rampa"": 0.0465, ""dtw_degrau"": 0.1283}","rampa < 0,8 x degrau"
+F4-05,F4,C05-esq,nao sei,"sem frenagem (freio < 0,10)",0.0,
+F4-06,F4,C02-dir,nao sei,"sem frenagem (freio < 0,10)",0.0,
+F4-07,F4,C02-dir,nao sei,"sem frenagem (freio < 0,10)",0.0004415139264892787,
+F4-08,F4,C03-esq,nao sei,"sem frenagem (freio < 0,10)",0.0,
+F4-09,F4,C07-dir,nao sei,o ultimo terco tem menos de 4 pontos,2,
+F4-10,F4,C06-dir,nao aplica,"penhasco: a descida inteira em 0,20 s ou menos",0.141,"<= 0,20 s"
+F4-11,F4,C09-dir,nao sei,o ultimo terco tem menos de 4 pontos,3,
+F4-12,F4,C07-dir,aplica,mais perto da rampa curva (DTW),"{""dtw_rampa"": 0.007, ""dtw_degrau"": 0.1898}","rampa < 0,8 x degrau"
+F4-13,F4,C06-dir,nao sei,"sem frenagem (freio < 0,10)",0.009578106533689693,
+F4-14,F4,C04-esq,aplica,mais perto da rampa curva (DTW),"{""dtw_rampa"": 0.066, ""dtw_degrau"": 0.3355}","rampa < 0,8 x degrau"
+F4-15,F4,C03-esq,nao sei,"sem frenagem (freio < 0,10)",0.0,
+F4-16,F4,C12-esq,aplica,mais perto da rampa curva (DTW),"{""dtw_rampa"": 0.0127, ""dtw_degrau"": 0.2642}","rampa < 0,8 x degrau"
+F4-17,F4,C09-dir,nao sei,o ultimo terco tem menos de 4 pontos,2,
+F4-18,F4,C10-dir,nao aplica,"penhasco: a descida inteira em 0,20 s ou menos",0.143,"<= 0,20 s"
+F4-19,F4,C01-esq,aplica,mais perto da rampa curva (DTW),"{""dtw_rampa"": 0.0251, ""dtw_degrau"": 0.3649}","rampa < 0,8 x degrau"
+F4-20,F4,C05-esq,nao aplica,gagueira: o freio volta a subir na descida,0.084,">= 0,04"
+F4-21,F4,C14-esq,nao sei,"sem frenagem (freio < 0,10)",0.0,
+F4-22,F4,C13-esq,nao sei,"sem frenagem (freio < 0,10)",0.0,
+F4-23,F4,C07-dir,aplica,mais perto da rampa curva (DTW),"{""dtw_rampa"": 0.009, ""dtw_degrau"": 0.2275}","rampa < 0,8 x degrau"
+F4-24,F4,C04-esq,aplica,mais perto da rampa curva (DTW),"{""dtw_rampa"": 0.0161, ""dtw_degrau"": 0.1474}","rampa < 0,8 x degrau"
+F5-01,F5,C01-esq,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.0,"< 0,04"
+F5-02,F5,C07-dir,aplica,freio >= 6% ao virar e o freio desce enquanto o volante sobe,"{""freio_ao_virar"": 0.469, ""correlacao"": -0.87}","r <= -0,2"
+F5-03,F5,C07-dir,aplica,freio >= 6% ao virar e o freio desce enquanto o volante sobe,"{""freio_ao_virar"": 0.239, ""correlacao"": -0.865}","r <= -0,2"
+F5-04,F5,C08-esq,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.0,"< 0,04"
+F5-05,F5,C09-dir,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.0,"< 0,04"
+F5-06,F5,C07-dir,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.0,"< 0,04"
+F5-07,F5,C06-dir,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.0,"< 0,04"
+F5-08,F5,C07-dir,aplica,freio >= 6% ao virar e o freio desce enquanto o volante sobe,"{""freio_ao_virar"": 0.278, ""correlacao"": -0.996}","r <= -0,2"
+F5-09,F5,C13-esq,nao sei,"curva sem frenagem nesta passagem (freio < 0,10)",null,
+F5-10,F5,C13-esq,nao sei,"curva sem frenagem nesta passagem (freio < 0,10)",null,
+F5-11,F5,C14-esq,nao sei,"curva sem frenagem nesta passagem (freio < 0,10)",null,
+F5-12,F5,C14-esq,nao sei,"curva sem frenagem nesta passagem (freio < 0,10)",null,
+F5-13,F5,C08-esq,nao sei,"curva sem frenagem nesta passagem (freio < 0,10)",null,
+F5-14,F5,C09-dir,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.0,"< 0,04"
+F5-15,F5,C09-dir,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.0,"< 0,04"
+F5-16,F5,C01-esq,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.0,"< 0,04"
+F5-17,F5,C09-dir,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.0,"< 0,04"
+F5-18,F5,C05-esq,nao sei,"curva sem frenagem nesta passagem (freio < 0,10)",null,
+F5-19,F5,C08-esq,nao sei,"curva sem frenagem nesta passagem (freio < 0,10)",null,
+F5-20,F5,C05-esq,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.0,"< 0,04"
+F5-21,F5,C09-dir,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.0,"< 0,04"
+F5-22,F5,C01-esq,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.026,"< 0,04"
+F5-23,F5,C01-esq,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.0,"< 0,04"
+F5-24,F5,C09-dir,nao aplica,freio abaixo de 5% quando o volante comeca a virar,0.0,"< 0,04"
+M6-01,M6,C09-dir,nao sei,sem subida do acelerador ate o fim da curva,null,
+M6-02,M6,C10-dir,aplica,"subida continua, sem alivio e sem o volante crescer","{""queda_total"": 0.049, ""volante_crescendo"": 0.0}","queda <= 0,08 e volante <= 0,05"
+M6-03,M6,C02-dir,aplica,"subida continua, sem alivio e sem o volante crescer","{""queda_total"": 0.03, ""volante_crescendo"": 0.0}","queda <= 0,08 e volante <= 0,05"
+M6-04,M6,C03-esq,nao aplica,alivio claro ou o volante crescendo de novo,"{""queda_total"": 0.56, ""volante_crescendo"": 0.376}","queda >= 0,20 ou volante >= 0,20"
+M6-05,M6,C04-esq,nao aplica,alivio claro ou o volante crescendo de novo,"{""queda_total"": 0.587, ""volante_crescendo"": 0.237}","queda >= 0,20 ou volante >= 0,20"
+M6-06,M6,C09-dir,nao sei,sem subida do acelerador ate o fim da curva,null,
+M6-07,M6,C02-dir,nao sei,sem subida do acelerador ate o fim da curva,null,
+M6-08,M6,C12-esq,nao sei,sem subida do acelerador ate o fim da curva,null,
+M6-09,M6,C01-esq,nao aplica,alivio claro ou o volante crescendo de novo,"{""queda_total"": 0.167, ""volante_crescendo"": 0.282}","queda >= 0,20 ou volante >= 0,20"
+M6-10,M6,C04-esq,nao sei,sem subida do acelerador ate o fim da curva,null,
+M6-11,M6,C07-dir,aplica,"subida continua, sem alivio e sem o volante crescer","{""queda_total"": 0.019, ""volante_crescendo"": 0.003}","queda <= 0,08 e volante <= 0,05"
+M6-12,M6,C01-esq,nao aplica,alivio claro ou o volante crescendo de novo,"{""queda_total"": 0.273, ""volante_crescendo"": 0.597}","queda >= 0,20 ou volante >= 0,20"
+M6-13,M6,C11-esq,nao sei,o meio,"{""queda_total"": 0.142, ""volante_crescendo"": 0.0}",
+M6-14,M6,C02-dir,nao sei,o meio,"{""queda_total"": 0.125, ""volante_crescendo"": 0.018}",
+M6-15,M6,C11-esq,nao sei,"o acelerador nao cai abaixo de 0,92: nada a retomar",null,
+M6-16,M6,C10-dir,nao aplica,alivio claro ou o volante crescendo de novo,"{""queda_total"": 0.48, ""volante_crescendo"": 0.0}","queda >= 0,20 ou volante >= 0,20"
+M6-17,M6,C02-dir,aplica,"subida continua, sem alivio e sem o volante crescer","{""queda_total"": 0.0, ""volante_crescendo"": 0.0}","queda <= 0,08 e volante <= 0,05"
+M6-18,M6,C12-esq,aplica,"subida continua, sem alivio e sem o volante crescer","{""queda_total"": 0.008, ""volante_crescendo"": 0.0}","queda <= 0,08 e volante <= 0,05"
+M6-19,M6,C08-esq,aplica,"subida continua, sem alivio e sem o volante crescer","{""queda_total"": 0.053, ""volante_crescendo"": 0.003}","queda <= 0,08 e volante <= 0,05"
+M6-20,M6,C05-esq,nao aplica,alivio claro ou o volante crescendo de novo,"{""queda_total"": 0.0, ""volante_crescendo"": 0.889}","queda >= 0,20 ou volante >= 0,20"
+M6-21,M6,C05-esq,nao sei,"o acelerador nao cai abaixo de 0,92: nada a retomar",null,
+M6-22,M6,C12-esq,aplica,"subida continua, sem alivio e sem o volante crescer","{""queda_total"": 0.005, ""volante_crescendo"": 0.011}","queda <= 0,08 e volante <= 0,05"
+M6-23,M6,C04-esq,nao sei,o meio,"{""queda_total"": 0.126, ""volante_crescendo"": 0.083}",
+M6-24,M6,C07-dir,aplica,"subida continua, sem alivio e sem o volante crescer","{""queda_total"": 0.008, ""volante_crescendo"": 0.0}","queda <= 0,08 e volante <= 0,05"
+E2-01,E2,C14-esq,nao aplica,o angulo de subesterco fica dentro da reta do carro,0.264,"<= 0,4 grau"
+E2-02,E2,C14-esq,nao aplica,o angulo de subesterco fica dentro da reta do carro,0.291,"<= 0,4 grau"
+E2-03,E2,C12-esq,aplica,o angulo de subesterco passa da reta do carro,1.912,">= 1,0 grau"
+E2-04,E2,C02-dir,aplica,o angulo de subesterco passa da reta do carro,2.627,">= 1,0 grau"
+E2-05,E2,C03-esq,nao sei,perto da margem,0.58,"0,4 a 1,0 grau"
+E2-06,E2,C03-esq,aplica,o angulo de subesterco passa da reta do carro,1.28,">= 1,0 grau"
+E2-07,E2,C02-dir,aplica,o angulo de subesterco passa da reta do carro,3.318,">= 1,0 grau"
+E2-08,E2,C04-esq,aplica,o angulo de subesterco passa da reta do carro,3.378,">= 1,0 grau"
+E2-09,E2,C05-esq,nao sei,perto da margem,0.436,"0,4 a 1,0 grau"
+E2-10,E2,C07-dir,aplica,o angulo de subesterco passa da reta do carro,2.901,">= 1,0 grau"
+E2-11,E2,C10-dir,nao sei,perto da margem,0.51,"0,4 a 1,0 grau"
+E2-12,E2,C08-esq,nao sei,perto da margem,0.85,"0,4 a 1,0 grau"
+E2-13,E2,C12-esq,aplica,o angulo de subesterco passa da reta do carro,3.05,">= 1,0 grau"
+E2-14,E2,C12-esq,aplica,o angulo de subesterco passa da reta do carro,2.207,">= 1,0 grau"
+E2-15,E2,C04-esq,aplica,o angulo de subesterco passa da reta do carro,3.404,">= 1,0 grau"
+E2-16,E2,C08-esq,aplica,o angulo de subesterco passa da reta do carro,2.434,">= 1,0 grau"
+E2-17,E2,C05-esq,nao aplica,o angulo de subesterco fica dentro da reta do carro,0.329,"<= 0,4 grau"
+E2-18,E2,C07-dir,aplica,o angulo de subesterco passa da reta do carro,3.363,">= 1,0 grau"
+E2-19,E2,C09-dir,aplica,o angulo de subesterco passa da reta do carro,1.272,">= 1,0 grau"
+E2-20,E2,C02-dir,aplica,o angulo de subesterco passa da reta do carro,1.304,">= 1,0 grau"
+E2-21,E2,C03-esq,nao sei,perto da margem,0.819,"0,4 a 1,0 grau"
+E2-22,E2,C03-esq,aplica,o angulo de subesterco passa da reta do carro,1.155,">= 1,0 grau"
+E2-23,E2,C06-dir,aplica,o angulo de subesterco passa da reta do carro,3.03,">= 1,0 grau"
+E2-24,E2,C02-dir,aplica,o angulo de subesterco passa da reta do carro,3.585,">= 1,0 grau"
+E3-01,E3,C14-esq,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 1.27, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.064, ""guinada_excesso_s"": 0.0}",
+E3-02,E3,C03-esq,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 2.64, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.057, ""guinada_excesso_s"": 0.0}",
+E3-03,E3,C10-dir,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 3.22, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.065, ""guinada_excesso_s"": 0.0}",
+E3-04,E3,C07-dir,aplica,guinada acima da referencia,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 7.05, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.337, ""guinada_excesso_s"": 1.646}",qualquer um dos tres sinais
+E3-05,E3,C02-dir,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 2.22, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.066, ""guinada_excesso_s"": 0.0}",
+E3-06,E3,C04-esq,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 8.62, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.106, ""guinada_excesso_s"": 0.116}",
+E3-07,E3,C02-dir,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 1.75, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.244, ""guinada_excesso_s"": 0.105}",
+E3-08,E3,C06-dir,aplica,guinada acima da referencia,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 5.29, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.245, ""guinada_excesso_s"": 0.348}",qualquer um dos tres sinais
+E3-09,E3,C12-esq,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 6.15, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.042, ""guinada_excesso_s"": 0.0}",
+E3-10,E3,C09-dir,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 2.87, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.08, ""guinada_excesso_s"": 0.0}",
+E3-11,E3,C02-dir,aplica,deriva >= 10 graus + guinada acima da referencia,"{""contraesterco_s"": 0.055, ""beta_max_graus"": 10.43, ""beta_10_s"": 0.11, ""guinada_excesso_max"": 0.579, ""guinada_excesso_s"": 0.666}",qualquer um dos tres sinais
+E3-12,E3,C11-esq,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 3.28, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.181, ""guinada_excesso_s"": 0.069}",
+E3-13,E3,C07-dir,aplica,guinada acima da referencia,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 3.62, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.265, ""guinada_excesso_s"": 0.889}",qualquer um dos tres sinais
+E3-14,E3,C07-dir,aplica,guinada acima da referencia,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 2.22, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.324, ""guinada_excesso_s"": 0.744}",qualquer um dos tres sinais
+E3-15,E3,C04-esq,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 5.71, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.042, ""guinada_excesso_s"": 0.0}",
+E3-16,E3,C14-esq,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 2.74, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.085, ""guinada_excesso_s"": 0.0}",
+E3-17,E3,C05-esq,aplica,guinada acima da referencia,"{""contraesterco_s"": 0.1, ""beta_max_graus"": 6.57, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.866, ""guinada_excesso_s"": 0.344}",qualquer um dos tres sinais
+E3-18,E3,C14-esq,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 2.7, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.069, ""guinada_excesso_s"": 0.0}",
+E3-19,E3,C06-dir,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 5.43, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.148, ""guinada_excesso_s"": 0.118}",
+E3-20,E3,C12-esq,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 2.35, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.051, ""guinada_excesso_s"": 0.0}",
+E3-21,E3,C04-esq,aplica,guinada acima da referencia,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 3.99, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.241, ""guinada_excesso_s"": 0.289}",qualquer um dos tres sinais
+E3-22,E3,C04-esq,nao sei,o meio,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 2.25, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.088, ""guinada_excesso_s"": 0.0}",
+E3-23,E3,C06-dir,aplica,guinada acima da referencia,"{""contraesterco_s"": 0.129, ""beta_max_graus"": 7.3, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.227, ""guinada_excesso_s"": 0.259}",qualquer um dos tres sinais
+E3-24,E3,C07-dir,aplica,guinada acima da referencia,"{""contraesterco_s"": 0.0, ""beta_max_graus"": 3.02, ""beta_10_s"": 0.0, ""guinada_excesso_max"": 0.219, ""guinada_excesso_s"": 0.407}",qualquer um dos tres sinais

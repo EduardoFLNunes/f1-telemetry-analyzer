@@ -259,3 +259,58 @@ def comparar_r3(r1_refeita: Path, r2_dir: Path, r3_dir: Path) -> Dict[str, objec
     out["fechamento"] = {"rodada2_s": e2r["fechamento_soma_das_fases_s"], "rodada3_s": e3r["fechamento_soma_das_fases_s"],
                          "metros_cobertos_r3": _json(r3_dir / "fases.json")["metros_cobertos"]}
     return out
+
+
+def _kappa(tab: Dict[str, int]) -> Optional[float]:
+    n = sum(tab.values())
+    if n == 0:
+        return None
+    po = (tab["aa"] + tab["nn"]) / n
+    p_lab = (tab["aa"] + tab["an"]) / n
+    p_det = (tab["aa"] + tab["na"]) / n
+    pe = p_lab * p_det + (1 - p_lab) * (1 - p_det)
+    return None if pe >= 1.0 else round((po - pe) / (1 - pe), 3)
+
+
+def concordancia_literatura(labels_csv: Path, root: Path) -> Dict[str, object]:
+    """A concordancia dos detectores (rodadas 1 a 4) com o criterio independente da literatura (secao 7.5, item 4).
+
+    A tabela 2x2 tem o rotulo nas linhas (aplica, nao aplica) e o detector nas
+    colunas: aa, an (rotulo aplica, detector nao aplica), na, nn. Os "nao sei" do
+    rotulo e os "nao conclusivo" do detector ficam a parte.
+    """
+    labels = pd.read_csv(labels_csv, dtype=str).fillna("")
+    lab = dict(zip(labels["id"], labels["rotulo"]))
+    rounds = {"rodada1": {k["id"]: k["estado"] for k in _json(root / "rotulagem_gabarito.json")}}
+    for r in (2, 3, 4):
+        key = _json(root / f"rodada{r}" / "kit2_gabarito.json")["passagens"]
+        # O build_kit2 grava o estado da rodada da pasta no campo "estado_rodada2", qualquer que seja a rodada.
+        rounds[f"rodada{r}"] = {k["id"]: k["estado_rodada2"] for k in key}
+    dets = dict(zip(labels["id"], labels["pergunta"]))
+    out: Dict[str, object] = {"rotulos": str(labels_csv), "por_rodada": {}, "resumo": {}}
+    for name, states in rounds.items():
+        per = {}
+        for det in sorted(set(dets.values())):
+            ids = [i for i, d in dets.items() if d == det]
+            tab = {"aa": 0, "an": 0, "na": 0, "nn": 0}
+            nao_sei = nc = ambos = 0
+            for i in ids:
+                l, s = lab.get(i), states.get(i)
+                if l == "nao sei" and s == NC:
+                    ambos += 1
+                if l == "nao sei":
+                    nao_sei += 1
+                    continue
+                if s == NC or s is None:
+                    nc += 1
+                    continue
+                tab[("a" if l == "aplica" else "n") + ("a" if s == APLICA else "n")] += 1
+            n = sum(tab.values())
+            per[det] = {"tabela": tab, "usadas": n, "acordo": None if n == 0 else round((tab["aa"] + tab["nn"]) / n, 3),
+                        "kappa": _kappa(tab), "rotulo_nao_sei": nao_sei, "detector_nao_conclusivo": nc,
+                        "os_dois_sem_decisao": ambos}
+        out["por_rodada"][name] = per
+    for det in sorted(set(dets.values())):
+        out["resumo"][det] = {name: {k: out["por_rodada"][name][det][k] for k in ("usadas", "acordo", "kappa")}
+                              for name in rounds}
+    return out

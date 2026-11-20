@@ -663,3 +663,28 @@ Quase todo o tempo vai nos bootstraps do modelo leve. A leitura das gravações 
 - **O passo corrigido** está na seção "Onde ficam as gravações": não copiar, porque o `ml` já lê as duas pastas.
 
 Arquivo: `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_relatorio.md`
+
+## A H.4, completada pelo pedido 42 (20/11): concordância com um critério independente da literatura
+
+**O que mudou:** a H.4 deixou de ser "precisão contra os rótulos humanos".
+
+- Em 20/11, o Eduardo decidiu não rotular à mão: ele não é piloto, e o risco de rotular errado lendo a telemetria é grande demais.
+- No lugar dos rótulos dele, cada uma das 120 passagens do kit foi rotulada por um critério numérico tirado da literatura, num módulo que não lê os detectores, a calibração nem os gabaritos (seção 7 de `docs/modelo2_tecnica_e_estilo.md`).
+- **O nome do resultado:** "concordância com um critério independente da literatura".
+- **A medida contra a verdade** continua sendo a das voltas provocadas (pedido 42, Parte F).
+- **O CSV de rótulos deste pedido** (`…_rotulagem.csv`) fica vazio.
+
+**A rodada 1 (as regras deste pedido, `53d563f1`)** contra o critério, nas mesmas 120 passagens:
+
+| pergunta | passagens usadas | acordo | kappa de Cohen | o critério diz "nao sei" | o detector diz "não conclusivo" |
+|---|---|---|---|---|---|
+| F4, soltura progressiva | 12 | 0,833 | 0,571 | 12 | 0 |
+| F5, trail braking | 16 | 0,688 | 0,375 | 7 | 1 |
+| M6, retomada | 12 | 0,500 | 0,000 | 10 | 2 |
+| E2, subesterço | 12 | 0,917 | 0,800 | 5 | 7 |
+| E3, sobresterço | 7 | 0,571 | 0,000 | 15 | 2 |
+
+- Na rodada 1, o M6 nunca diz "aplica" nessas passagens. Por isso, o kappa é zero.
+- O E3 tem kappa zero porque o critério nunca diz "nao aplica" nessas passagens.
+
+**As rodadas 2 a 4, as tabelas 2×2 e a leitura** estão no relatório do pedido 42: `docs/handoff/2026-10-29_42_modelo2-rodada-2_relatorio.md`, seção de 20/11.

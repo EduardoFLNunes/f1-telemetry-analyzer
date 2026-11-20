@@ -1,4 +1,237 @@
-# Pedido 42 — relatório parcial de 18/11, à tarde: a rodada 4 (a entrada a partir de b_k); parado
+# Pedido 42 — relatório parcial de 20/11: os rótulos pelos critérios da literatura e a concordância com as quatro rodadas; parado
+
+- **Pedido:** `docs/prompts/2026-10-29_42_modelo2-rodada-2.md`, com a "Atualização de 20/11" (itens 3 a 5; depois, gravar o relatório parcial e parar).
+- **Data:** 20/11/2026.
+- **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-48`. A atualização estava só nela, sem commit, e foi commitada antes de tudo (`8d067698`). A pasta principal (pedido 52) estava limpa e não foi tocada.
+- **Branch:** `etapa/modelo2-rodada-2`. O remoto estava em `51b987db`: você enviou a etapa anterior.
+- **Commits desta etapa:**
+  - `8d067698` — o texto da atualização de 20/11;
+  - `844c7197` — os critérios registrados antes de rodar (seção 7 de `docs/modelo2_tecnica_e_estilo.md` e linha no ADR 0023);
+  - `efac71ba` — o código, antes de rodar: o módulo dos rótulos (`backend/ml/modelo2/rotulos_literatura.py`), quem o chama (`literatura_execucao.py` e `ml/scripts/modelo2_literatura.py`) e os testes;
+  - o commit das saídas, da concordância, da galeria, da H.4 do 38 e deste relatório (o hash está no chat e na nota da sessão).
+- **Merges:** nenhum.
+- **Arquivos de handoff gerados nesta etapa (`docs/handoff/2026-10-29_42_modelo2-rodada-2_*`):**
+  - `2026-11-20_42_rotulos_literatura.csv`: os 120 rótulos;
+  - `literatura_e3_saidas_de_0111.json`: o teste do E3 nas 7 saídas;
+  - `literatura_rotulos_resumo.json`;
+  - `literatura_concordancia.json`: as tabelas 2×2 das quatro rodadas;
+  - `galeria_rodada4.html`;
+  - `pytest.txt`, atualizado;
+  - este relatório.
+
+  Fora do handoff: a seção da H.4 em `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_relatorio.md`.
+
+## Resumo
+
+1. **Os 5 critérios** foram registrados antes de qualquer conta (seção 7), com as margens, o porquê e as fontes.
+   - O módulo do rótulo não importa os detectores nem a calibração, e não lê estados nem gabaritos.
+   - Isso é conferido por um teste e nas duas rodadas do script: `detectores_carregados: false`.
+2. **O teste do E3 nas 7 saídas de traseira de 01/11:** o critério diz "aplica" nas **7**, incluindo as duas da C06 (com 81° e 83° de deriva). Por isso não parei.
+3. **Os 120 rótulos estão no CSV.**
+
+   | pergunta | aplica | nao aplica | nao sei |
+   |---|---|---|---|
+   | F4 | 8 | 4 | 12 |
+   | F5 | 3 | 14 | 7 |
+   | M6 | 8 | 6 | 10 |
+   | E2 | 16 | 3 | 5 |
+   | E3 | 9 | 0 | 15 |
+
+4. **A concordância com a rodada 4** (a que vale), nas passagens em que o critério e o detector decidem:
+   - E2: acordo de 0,857 e kappa de 0,659;
+   - F4: 0,833 e 0,571;
+   - M6: 0,769 e 0,552;
+   - F5: 0,688 e 0,375;
+   - E3: 0,571 e 0,000.
+
+   As amostras são pequenas: de 7 a 16 passagens por pergunta.
+5. **O que a concordância mostra entre as rodadas:**
+   - o M6 melhora da rodada 1 (kappa 0,000) para a 2 (0,552);
+   - o F5 piora na rodada 2 (−0,085) e volta na 3 e na 4 (0,375), o que confirma o defeito da entrada da rodada 2;
+   - o F4 e o E3 não mudam entre as rodadas;
+   - o E2 fica entre 0,659 e 0,800.
+6. **A galeria da rodada 4** está gerada. **A seção da H.4** foi escrita no relatório do 38, com os nomes novos.
+
+## Os dados e o jogo
+
+- **Os vínculos:** os 3 de `data/reference_models` continuam iguais aos da pasta principal, conferidos de novo pelo SHA-256 em 20/11 (`811da4c9…`, `f8e61864…` e `e8651d45…`).
+- **O store:** é o mesmo das rodadas 2 a 4 (meta de 17/11, 21:31, `aprovado: true`).
+- **O jogo:** o `acs.exe` estava fechado antes de cada conta (o E3, os rótulos e a galeria).
+- **As voltas:** as 144 da rodada 1, lidas sem gravar nada (o `carregar` sem pasta de saída).
+
+## Item 3: o registro, antes de rodar (`844c7197`)
+
+**A seção 7 de `docs/modelo2_tecnica_e_estilo.md`** tem:
+
+- o nome novo do resultado;
+- a independência;
+- os três resultados;
+- os 5 critérios, com os números da literatura e as margens escolhidas pelo projeto, cada uma com o porquê;
+- a ordem dos passos;
+- as fontes do item 6.
+
+**As coincidências com os limiares dos detectores, ditas na seção:** só o 5% de freio do F5. Ele vem da Virtual Racing School, e o detector usa 0,05 como "pedal acionado", com outro sentido. As outras margens foram escolhidas diferentes das dos detectores:
+
+- 0,25 do volante para "começa a virar", contra o 0,15 do detector;
+- 0,08 e 0,20 na queda do acelerador, contra o 0,05 e o 0,15 do M8;
+- 0,04 na gagueira;
+- 0,35 g e 0,5 g no E2, contra o 0,4 g do detector.
+
+**A linha no ADR 0023** foi no mesmo commit. **A seção 3.3** do documento também passou a usar o nome novo.
+
+## A referência do próprio carro (E2 e E3)
+
+Das 130 voltas do Eduardo, nos 47.192 pontos com 0,10 g ≤ |a_y| ≤ 0,35 g e v ≥ 50 km/h:
+
+| medida | valor |
+|---|---|
+| L (pedido 39) | 2,9636 m |
+| k_δ (pedido 39) | 0,30396 rad |
+| gradiente de subesterço K_us | 0,00143 rad/g (0,08°/g: o carro é quase neutro na faixa linear) |
+| intercepto | −0,00017 rad |
+| μ (o percentil 99 de \|a_y\|) | 2,74 g |
+
+## Item 5.2: o E3 da literatura nas 7 saídas de traseira de 01/11
+
+| volta relatada | curva | volta na gravação | rótulo | o sinal que disparou | contraesterço | maior \|β\| | guinada acima da referência |
+|---|---|---|---|---|---|---|---|
+| 3 | C05 | #0002 | aplica | guinada acima da referência | 0,00 s | 1,9° | 0,54 rad/s, por 1,0 s |
+| 3 | C06 | #0002 | aplica | deriva ≥ 10° + guinada | 0,00 s | 81,3° (≥ 10° por 2,5 s) | 1,78 rad/s |
+| 3 | C13 | #0002 | aplica | guinada acima da referência | 0,12 s | 9,1° | 3,42 rad/s |
+| 4 | C02 | #0003 | aplica | guinada acima da referência | 0,00 s | 3,1° | 0,21 rad/s, por 0,49 s |
+| 4 | C06 | #0003 | aplica | contraesterço + deriva ≥ 10° + guinada | 0,15 s | 82,8° (≥ 10° por 2,8 s) | 0,95 rad/s |
+| 10 | C05 | #0009 | aplica | contraesterço + guinada | 0,22 s | 3,3° | 0,49 rad/s, por 1,6 s |
+| 11 | C01 | #0010 | aplica | contraesterço + deriva ≥ 10° + guinada | 0,41 s | 20,2° (≥ 10° por 0,9 s) | 3,09 rad/s |
+
+- **As duas da C06** (as rodadas, com mais de 59° no E3 do detector) são pegas pela deriva de 10° ou mais.
+- **O detector E3 disse "aplica" em 5 das 7** nas rodadas 1 e 2 (relatório de 17/11); as emendas das rodadas 3 e 4 não tocam o E3. As duas da C05 o detector não pegou. O critério pega as duas: uma pela guinada acima da referência e a outra pelo contraesterço e pela guinada.
+- **Um cuidado:** nas voltas 3 e 4, o carro ficou parado em 41% a 49% das amostras. A janela do E3 pega o carro parado ou girando devagar, e por isso o tempo "acima da referência" passa de 24 s na C13 e na C06. O rótulo continua certo (as duas são saídas relatadas), mas o número de segundos não deve ser lido como duração de uma saída.
+- **Também uma revocação só sobre os casos relatados:** a lista não tem "não aplica".
+
+## Item 5.3: os rótulos das 120 passagens
+
+- **O CSV:** `data/ml/modelo2/rotulagem/2026-11-20_42_rotulos_literatura.csv` (sha256 `ce22d4d7…`), com cópia em `docs/handoff/2026-10-29_42_modelo2-rodada-2_2026-11-20_42_rotulos_literatura.csv`.
+- **As colunas:** o id do kit, a pergunta, a curva, o rótulo, o critério que decidiu, o valor medido e a margem.
+- **O CSV do 38** continua vazio.
+- **O que chama a atenção:**
+  - **E3:** o critério nunca diz "nao aplica" nessas 120. A regra de "nao aplica" exige a guinada sempre dentro da referência (até 0,05 rad/s) e a deriva abaixo de 5°, e passagens normais de corrida passam disso. São 9 "aplica" e 15 "nao sei";
+  - **F4:** 12 "nao sei", a metade. Neles, a última parte da soltura fica entre a rampa e o degrau, perto de uma descida reta;
+  - **F5:** 14 "nao aplica", quase sempre com freio abaixo de 4% quando o volante passa de 25% do maior.
+
+  Nada disso muda: os critérios ficam como foram registrados.
+
+## Item 5.4: a concordância com as quatro rodadas
+
+- **A tabela 2×2:** o rótulo nas linhas e o detector nas colunas.
+  - aa: os dois dizem aplica;
+  - an: o rótulo diz aplica e o detector, não aplica;
+  - na: o rótulo diz não aplica e o detector, aplica;
+  - nn: os dois dizem não aplica.
+- **O que entra:** só as passagens em que os dois decidem. Os "nao sei" do critério e os "não conclusivos" do detector ficam à parte.
+
+| pergunta | rodada | usadas | aa | an | na | nn | acordo | kappa | rótulo nao sei | detector não conclusivo |
+|---|---|---|---|---|---|---|---|---|---|---|
+| F4 | 1 | 12 | 8 | 0 | 2 | 2 | 0,833 | 0,571 | 12 | 0 |
+| F4 | 2 | 12 | 8 | 0 | 2 | 2 | 0,833 | 0,571 | 12 | 0 |
+| F4 | 3 | 12 | 8 | 0 | 2 | 2 | 0,833 | 0,571 | 12 | 0 |
+| F4 | 4 | 12 | 8 | 0 | 2 | 2 | 0,833 | 0,571 | 12 | 0 |
+| F5 | 1 | 16 | 3 | 0 | 5 | 8 | 0,688 | 0,375 | 7 | 1 |
+| F5 | 2 | 16 | 1 | 2 | 6 | 7 | 0,500 | -0,085 | 7 | 1 |
+| F5 | 3 | 16 | 3 | 0 | 5 | 8 | 0,688 | 0,375 | 7 | 1 |
+| F5 | 4 | 16 | 3 | 0 | 5 | 8 | 0,688 | 0,375 | 7 | 1 |
+| M6 | 1 | 12 | 0 | 6 | 0 | 6 | 0,500 | 0,000 | 10 | 2 |
+| M6 | 2 | 13 | 4 | 3 | 0 | 6 | 0,769 | 0,552 | 10 | 1 |
+| M6 | 3 | 13 | 4 | 3 | 0 | 6 | 0,769 | 0,552 | 10 | 1 |
+| M6 | 4 | 13 | 4 | 3 | 0 | 6 | 0,769 | 0,552 | 10 | 1 |
+| E2 | 1 | 12 | 8 | 1 | 0 | 3 | 0,917 | 0,800 | 5 | 7 |
+| E2 | 2 | 14 | 9 | 2 | 0 | 3 | 0,857 | 0,659 | 5 | 5 |
+| E2 | 3 | 14 | 9 | 2 | 0 | 3 | 0,857 | 0,659 | 5 | 5 |
+| E2 | 4 | 14 | 9 | 2 | 0 | 3 | 0,857 | 0,659 | 5 | 5 |
+| E3 | 1 | 7 | 4 | 3 | 0 | 0 | 0,571 | 0,000 | 15 | 2 |
+| E3 | 2 | 7 | 4 | 3 | 0 | 0 | 0,571 | 0,000 | 15 | 2 |
+| E3 | 3 | 7 | 4 | 3 | 0 | 0 | 0,571 | 0,000 | 15 | 2 |
+| E3 | 4 | 7 | 4 | 3 | 0 | 0 | 0,571 | 0,000 | 15 | 2 |
+
+**A leitura:**
+
+- **A rodada 4 é a que vale.** Nela, o E2 e o F4 têm concordância moderada a boa (kappa 0,66 e 0,57). O M6 tem 0,55, e o F5 0,38.
+- **O E3 tem kappa zero** em todas as rodadas, porque o critério nunca diz "nao aplica". O acordo de 0,571 vem só das passagens que os dois chamam de "aplica" (4 de 7).
+- **O caminho até a rodada 4 aparece na concordância:**
+  - o M6 da rodada 1 nunca dizia "aplica" (kappa 0), e a retomada nova o faz concordar;
+  - o F5 da rodada 2 piorou (o defeito da entrada) e voltou nas rodadas 3 e 4.
+- **O M6 é o rótulo menos independente** (seção 7.4): desde a rodada 2, a regra do detector já mede a subida contínua. A concordância dele tem de ser lida com isso.
+- **As amostras são pequenas:** de 7 a 16 passagens por pergunta, depois de tirar os "nao sei" e os "não conclusivos". Os kappas têm incerteza grande e não foram dados com intervalo.
+- **Nenhuma regra muda por causa disso,** como manda o item 2 de 18/11, à tarde.
+
+**Um detalhe técnico dos gabaritos:** nos gabaritos do kit 2 das rodadas 3 e 4 (`rodada3/kit2_gabarito.json` e `rodada4/kit2_gabarito.json`), o campo com o estado se chama `estado_rodada2`, mas guarda o estado da rodada da pasta. O nome veio do código da rodada 2. A concordância lê esse campo em cada pasta, e o comentário no código diz isso.
+
+## Item 5.5: a galeria da rodada 4
+
+- **Os arquivos:** `data/ml/modelo2/literatura/galeria_rodada4.html`, com cópia em `docs/handoff/2026-10-29_42_modelo2-rodada-2_galeria_rodada4.html`.
+- **O conteúdo:** para cada pergunta, a página da literatura e até 3 passagens "aplica" e 3 "não aplica" da rodada 4 (semente 42). Elas trazem a Volta de referência e a Sua melhor volta, como no kit 2. Aqui o estado e a origem aparecem, porque a galeria não é para rotular.
+- **O que foi sorteado:**
+
+  | pergunta | aplica: eu | aplica: IA | não aplica: eu | não aplica: IA |
+  |---|---|---|---|---|
+  | F4 | 2 | 1 | 0 | 1 |
+  | F5 | 2 | 1 | 2 | 1 |
+  | M6 | 2 | 1 | 2 | 1 |
+  | E2 | 3 | 0 | 2 | 1 |
+  | E3 | 3 | 0 | 2 | 1 |
+
+- **Um achado da galeria:** o F4 da rodada 4 **nunca diz "não aplica" numa passagem minha.** São 0 de 1.820; só 6 passagens da IA. Por isso a galeria do F4 tem só 1 "não aplica".
+  - O limiar do F4 (a taxa de soltura ≤ 3,0/s menos a faixa) quase sempre é cumprido por mim.
+  - No critério da literatura, o F4 tem 4 "nao aplica" nas 120 (penhasco ou gagueira).
+  - Fica registrado como trabalho futuro, sem mudança de regra.
+- **O E2 e o E3 da IA** só têm "aplica" ou "não aplica" na volta com a guinada (22/10). A galeria pegou 1 "não aplica" dela em cada.
+
+## Item 5.6: a H.4 no relatório do 38
+
+Uma seção nova no fim de `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_relatorio.md`. Ela diz que a H.4 virou "concordância com um critério independente da literatura" e dá a tabela da rodada 1 (as regras do 38). Para as outras rodadas, ela aponta para este relatório.
+
+## Os testes
+
+- **`backend/tests/test_modelo2_literatura.py`,** 6 testes com traços sintéticos:
+  - **a independência:** o módulo do rótulo e quem o chama não importam os detectores, a calibração nem a rotulagem;
+  - **F4:** a rampa, o degrau, o penhasco, a gagueira e "sem frenagem";
+  - **F5:** com e sem trail braking;
+  - **M6:** a subida contínua e o alívio;
+  - **E2 e E3:** neutro, subesterço de 2°, deriva e "sem guinada";
+  - **a reta do carro:** acha o gradiente.
+- **A suíte do backend:** 1.070 passam, nenhuma falha (8 min 42 s); eram 1.064.
+
+## O que falta
+
+- **As gravações da IA em níveis,** e depois a Parte B.
+- **As voltas de teste** na cópia da pista ("Interlagos [teste]"), pela folha, e depois a Parte F.2. É a medida contra a verdade.
+- **A Parte G** (a documentação final da rodada 2 em diante), **o merge e o envio de `develop`.**
+- **Se um piloto mais experiente rotular 20 ou 30 passagens no kit 2,** compare com o critério e com a rodada 4 (item 7 de 20/11).
+
+## O envio
+
+Não tentei: o controle de permissões recusou nas outras vezes. O remoto tem a branch em `51b987db`; faltam os commits desta etapa (de `8d067698` em diante). Rode pelo terminal:
+
+```bash
+git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer-48 push origin etapa/modelo2-rodada-2
+```
+
+```bash
+git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer-48 ls-remote origin refs/heads/etapa/modelo2-rodada-2
+```
+
+**A conferência antes do envio:**
+
+- os commits mudam `backend/` e `docs/`;
+- o maior arquivo novo é a galeria (1,5 MB);
+- nenhuma gravação, nenhum arquivo de `data/` e nenhum segredo;
+- os gabaritos ficam fora do git.
+
+---
+
+# A etapa de 18/11, à tarde (a rodada 4), como foi relatada
+
+
+## Pedido 42 — relatório parcial de 18/11, à tarde: a rodada 4 (a entrada a partir de b_k); parado
 
 - **Pedido:** `docs/prompts/2026-10-29_42_modelo2-rodada-2.md`, com a "Atualização de 18/11, à tarde" (item 1; depois, gravar o relatório parcial e parar).
 - **Data:** 18/11/2026.

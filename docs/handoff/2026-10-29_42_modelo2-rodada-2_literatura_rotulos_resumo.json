@@ -1,0 +1,41 @@
+{
+ "csv": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rotulagem\\2026-11-20_42_rotulos_literatura.csv",
+ "sha256": "ce22d4d7b8efd1dd5bb9900f397886a7a887a0c004eaef7ecdd4845b53e0d923",
+ "por_pergunta": {
+  "F4": {
+   "aplica": 8,
+   "nao aplica": 4,
+   "nao sei": 12
+  },
+  "F5": {
+   "aplica": 3,
+   "nao aplica": 14,
+   "nao sei": 7
+  },
+  "M6": {
+   "aplica": 8,
+   "nao aplica": 6,
+   "nao sei": 10
+  },
+  "E2": {
+   "aplica": 16,
+   "nao aplica": 3,
+   "nao sei": 5
+  },
+  "E3": {
+   "aplica": 9,
+   "nao aplica": 0,
+   "nao sei": 15
+  }
+ },
+ "referencia_do_carro": {
+  "L": 2.9636409495155203,
+  "k_delta": 0.3039644940480894,
+  "k_us_rad_por_g": 0.0014319526854746293,
+  "intercepto_rad": -0.0001669512573688505,
+  "mu": 2.742224674103748,
+  "pontos": 47192
+ },
+ "detectores_carregados": false,
+ "tempo_s": 1.1
+}

@@ -345,7 +345,13 @@ São 27 detectores, em quatro famílias:
 
 Os limiares vêm da pesquisa e são ajustados pela IA na mesma curva, porque um número publicado para outro carro não vale para este.
 
-**Importante:** os detectores ainda não foram validados. O Eduardo vai rotular 120 passagens à mão (o kit da Parte H), e só depois se sabe quanto cada detector acerta (a precisão e a revocação). Até lá, nenhum deles vai para o rádio nem para o coach (ADR 0023, item 4).
+**Importante:** os detectores ainda não foram validados contra a verdade.
+
+- **A primeira ideia:** o Eduardo rotularia 120 passagens à mão (o kit da Parte H), para medir a precisão e a revocação.
+- **A decisão de 20/11 (pedido 42; seção 7):** em vez disso, as 120 passagens são rotuladas por critérios da literatura. O resultado é a **concordância com um critério independente da literatura**.
+- **A medida contra a verdade** são as voltas provocadas (pedido 42, Parte F).
+
+Até lá, nenhum detector vai para o rádio nem para o coach (ADR 0023, item 4).
 
 ### 3.4 A assinatura de estilo (Parte F)
 
