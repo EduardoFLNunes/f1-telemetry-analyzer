@@ -676,3 +676,146 @@ O resto é a rodada 3:
   - o modelo leve, os 3 maiores erros por sessão e o fechamento das fases.
 - **Se a rodada 4 mostrar outro defeito,** nada muda: ele fica relatado e registrado como trabalho futuro.
 - **A E.2** julga as quatro rodadas como estão, com os mesmos rótulos. A rodada que vale para o TCC é a 4; as outras aparecem como o caminho até ela.
+
+---
+
+## 7. Os rótulos pelos critérios da literatura (registrado em 20/11/2026, antes de rodar)
+
+Pedido 42, "Atualização de 20/11". As seções 1 a 6 e as rodadas 1 a 4 não mudam.
+
+### 7.1 Por que, e o nome do resultado
+
+- **A decisão:** o Eduardo não é piloto, e o risco de rotular errado lendo a telemetria é grande demais. Em 20/11, ele decidiu que cada passagem do kit 2 é rotulada por um critério numérico tirado da literatura.
+- **O que fica sem uso:**
+  - o CSV de rótulos do pedido 38 fica vazio;
+  - o kit 2 fica como material de figura;
+  - a consistência das 30 passagens sai do pedido.
+- **O nome do resultado:** deixa de ser "precisão contra rótulos humanos" e passa a ser **"concordância com um critério independente da literatura"**.
+- **A medida contra a verdade** continua sendo a das voltas provocadas (Parte F), em que o Eduardo só marca o que fez de propósito.
+
+### 7.2 A independência
+
+- **O código** fica em `backend/ml/modelo2/rotulos_literatura.py`. Ele não importa o código dos detectores (`detectores.py`) nem o da calibração. Também não lê o estado dos detectores nem os gabaritos.
+- **O que ele recebe:**
+  - os traços da passagem na grade de 2 m (os mesmos canais do kit: pedais, volante, velocidade, guinada, aceleração lateral, velocidades no referencial do carro e o tempo);
+  - as fronteiras geométricas da curva (o começo, o ápice e o fim, e o meio da seção 1.3) e o sentido dela;
+  - o `L` e o `k_δ` do pedido 39 (a chave `usados` de `docs/handoff/2026-10-25_39_m1-geometria-medida_geometria.json`), lidos do arquivo;
+  - a referência do próprio carro do item 7.4 (E2): o gradiente de subesterço nas voltas do Eduardo, com aceleração lateral baixa.
+  - **Nunca a mediana da IA,** que calibra os detectores.
+- **Quem chama o módulo:** um script à parte (o comando `literatura` de `ml.scripts.modelo2`).
+  - Ele tira do gabarito do kit do 38 só o endereço de cada passagem (o id, a pergunta, a volta e a curva), sem o estado nem a origem, e passa ao módulo só os traços.
+  - A concordância com as rodadas é calculada depois, por outro código, que junta os rótulos e os gabaritos.
+- **Os limiares:** nenhum limiar do rótulo é cópia de um limiar de detector. As coincidências que existem por definição estão ditas em cada critério.
+
+### 7.3 Os três resultados
+
+Cada critério dá **aplica**, **nao aplica** ou **nao sei**. É "nao sei" quando:
+
+- falta o canal;
+- o evento que o critério mede não existe na passagem;
+- o valor cai na faixa do meio.
+
+### 7.4 Os critérios
+
+**F4, soltura progressiva do freio** (Sector4, Brake release trace patterns; Coach Dave, A delta guide: understanding brake traces).
+
+- **A frenagem:** a sequência de freio que contém o maior freio entre o ápice anterior e o ápice da curva.
+  - **Sem frenagem:** com o maior freio abaixo de 0,10, a passagem não tem frenagem para julgar, e o resultado é "nao sei". É escolha do projeto: um freio abaixo de 10% não é uma frenagem de curva.
+- **A descida:** do último ponto com freio ≥ 0,9 do maior até o primeiro ponto depois dele com freio < 0,02 do maior.
+- **O penhasco:** uma descida inteira em 0,20 s ou menos é um degrau, e o resultado é "nao aplica". É escolha do projeto: 0,20 s é o tempo de tirar o pé de uma vez.
+- **A gagueira:** se, na descida, o freio volta a subir 0,04 ou mais acima do menor valor anterior, o resultado é "nao aplica". A gagueira e o platô são os padrões ruins da Sector4. O 0,04 é escolha do projeto: acima do ruído do pedal.
+- **O último terço da descida (no tempo)** é normalizado de 0 a 1 na pressão (dividido pelo valor no começo do terço) e no tempo, e reamostrado em 30 pontos.
+- **A comparação:** a distância DTW (Al-Din 2023; a soma das diferenças absolutas no melhor alinhamento, dividida pelo número de pontos) a dois moldes:
+  - **a rampa curva:** y = (1 − x)²; a soltura boa é curva, e não linear (Sector4; Coach Dave);
+  - **o degrau:** y = 1 até x = 0,5 e 0 depois.
+- **O resultado:**
+  - **aplica:** a distância à rampa é menor que 0,8 da distância ao degrau;
+  - **nao aplica:** a distância ao degrau é menor que 0,8 da distância à rampa;
+  - **nao sei:** as duas distâncias ficam dentro de 20% uma da outra (escolha do projeto), ou o terço tem menos de 4 pontos da grade.
+
+**F5, trail braking** (Velenis, Tsiotras e Lu 2008; Coach Dave; Virtual Racing School; Fanatec).
+
+- **"Começa a virar":** o último ponto antes do ápice em que o volante, no sentido da curva, sobe acima de **0,25** do maior volante da curva. É escolha do projeto, e é diferente do 0,15 do detector: 25% marca uma entrada já decidida, e não uma correção.
+- **O freio nesse instante,** em fração do pedal. A literatura dá **5% a 10%** mantidos (Virtual Racing School); o número usado é o 5%.
+  - **Uma coincidência por definição:** o 0,05 do detector é o "pedal acionado" (seção 1.4), e aqui é o número da literatura.
+  - Ao redor dele, uma faixa de ±0,01 é "nao sei" (o ruído do pedal; escolha do projeto).
+- **A sobreposição:** do instante de virar até o primeiro ponto com freio < 0,02, ou até o ápice. Nela, a correlação de Pearson entre o freio e o volante: o freio desce enquanto o volante sobe (Velenis et al.).
+- **O resultado:**
+  - **aplica:** freio ≥ 0,06 no instante de virar, e correlação ≤ −0,2 na sobreposição, com 5 pontos ou mais. O −0,2 é escolha do projeto: uma tendência negativa clara, sem exigir uma reta;
+  - **nao aplica:** freio < 0,04 no instante de virar;
+  - **nao sei:** o meio; ou a curva sem frenagem (o maior freio da janela abaixo de 0,10); ou sem o volante.
+
+**M6, retomada do acelerador** (Coach Dave, cornering; Fanatec, speed graph).
+
+- **A janela:** da velocidade mínima (entre o começo e o fim da curva) até o fim da curva.
+- **A subida:** começa no primeiro ponto em que o acelerador passa 0,08 acima do menor valor visto desde a mínima. É escolha do projeto: 8% do curso do pedal, acima da modulação.
+- **Medido da subida até o fim da curva:**
+  - **a queda total:** a soma de todas as descidas do acelerador;
+  - **o volante crescendo:** o maior volante, no sentido da curva, menos o volante no começo da subida, dividido pelo maior volante da curva.
+- **O resultado:**
+  - **aplica:** queda total ≤ 0,08 e volante crescendo ≤ 0,05;
+  - **nao aplica:** queda total ≥ 0,20 (um alívio claro, um quinto do pedal) ou volante crescendo ≥ 0,20;
+  - **nao sei:** o meio; ou o acelerador sem cair abaixo de 0,92 na janela (nada a retomar); ou sem subida.
+- **Os números** são escolha do projeto: a literatura só descreve a forma, a subida contínua sem corte nem hesitação.
+- **Este é o rótulo menos independente:** a regra do M6, desde a rodada 2, já mede a subida contínua depois da mínima. A concordância do M6 deve ser lida com isso em mente.
+
+**E2, subesterço** (Milliken e Milliken, pelo canal do MoTeC i2; SAE J670 e ISO 8855; a ideia do ensaio de raio constante da ISO 4138).
+
+- **O ângulo de subesterço:** UA = δ_roda − L·a_y/v², em graus.
+  - δ_roda = −k_δ·volante, positivo para a esquerda;
+  - a_y é a aceleração lateral, positiva para a esquerda;
+  - v é a velocidade;
+  - o sinal é virado pelo sentido da curva, para que positivo seja subesterço.
+- **A reta do próprio carro:** nas voltas do Eduardo (as 130 das 144), nos pontos com 0,10 g ≤ |a_y| ≤ 0,35 g e v ≥ 50 km/h, a reta de mínimos quadrados de UA contra a_y (em g) dá o gradiente K_us e o intercepto.
+  - Os limites são escolha do projeto: abaixo de 0,10 g, o ruído do volante domina; até 0,35 g, longe do limite de aderência do carro (perto de 2 g), o pneu ainda está na faixa linear.
+  - O corte de 50 km/h é o do canal do MoTeC.
+- **Na passagem,** no meio da curva, nos pontos com |a_y| ≥ 0,5 g (fora da faixa linear) e v ≥ 50 km/h, mede-se a mediana do excesso: UA menos a reta.
+- **O resultado:**
+  - **aplica:** excesso ≥ 1,0°;
+  - **nao aplica:** excesso ≤ 0,4°;
+  - **nao sei:** entre os dois; ou menos de 5 pontos; ou sem a guinada (as voltas da IA de 04/10).
+- **Os números** 1,0° e 0,4° são escolha do projeto: um grau a mais de ângulo de roda que a curva pede é um subesterço claro, e 0,4° fica dentro do ruído do volante.
+
+**E3, sobresterço** (Bosch, Automotive Electronics Handbook, cap. 17, citando Shibahata; Linköping, TSFS02, aula 7; Pitschi et al. 2026; Kegelman, Harbott e Gerdes 2017).
+
+- **A janela:** do começo da curva até 60 m depois do fim. Ela pega a saída, onde as saídas de traseira de 01/11 aconteceram.
+- **Três sinais absolutos:**
+  - **(a) o contraesterço:** o ângulo de roda para fora da curva, além de 0,5°, com a aceleração lateral ainda para dentro, acima de 0,3 g, por 0,15 s ou mais;
+  - **(b) a deriva:** |β| = |atan2(v_lat, v_long)| de **10° ou mais**, por 0,1 s ou mais. O 10° é o número da literatura: a perda de dirigibilidade no seco (Bosch, citando Shibahata);
+  - **(c) a guinada acima da referência:**
+    - a referência é r_ref = v·δ_roda/(L + K_us·v²/g), com o K_us da reta do E2, limitada a μg/v, com μ = o percentil 99 de |a_y| nas voltas do Eduardo (o limite do próprio carro);
+    - o sinal (c) dispara quando a guinada, no sentido da curva, passa de r_ref por 0,10 rad/s ou mais, por 0,20 s ou mais.
+- **Os números** 0,5°, 0,3 g, 0,15 s, 0,10 rad/s e 0,20 s são escolha do projeto: além do ruído do volante e da guinada, e por um tempo que exclui um pico de um ponto.
+- **O resultado:**
+  - **aplica:** qualquer um dos três sinais;
+  - **nao aplica:**
+    - a guinada nunca passa de r_ref por mais de 0,05 rad/s;
+    - |β| fica abaixo de 5° (a metade dos 10°) em toda a janela;
+    - nenhum contraesterço;
+  - **nao sei:** o meio; ou sem a guinada e as velocidades no referencial do carro, quando o sinal (a) não disparou.
+
+### 7.5 A ordem
+
+1. este registro, commitado;
+2. **o teste do E3 nas 7 saídas de traseira de 01/11, antes das 120.** Se o critério não pegar as duas passagens da C06 que passaram de 59°, o trabalho para. O relatório dá o sinal que disparou em cada uma;
+3. os rótulos das 120 passagens em `data/ml/modelo2/rotulagem/2026-11-20_42_rotulos_literatura.csv` (o id, a pergunta, a curva, o rótulo, o critério que decidiu, o valor medido e a margem), com cópia em `docs/handoff/`;
+4. **a concordância com as quatro rodadas, por detector:**
+   - a tabela 2×2, o kappa de Cohen e a fração de acordo, nas passagens em que o rótulo e o detector são conclusivos;
+   - os "nao sei" e os "não conclusivos" à parte;
+   - a rodada que vale é a 4;
+5. a galeria (E.2.5): 3 passagens "aplica" e 3 "não aplica" da rodada 4 em cada pergunta, ao lado do desenho da literatura;
+6. a seção da H.4 no relatório do 38, com os nomes do item 7.1.
+
+### 7.6 As fontes (abertas e lidas pelo Eduardo em 20/11)
+
+- Velenis, Tsiotras e Lu (2008), Trail-Braking Driver Input Parameterization for General Corner Geometry, SAE 2008-01-2986;
+- Kegelman, Harbott e Gerdes (2017), Insights into vehicle trajectories at the handling limits: analysing open data from race car drivers;
+- Pitschi et al. (2026), Stability Control for Real World Testing in Autonomous Racing;
+- Bosch, Automotive Electronics Handbook, cap. 17, Stability Control;
+- Linköping University, TSFS02, aula 7, controle de estabilidade;
+- ISO 4138:2021 (a prévia);
+- Ratner et al. (2017), Snorkel: Rapid Training Data Creation with Weak Supervision, para a ideia de rótulos por regras que votam ou se abstêm;
+- Al-Din (2023), Driving Maneuvers Recognition and Classification, IJACSA 14(2), para o DTW com moldes;
+- os guias técnicos: Coach Dave Academy (brake traces; cornering types), Sector4 (brake release trace patterns), Virtual Racing School (braking technique), Fanatec (trail braking; speed graph), o fórum da MoTeC (oversteer maths formula), o Rennlist (understeer/oversteer visualization) e a Wikipedia (Understeer and oversteer).
+
+Milliken e Milliken (Race Car Vehicle Dynamics), Segers (Analysis Techniques for Racecar Data Acquisition) e o texto completo da ISO 4138 não foram lidos: entram só como citados pelas fontes acima.
