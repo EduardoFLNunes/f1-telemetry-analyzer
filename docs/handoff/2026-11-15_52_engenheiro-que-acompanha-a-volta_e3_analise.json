@@ -1,0 +1,1079 @@
+{
+ "sessao": "2026-11-20_19-06-14_vhe_interlagos",
+ "deslocamentoDoRelogioS": 10800.0,
+ "voltas": [
+  {
+   "volta": 0,
+   "tempoS": 150.645
+  },
+  {
+   "volta": 1,
+   "tempoS": 102.045
+  },
+  {
+   "volta": 2,
+   "tempoS": 92.071
+  },
+  {
+   "volta": 3,
+   "tempoS": 110.524
+  },
+  {
+   "volta": 4,
+   "tempoS": 144.044
+  }
+ ],
+ "avisos": [
+  {
+   "trecho": "C02",
+   "acao": "vire",
+   "frase": "vire 5 metros depois do começo da zebra à direita",
+   "voltaDaGravacao": 3,
+   "apareceuEm": "19:11:58.17",
+   "sFala": 218.8,
+   "vKmh": 117.7,
+   "voz": false,
+   "motivo": "a referência não freia no trecho",
+   "sDito": 356.2,
+   "ateOPontoDitoS": 4.31,
+   "acaoDoPiloto": "alívio",
+   "sAcaoDoPiloto": 334.1,
+   "ateASuaAcaoS": 3.67
+  },
+  {
+   "trecho": "C04",
+   "acao": "freie",
+   "frase": "freie 10 metros antes da placa de 100",
+   "voltaDaGravacao": 3,
+   "apareceuEm": "19:12:15.24",
+   "sFala": 964.8,
+   "vKmh": 188.9,
+   "voz": true,
+   "motivo": null,
+   "sDito": 1217.2,
+   "ateOPontoDitoS": 4.48,
+   "acaoDoPiloto": "frenagem",
+   "sAcaoDoPiloto": 1183.1,
+   "ateASuaAcaoS": 3.9,
+   "vozGerada": true,
+   "entregue": {
+    "id": 4,
+    "em": "19:12:15"
+   },
+   "tocouNoJogo": "19:12:17.30",
+   "latenciaS": 2.06,
+   "sNoToque": 1074.9,
+   "sNoFimDaFala": 1213.3,
+   "fimDaFalaAteASuaAcaoS": -0.51,
+   "fimDaFalaAteOPontoDitoS": 0.07
+  },
+  {
+   "trecho": "C05",
+   "acao": "sem tirar o pé",
+   "frase": "sem tirar o pé",
+   "voltaDaGravacao": 3,
+   "apareceuEm": "19:12:24.04",
+   "sFala": 1380.8,
+   "vKmh": 133.5,
+   "voz": false,
+   "motivo": "sem tirar o pé (a referência não freia nem alivia no trecho)",
+   "sDito": 1480.0,
+   "ateOPontoDitoS": 2.39,
+   "acaoDoPiloto": "entrada",
+   "sAcaoDoPiloto": 1480.0,
+   "ateASuaAcaoS": 2.39
+  },
+  {
+   "trecho": "C06",
+   "acao": "vire",
+   "frase": "vire no começo da zebra à direita",
+   "voltaDaGravacao": 3,
+   "apareceuEm": "19:12:31.59",
+   "sFala": 1758.5,
+   "vKmh": 218.1,
+   "voz": false,
+   "motivo": "a referência não freia no trecho",
+   "sDito": 1941.0,
+   "ateOPontoDitoS": 3.03,
+   "acaoDoPiloto": "alívio",
+   "sAcaoDoPiloto": 1834.0,
+   "ateASuaAcaoS": 1.22
+  },
+  {
+   "trecho": "C07",
+   "acao": "freie",
+   "frase": "freie 35 metros antes do começo da zebra à direita",
+   "voltaDaGravacao": 3,
+   "apareceuEm": "19:12:34.90",
+   "sFala": 1956.1,
+   "vKmh": 192.6,
+   "voz": false,
+   "motivo": "sem bloco de voz antes da frenagem",
+   "sDito": 2196.4,
+   "ateOPontoDitoS": 4.85,
+   "acaoDoPiloto": "frenagem",
+   "sAcaoDoPiloto": 2161.6,
+   "ateASuaAcaoS": 4.02
+  },
+  {
+   "trecho": "C09",
+   "acao": "vire",
+   "frase": "vire 30 metros antes do fim da zebra à direita",
+   "voltaDaGravacao": 3,
+   "apareceuEm": "19:12:46.62",
+   "sFala": 2389.1,
+   "vKmh": 105.6,
+   "voz": false,
+   "motivo": "a referência não freia no trecho",
+   "sDito": 2565.5,
+   "ateOPontoDitoS": 4.95,
+   "acaoDoPiloto": "alívio",
+   "sAcaoDoPiloto": 2605.5,
+   "ateASuaAcaoS": 5.84
+  },
+  {
+   "trecho": "C11",
+   "acao": "vire",
+   "frase": "vire 5 metros depois do começo da zebra à esquerda",
+   "voltaDaGravacao": 3,
+   "apareceuEm": "19:12:53.82",
+   "sFala": 2661.4,
+   "vKmh": 118.5,
+   "voz": false,
+   "motivo": "a referência não freia no trecho",
+   "sDito": 2849.3,
+   "ateOPontoDitoS": 21.86,
+   "acaoDoPiloto": "alívio",
+   "sAcaoDoPiloto": 2758.1,
+   "ateASuaAcaoS": 3.9
+  },
+  {
+   "trecho": "C12",
+   "acao": "freie",
+   "frase": "freie 15 metros depois da placa de 100",
+   "voltaDaGravacao": 3,
+   "apareceuEm": "19:13:17.86",
+   "sFala": 2910.3,
+   "vKmh": 128.7,
+   "voz": false,
+   "motivo": "a frase não cabe no bloco",
+   "sDito": 3123.5,
+   "ateOPontoDitoS": 4.41,
+   "acaoDoPiloto": "frenagem",
+   "sAcaoDoPiloto": 3108.9,
+   "ateASuaAcaoS": 4.14
+  },
+  {
+   "trecho": "C01",
+   "acao": "freie",
+   "frase": "freie 10 metros depois da placa de 100",
+   "voltaDaGravacao": 3,
+   "apareceuEm": "19:13:43.01",
+   "sFala": 4196.1,
+   "vKmh": 252.1,
+   "voz": true,
+   "motivo": null,
+   "sDito": 124.0,
+   "ateOPontoDitoS": 3.88,
+   "acaoDoPiloto": "frenagem",
+   "sAcaoDoPiloto": 72.3,
+   "ateASuaAcaoS": 3.03,
+   "vozGerada": true,
+   "entregue": {
+    "id": 5,
+    "em": "19:13:43"
+   },
+   "tocouNoJogo": "19:13:43.45",
+   "latenciaS": 0.44,
+   "sNoToque": 4227.0,
+   "sNoFimDaFala": 58.0,
+   "fimDaFalaAteASuaAcaoS": 0.22,
+   "fimDaFalaAteOPontoDitoS": 1.07
+  },
+  {
+   "trecho": "C02",
+   "acao": "vire",
+   "frase": "vire 5 metros depois do começo da zebra à direita",
+   "voltaDaGravacao": 4,
+   "apareceuEm": "19:13:49.59",
+   "sFala": 218.8,
+   "vKmh": 74.0,
+   "voz": false,
+   "motivo": "a referência não freia no trecho",
+   "sDito": 356.2,
+   "ateOPontoDitoS": 4.96,
+   "acaoDoPiloto": "alívio",
+   "sAcaoDoPiloto": 334.4,
+   "ateASuaAcaoS": 4.3
+  },
+  {
+   "trecho": "C04",
+   "acao": "freie",
+   "frase": "freie 10 metros antes da placa de 100",
+   "voltaDaGravacao": 4,
+   "apareceuEm": "19:14:06.88",
+   "sFala": 964.8,
+   "vKmh": 234.7,
+   "voz": false,
+   "motivo": "outra fala em andamento",
+   "sDito": 1217.2,
+   "ateOPontoDitoS": 3.7,
+   "acaoDoPiloto": "frenagem",
+   "sAcaoDoPiloto": 1176.3,
+   "ateASuaAcaoS": 3.09
+  },
+  {
+   "trecho": "C05",
+   "acao": "sem tirar o pé",
+   "frase": "sem tirar o pé",
+   "voltaDaGravacao": 4,
+   "apareceuEm": "19:14:14.89",
+   "sFala": 1380.8,
+   "vKmh": 128.4,
+   "voz": false,
+   "motivo": "sem tirar o pé (a referência não freia nem alivia no trecho)",
+   "sDito": 1480.0,
+   "ateOPontoDitoS": 2.56,
+   "acaoDoPiloto": "entrada",
+   "sAcaoDoPiloto": 1480.0,
+   "ateASuaAcaoS": 2.56
+  },
+  {
+   "trecho": "C06",
+   "acao": "vire",
+   "frase": "vire no começo da zebra à direita",
+   "voltaDaGravacao": 4,
+   "apareceuEm": "19:14:23.79",
+   "sFala": 1758.5,
+   "vKmh": 187.8,
+   "voz": false,
+   "motivo": "a referência não freia no trecho",
+   "sDito": 1941.0,
+   "ateOPontoDitoS": 3.3,
+   "acaoDoPiloto": "alívio",
+   "sAcaoDoPiloto": 1910.5,
+   "ateASuaAcaoS": 2.78
+  },
+  {
+   "trecho": "C07",
+   "acao": "freie",
+   "frase": "freie 35 metros antes do começo da zebra à direita",
+   "voltaDaGravacao": 4,
+   "apareceuEm": "19:14:27.38",
+   "sFala": 1956.1,
+   "vKmh": 194.3,
+   "voz": false,
+   "motivo": "sem bloco de voz antes da frenagem",
+   "sDito": 2196.4,
+   "ateOPontoDitoS": 7.18,
+   "acaoDoPiloto": null,
+   "sAcaoDoPiloto": null,
+   "ateASuaAcaoS": null
+  }
+ ],
+ "vozTocouNoJogo": [
+  "19:10:11.81",
+  "19:10:36.26",
+  "19:12:07.76",
+  "19:12:17.30",
+  "19:13:43.45",
+  "19:13:59.94"
+ ],
+ "vozFalhou": [],
+ "entreAcoes": [
+  {
+   "trecho": "C01",
+   "volta1": {
+    "livreS": 19.07,
+    "livreDesde": 3302.5,
+    "acao": "frenagem",
+    "sAcao": 100.1,
+    "desdeAAcaoDaCurvaAnteriorS": 12.8
+   },
+   "volta2": {
+    "livreS": 19.89,
+    "livreDesde": 3275.1,
+    "acao": "frenagem",
+    "sAcao": 95.7,
+    "desdeAAcaoDaCurvaAnteriorS": 12.93
+   },
+   "volta3": {
+    "livreS": 19.37,
+    "livreDesde": 3243.5,
+    "acao": "frenagem",
+    "sAcao": 73.1,
+    "desdeAAcaoDaCurvaAnteriorS": 12.16
+   }
+  },
+  {
+   "trecho": "C02",
+   "volta1": {
+    "livreS": 0.0,
+    "livreDesde": null,
+    "acao": "alívio",
+    "sAcao": 334.2,
+    "desdeAAcaoDaCurvaAnteriorS": 6.45
+   },
+   "volta2": {
+    "livreS": 0.0,
+    "livreDesde": null,
+    "acao": "alívio",
+    "sAcao": 334.2,
+    "desdeAAcaoDaCurvaAnteriorS": 6.96
+   },
+   "volta3": {
+    "livreS": 0.0,
+    "livreDesde": null,
+    "acao": "alívio",
+    "sAcao": 334.1,
+    "desdeAAcaoDaCurvaAnteriorS": 6.39
+   }
+  },
+  {
+   "trecho": "C04",
+   "volta1": {
+    "livreS": 12.52,
+    "livreDesde": 420.2,
+    "acao": "frenagem",
+    "sAcao": 1158.9,
+    "desdeAAcaoDaCurvaAnteriorS": 12.23
+   },
+   "volta2": {
+    "livreS": 14.91,
+    "livreDesde": 350.3,
+    "acao": "frenagem",
+    "sAcao": 1189.4,
+    "desdeAAcaoDaCurvaAnteriorS": 12.63
+   },
+   "volta3": {
+    "livreS": 12.73,
+    "livreDesde": 505.7,
+    "acao": "frenagem",
+    "sAcao": 1183.1,
+    "desdeAAcaoDaCurvaAnteriorS": 14.89
+   }
+  },
+  {
+   "trecho": "C05",
+   "volta1": {
+    "livreS": 0.0,
+    "livreDesde": null,
+    "acao": "entrada",
+    "sAcao": 1480.0,
+    "desdeAAcaoDaCurvaAnteriorS": 7.44
+   },
+   "volta2": {
+    "livreS": 0.0,
+    "livreDesde": null,
+    "acao": "entrada",
+    "sAcao": 1480.0,
+    "desdeAAcaoDaCurvaAnteriorS": 7.57
+   },
+   "volta3": {
+    "livreS": 0.0,
+    "livreDesde": null,
+    "acao": "entrada",
+    "sAcao": 1480.0,
+    "desdeAAcaoDaCurvaAnteriorS": 7.3
+   }
+  },
+  {
+   "trecho": "C06",
+   "volta1": {
+    "livreS": 8.36,
+    "livreDesde": 1402.5,
+    "acao": "alívio",
+    "sAcao": 1827.0,
+    "desdeAAcaoDaCurvaAnteriorS": 6.48
+   },
+   "volta2": {
+    "livreS": 8.89,
+    "livreDesde": 1398.1,
+    "acao": "alívio",
+    "sAcao": 1844.8,
+    "desdeAAcaoDaCurvaAnteriorS": 6.64
+   },
+   "volta3": {
+    "livreS": 8.55,
+    "livreDesde": 1389.1,
+    "acao": "alívio",
+    "sAcao": 1834.0,
+    "desdeAAcaoDaCurvaAnteriorS": 6.38
+   }
+  },
+  {
+   "trecho": "C07",
+   "volta1": {
+    "livreS": 0.0,
+    "livreDesde": null,
+    "acao": "frenagem",
+    "sAcao": 2186.5,
+    "desdeAAcaoDaCurvaAnteriorS": 7.29
+   },
+   "volta2": {
+    "livreS": 0.0,
+    "livreDesde": null,
+    "acao": "frenagem",
+    "sAcao": 2174.6,
+    "desdeAAcaoDaCurvaAnteriorS": 6.29
+   },
+   "volta3": {
+    "livreS": 0.0,
+    "livreDesde": null,
+    "acao": "frenagem",
+    "sAcao": 2161.6,
+    "desdeAAcaoDaCurvaAnteriorS": 6.11
+   }
+  },
+  {
+   "trecho": "C09",
+   "volta1": {
+    "livreS": 3.03,
+    "livreDesde": 2472.9,
+    "acao": "alívio",
+    "sAcao": 2555.2,
+    "desdeAAcaoDaCurvaAnteriorS": 11.33
+   },
+   "volta2": {
+    "livreS": 2.92,
+    "livreDesde": 2483.9,
+    "acao": "alívio",
+    "sAcao": 2606.1,
+    "desdeAAcaoDaCurvaAnteriorS": 7.38
+   },
+   "volta3": {
+    "livreS": 3.58,
+    "livreDesde": 2460.5,
+    "acao": "alívio",
+    "sAcao": 2605.5,
+    "desdeAAcaoDaCurvaAnteriorS": 7.48
+   }
+  },
+  {
+   "trecho": "C11",
+   "volta1": {
+    "livreS": 0.0,
+    "livreDesde": null,
+    "acao": "alívio",
+    "sAcao": 2758.1,
+    "desdeAAcaoDaCurvaAnteriorS": 5.79
+   },
+   "volta2": {
+    "livreS": 0.0,
+    "livreDesde": null,
+    "acao": "alívio",
+    "sAcao": 2758.4,
+    "desdeAAcaoDaCurvaAnteriorS": 4.69
+   },
+   "volta3": {
+    "livreS": 0.0,
+    "livreDesde": null,
+    "acao": "alívio",
+    "sAcao": 2758.1,
+    "desdeAAcaoDaCurvaAnteriorS": 4.82
+   }
+  },
+  {
+   "trecho": "C12",
+   "volta1": {
+    "livreS": 0.0,
+    "livreDesde": null,
+    "acao": "frenagem",
+    "sAcao": 3074.2,
+    "desdeAAcaoDaCurvaAnteriorS": 7.37
+   },
+   "volta2": {
+    "livreS": 5.91,
+    "livreDesde": 2784.1,
+    "acao": "frenagem",
+    "sAcao": 3077.3,
+    "desdeAAcaoDaCurvaAnteriorS": 6.84
+   },
+   "volta3": {
+    "livreS": 7.48,
+    "livreDesde": 2829.9,
+    "acao": "frenagem",
+    "sAcao": 3108.9,
+    "desdeAAcaoDaCurvaAnteriorS": 24.28
+   }
+  }
+ ],
+ "opcoes": [
+  {
+   "opcao": "A. hoje, sem a regra do bloco do modelo nem a de 'a referência freia' (o pedaço livre do piloto)",
+   "porVolta": [
+    {
+     "volta": 1,
+     "comVoz": 3,
+     "trechos": {
+      "C01": 16.3,
+      "C04": 9.82,
+      "C06": 5.91
+     }
+    },
+    {
+     "volta": 2,
+     "comVoz": 4,
+     "trechos": {
+      "C01": 17.13,
+      "C04": 12.19,
+      "C06": 6.46,
+      "C12": 3.07
+     }
+    },
+    {
+     "volta": 3,
+     "comVoz": 4,
+     "trechos": {
+      "C01": 16.65,
+      "C04": 10.07,
+      "C06": 6.12,
+      "C12": 4.66
+     }
+    }
+   ],
+   "trechosComVozPorVolta": [
+    3,
+    4,
+    4
+   ],
+   "folgaS": {
+    "min": 3.07,
+    "mediana": 9.82,
+    "max": 17.13
+   }
+  },
+  {
+   "opcao": "B. A + o aviso disparado no jogo, com o áudio já baixado (latência 0,1 s)",
+   "porVolta": [
+    {
+     "volta": 1,
+     "comVoz": 3,
+     "trechos": {
+      "C01": 16.65,
+      "C04": 10.17,
+      "C06": 6.26
+     }
+    },
+    {
+     "volta": 2,
+     "comVoz": 4,
+     "trechos": {
+      "C01": 17.48,
+      "C04": 12.54,
+      "C06": 6.81,
+      "C12": 3.42
+     }
+    },
+    {
+     "volta": 3,
+     "comVoz": 4,
+     "trechos": {
+      "C01": 17.0,
+      "C04": 10.42,
+      "C06": 6.47,
+      "C12": 5.01
+     }
+    }
+   ],
+   "trechosComVozPorVolta": [
+    3,
+    4,
+    4
+   ],
+   "folgaS": {
+    "min": 3.42,
+    "mediana": 10.17,
+    "max": 17.48
+   }
+  },
+  {
+   "opcao": "C. B + a fala curta (verbo e marco: 'Freie no cem, mais dez.')",
+   "porVolta": [
+    {
+     "volta": 1,
+     "comVoz": 4,
+     "trechos": {
+      "C01": 17.35,
+      "C04": 10.85,
+      "C06": 6.43,
+      "C09": 1.12
+     }
+    },
+    {
+     "volta": 2,
+     "comVoz": 5,
+     "trechos": {
+      "C01": 18.18,
+      "C04": 13.22,
+      "C06": 6.98,
+      "C09": 1.01,
+      "C12": 4.24
+     }
+    },
+    {
+     "volta": 3,
+     "comVoz": 5,
+     "trechos": {
+      "C01": 17.7,
+      "C04": 11.1,
+      "C06": 6.64,
+      "C09": 1.66,
+      "C12": 5.83
+     }
+    }
+   ],
+   "trechosComVozPorVolta": [
+    4,
+    5,
+    5
+   ],
+   "folgaS": {
+    "min": 1.01,
+    "mediana": 6.8100000000000005,
+    "max": 18.18
+   }
+  },
+  {
+   "opcao": "D. C + a voz a 1,7x",
+   "porVolta": [
+    {
+     "volta": 1,
+     "comVoz": 4,
+     "trechos": {
+      "C01": 17.61,
+      "C04": 11.11,
+      "C06": 6.72,
+      "C09": 1.41
+     }
+    },
+    {
+     "volta": 2,
+     "comVoz": 5,
+     "trechos": {
+      "C01": 18.44,
+      "C04": 13.48,
+      "C06": 7.27,
+      "C09": 1.3,
+      "C12": 4.5
+     }
+    },
+    {
+     "volta": 3,
+     "comVoz": 5,
+     "trechos": {
+      "C01": 17.96,
+      "C04": 11.36,
+      "C06": 6.93,
+      "C09": 1.95,
+      "C12": 6.09
+     }
+    }
+   ],
+   "trechosComVozPorVolta": [
+    4,
+    5,
+    5
+   ],
+   "folgaS": {
+    "min": 1.3,
+    "mediana": 7.1,
+    "max": 18.44
+   }
+  },
+  {
+   "opcao": "E. B + avisar mais cedo (o pedaço livre anterior mais perto que caiba)",
+   "porVolta": [
+    {
+     "volta": 1,
+     "comVoz": 9,
+     "trechos": {
+      "C01": 16.65,
+      "C02": 19.57,
+      "C04": 10.17,
+      "C05": 16.21,
+      "C06": 6.26,
+      "C07": 9.68,
+      "C09": 43.95,
+      "C11": 48.14,
+      "C12": 15.59
+     }
+    },
+    {
+     "volta": 2,
+     "comVoz": 9,
+     "trechos": {
+      "C01": 17.48,
+      "C02": 20.91,
+      "C04": 12.54,
+      "C05": 18.71,
+      "C06": 6.81,
+      "C07": 9.23,
+      "C09": 41.15,
+      "C11": 42.71,
+      "C12": 3.42
+     }
+    },
+    {
+     "volta": 3,
+     "comVoz": 9,
+     "trechos": {
+      "C01": 17.0,
+      "C02": 19.86,
+      "C04": 10.42,
+      "C05": 16.32,
+      "C06": 6.47,
+      "C07": 8.7,
+      "C09": 39.07,
+      "C11": 5.6,
+      "C12": 5.01
+     }
+    }
+   ],
+   "trechosComVozPorVolta": [
+    9,
+    9,
+    9
+   ],
+   "folgaS": {
+    "min": 3.42,
+    "mediana": 16.21,
+    "max": 48.14
+   }
+  },
+  {
+   "opcao": "F. C + avisar mais cedo",
+   "porVolta": [
+    {
+     "volta": 1,
+     "comVoz": 9,
+     "trechos": {
+      "C01": 17.35,
+      "C02": 21.56,
+      "C04": 10.85,
+      "C05": 16.89,
+      "C06": 6.43,
+      "C07": 11.65,
+      "C09": 1.12,
+      "C11": 34.41,
+      "C12": 39.71
+     }
+    },
+    {
+     "volta": 2,
+     "comVoz": 9,
+     "trechos": {
+      "C01": 18.18,
+      "C02": 22.9,
+      "C04": 13.22,
+      "C05": 19.39,
+      "C06": 6.98,
+      "C07": 11.2,
+      "C09": 1.01,
+      "C11": 26.86,
+      "C12": 4.24
+     }
+    },
+    {
+     "volta": 3,
+     "comVoz": 9,
+     "trechos": {
+      "C01": 17.7,
+      "C02": 21.85,
+      "C04": 11.1,
+      "C05": 17.0,
+      "C06": 6.64,
+      "C07": 10.67,
+      "C09": 1.66,
+      "C11": 27.23,
+      "C12": 5.83
+     }
+    }
+   ],
+   "trechosComVozPorVolta": [
+    9,
+    9,
+    9
+   ],
+   "folgaS": {
+    "min": 1.01,
+    "mediana": 13.22,
+    "max": 39.71
+   }
+  },
+  {
+   "opcao": "E20. E, com no máximo 20 s entre o fim da fala e a ação",
+   "porVolta": [
+    {
+     "volta": 1,
+     "comVoz": 7,
+     "trechos": {
+      "C01": 16.65,
+      "C02": 19.57,
+      "C04": 10.17,
+      "C05": 16.21,
+      "C06": 6.26,
+      "C07": 9.68,
+      "C12": 15.59
+     }
+    },
+    {
+     "volta": 2,
+     "comVoz": 6,
+     "trechos": {
+      "C01": 17.48,
+      "C04": 12.54,
+      "C05": 18.71,
+      "C06": 6.81,
+      "C07": 9.23,
+      "C12": 3.42
+     }
+    },
+    {
+     "volta": 3,
+     "comVoz": 8,
+     "trechos": {
+      "C01": 17.0,
+      "C02": 19.86,
+      "C04": 10.42,
+      "C05": 16.32,
+      "C06": 6.47,
+      "C07": 8.7,
+      "C11": 5.6,
+      "C12": 5.01
+     }
+    }
+   ],
+   "trechosComVozPorVolta": [
+    7,
+    6,
+    8
+   ],
+   "folgaS": {
+    "min": 3.42,
+    "mediana": 10.42,
+    "max": 19.86
+   }
+  },
+  {
+   "opcao": "F20. F, com no máximo 20 s entre o fim da fala e a ação",
+   "porVolta": [
+    {
+     "volta": 1,
+     "comVoz": 6,
+     "trechos": {
+      "C01": 17.35,
+      "C04": 10.85,
+      "C05": 16.89,
+      "C06": 6.43,
+      "C07": 11.65,
+      "C09": 1.12
+     }
+    },
+    {
+     "volta": 2,
+     "comVoz": 7,
+     "trechos": {
+      "C01": 18.18,
+      "C04": 13.22,
+      "C05": 19.39,
+      "C06": 6.98,
+      "C07": 11.2,
+      "C09": 1.01,
+      "C12": 4.24
+     }
+    },
+    {
+     "volta": 3,
+     "comVoz": 7,
+     "trechos": {
+      "C01": 17.7,
+      "C04": 11.1,
+      "C05": 17.0,
+      "C06": 6.64,
+      "C07": 10.67,
+      "C09": 1.66,
+      "C12": 5.83
+     }
+    }
+   ],
+   "trechosComVozPorVolta": [
+    6,
+    7,
+    7
+   ],
+   "folgaS": {
+    "min": 1.01,
+    "mediana": 10.975,
+    "max": 19.39
+   }
+  },
+  {
+   "opcao": "H. C + juntar com a curva anterior (só os dois pedaços livres mais perto)",
+   "porVolta": [
+    {
+     "volta": 1,
+     "comVoz": 7,
+     "trechos": {
+      "C01": 17.35,
+      "C02": 21.56,
+      "C04": 10.85,
+      "C05": 16.89,
+      "C06": 6.43,
+      "C07": 11.65,
+      "C09": 1.12
+     }
+    },
+    {
+     "volta": 2,
+     "comVoz": 9,
+     "trechos": {
+      "C01": 18.18,
+      "C02": 22.9,
+      "C04": 13.22,
+      "C05": 19.39,
+      "C06": 6.98,
+      "C07": 11.2,
+      "C09": 1.01,
+      "C11": 26.86,
+      "C12": 4.24
+     }
+    },
+    {
+     "volta": 3,
+     "comVoz": 9,
+     "trechos": {
+      "C01": 17.7,
+      "C02": 21.85,
+      "C04": 11.1,
+      "C05": 17.0,
+      "C06": 6.64,
+      "C07": 10.67,
+      "C09": 1.66,
+      "C11": 27.23,
+      "C12": 5.83
+     }
+    }
+   ],
+   "trechosComVozPorVolta": [
+    7,
+    9,
+    9
+   ],
+   "folgaS": {
+    "min": 1.01,
+    "mediana": 11.65,
+    "max": 27.23
+   }
+  },
+  {
+   "opcao": "G. o bipe (0,25 s) no jogo, 1,0 s antes da sua ação, junto com a marca",
+   "trechosComVozPorVolta": [
+    9,
+    9,
+    9
+   ],
+   "folgaS": {
+    "min": 1.0,
+    "mediana": 1.0,
+    "max": 1.0
+   },
+   "porVolta": [
+    {
+     "volta": 1,
+     "comVoz": 9,
+     "trechos": {
+      "C01": 1.0,
+      "C02": 1.0,
+      "C04": 1.0,
+      "C05": 1.0,
+      "C06": 1.0,
+      "C07": 1.0,
+      "C09": 1.0,
+      "C11": 1.0,
+      "C12": 1.0
+     }
+    },
+    {
+     "volta": 2,
+     "comVoz": 9,
+     "trechos": {
+      "C01": 1.0,
+      "C02": 1.0,
+      "C04": 1.0,
+      "C05": 1.0,
+      "C06": 1.0,
+      "C07": 1.0,
+      "C09": 1.0,
+      "C11": 1.0,
+      "C12": 1.0
+     }
+    },
+    {
+     "volta": 3,
+     "comVoz": 9,
+     "trechos": {
+      "C01": 1.0,
+      "C02": 1.0,
+      "C04": 1.0,
+      "C05": 1.0,
+      "C06": 1.0,
+      "C07": 1.0,
+      "C09": 1.0,
+      "C11": 1.0,
+      "C12": 1.0
+     }
+    }
+   ]
+  }
+ ],
+ "retasLongas": [
+  {
+   "volta": 1,
+   "reta": "boxes",
+   "livreS": 19.07,
+   "avisosCurtos": 9,
+   "avisosCurtos17": 10
+  },
+  {
+   "volta": 1,
+   "reta": "oposta",
+   "livreS": 12.52,
+   "avisosCurtos": 6,
+   "avisosCurtos17": 6
+  },
+  {
+   "volta": 2,
+   "reta": "boxes",
+   "livreS": 19.89,
+   "avisosCurtos": 9,
+   "avisosCurtos17": 11
+  },
+  {
+   "volta": 2,
+   "reta": "oposta",
+   "livreS": 14.91,
+   "avisosCurtos": 7,
+   "avisosCurtos17": 8
+  },
+  {
+   "volta": 3,
+   "reta": "boxes",
+   "livreS": 19.37,
+   "avisosCurtos": 9,
+   "avisosCurtos17": 10
+  },
+  {
+   "volta": 3,
+   "reta": "oposta",
+   "livreS": 12.73,
+   "avisosCurtos": 6,
+   "avisosCurtos17": 6
+  }
+ ],
+ "latencias": {
+  "hoje": 0.45,
+  "local": 0.1
+ },
+ "fator17": 0.85
+}

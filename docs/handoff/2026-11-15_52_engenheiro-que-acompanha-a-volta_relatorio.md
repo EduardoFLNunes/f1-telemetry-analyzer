@@ -6,6 +6,10 @@
   - A B.4 e a D.1 foram refeitas: o feedback com o engenheiro perde a causa na voz em 6 mensagens, contra 42 antes.
   - A suíte do backend passou: **1069 testes**.
   - **Pronto para o seu teste no jogo (a Parte E).**
+- **A Parte E (20/11), a seção no fim:**
+  - o teste no jogo foi feito, e a leitura E.3 está feita, com o foco na voz e no tempo;
+  - **parado para a sua decisão:** nenhum código foi mudado depois do teste;
+  - arquivos novos: `_e3_voltas.py`, `_e3_analise.py` e `.json`, `_e3_falas_curtas.py` e `.json`.
 - **Situação antes da atualização:** **parado na Parte E, como o pedido manda.** As Partes A a D e a documentação da F estão feitas e commitadas. Falta o seu teste no jogo ("rodei o engenheiro"); depois dele, a minha leitura da sessão, o merge em `develop` e o instalador 0.9.0. Há **três pontos para a sua decisão** (a seção "O que precisa de decisão").
 - **Commits** (em `etapa/engenheiro`):
   - `227e46cc` Pedido 52: o texto do pedido
@@ -21,7 +25,8 @@
   - `1edbebf3` "frenagem" no lugar de "freada" no que o piloto ouve e lê (ADR 0033, emenda, item 9)
   - `eb526234` a pisada em andamento na saída do trecho anterior conta desde o começo (a C10; item 10)
   - `a724ff76` a B.4 com a voz curta, a D.1 refeita e a saída da suíte (os arquivos de dados)
-  - o commit deste relatório
+  - `063977be` o relatório com a B.4, a D.1 refeita e a suíte
+  - o commit da leitura do teste no jogo (E.3) e deste relatório
 - **Merge:** nenhum (depois do teste no jogo). **Envio:** nenhum feito por mim (os comandos estão no fim).
 - **Arquivos de handoff** (`docs/handoff/2026-11-15_52_engenheiro-que-acompanha-a-volta_…`):
   - `_relatorio.md` (este);
@@ -529,3 +534,152 @@ powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-ana
 ```bash
 git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer push origin etapa/engenheiro
 ```
+
+## Parte E: o teste no jogo (20/11) e a leitura (E.3), com o foco na voz e no tempo (parado: a decisão é sua)
+
+**O pedido:** a sua mensagem de 20/11, com a leitura da sessão focada em dois problemas: (1) o engenheiro não falou, só apareceu na janela e na marca; (2) as mensagens chegam muito em cima. Nenhum código foi mudado.
+
+**A sessão:** `2026-11-20_19-06-14_vhe_interlagos`, gravada pelo app do repositório 0.9.0-engenheiro (`063977be`, sem mudança local) com o app do jogo 0.7.0. O `radio_engenheiro.lua` instalado é igual ao do repositório.
+- **Voltas (5, nenhuma com a IA):**
+  - a volta de saída;
+  - 1:42,045 (com rodada);
+  - **1:32,071 (limpa, a única que contou)**;
+  - 1:50,524 (com rodada);
+  - uma última incompleta: o jogo fechou às 19:16.
+- **O roteiro do pedido não foi cumprido:** pedia 10 voltas e 45 minutos, e a sessão teve 5 voltas e uns 10 minutos.
+- **A lista do engenheiro foi montada uma vez só,** na linha da volta de 1:32,071, e não mudou mais.
+- **O que voltou ao normal:** o app do repositório (o backend, o front e a janela) foi fechado depois da leitura, e o cache da pista não mudou.
+
+**Como li:**
+- a gravação, projetada na geometria oficial;
+- o registro do engenheiro e o do rádio;
+- o log do CSP;
+- o rádio fora do tempo real nesta mesma sessão, que reproduz os 14 avisos do jogo e dá o ponto da ação de cada um;
+- a ação de cada trecho, buscada desde a saída do trecho anterior (a regra do engenheiro):
+  - para "freie", a sua frenagem;
+  - para "vire", a sua primeira frenagem ou o primeiro alívio (acelerador abaixo de 0,90);
+  - sem nenhum dos dois, e para "sem tirar o pé", a entrada da curva.
+- **O relógio da gravação está 3 h adiantado** (o defeito do gravador, no backlog): a hora certa vem do `startedAt`.
+
+**Os arquivos:**
+- `_e3_voltas.py`, `_e3_analise.py` e `_e3_analise.json`: a leitura e as opções;
+- `_e3_falas_curtas.py` e `_e3_falas_curtas.json`: as falas candidatas, medidas com a voz do projeto.
+
+### E.3.1 Cada aviso da sessão
+
+"Até a sua ação" é o tempo entre o aviso aparecer na janela e a sua ação naquela passagem. A janela desenha o aviso no quadro em que o carro passa o `s_fala`, sem esperar a rede: a lista já está no jogo.
+
+| hora | trecho | a frase | voz? | o motivo (registro) | até a sua ação | a sua ação |
+|---|---|---|---|---|---:|---|
+| 19:11:58,2 | C02 | vire 5 metros depois do começo da zebra à direita | não | a referência não freia no trecho | 3,67 s | alívio em 334 m |
+| 19:12:15,2 | **C04** | freie 10 metros antes da placa de 100 | **sim** | — | 3,90 s | frenagem em 1.183 m |
+| 19:12:24,0 | C05 | sem tirar o pé | não | sem tirar o pé (a referência não freia nem alivia) | 2,39 s | entrada (1.480 m) |
+| 19:12:31,6 | C06 | vire no começo da zebra à direita | não | a referência não freia no trecho | 1,22 s | alívio em 1.834 m |
+| 19:12:34,9 | C07 | freie 35 metros antes do começo da zebra à direita | não | sem bloco de voz antes da frenagem | 4,02 s | frenagem em 2.162 m |
+| 19:12:46,6 | C09 | vire 30 metros antes do fim da zebra à direita | não | a referência não freia no trecho | 5,84 s | alívio em 2.606 m |
+| 19:12:53,8 | C11 | vire 5 metros depois do começo da zebra à esquerda | não | a referência não freia no trecho | 3,90 s | alívio em 2.758 m |
+| 19:13:17,9 | C12 | freie 15 metros depois da placa de 100 | não | a frase não cabe no bloco | 4,14 s | frenagem em 3.109 m |
+| 19:13:43,0 | **C01** | freie 10 metros depois da placa de 100 | **sim** | — | 3,03 s | frenagem em 72 m |
+| 19:13:49,6 | C02 | (a mesma) | não | a referência não freia no trecho | 4,30 s | alívio em 334 m |
+| 19:14:06,9 | C04 | (a mesma) | não | **outra fala em andamento** | 3,09 s | frenagem em 1.176 m |
+| 19:14:14,9 | C05 | sem tirar o pé | não | (o mesmo) | 2,56 s | entrada |
+| 19:14:23,8 | C06 | (a mesma) | não | a referência não freia no trecho | 2,78 s | alívio em 1.911 m |
+| 19:14:27,4 | C07 | (a mesma) | não | sem bloco de voz antes da frenagem | — | (a volta não chegou à C07) |
+
+**Os 2 avisos pela voz foram gerados, entregues e tocados no jogo.** O log do CSP tem "voz: url tocou" para as 6 mensagens do rádio: a frase do coach, três resumos e os dois avisos. Não há nenhum "voz: falhou".
+
+| aviso | voz gerada | entregue (rádio) | tocou no jogo | latência | o carro no começo e no fim da fala | o fim da fala até a sua frenagem | até o ponto dito |
+|---|---|---|---|---:|---|---:|---:|
+| C04 | sim (2,35 s) | id 4, 19:12:15 | 19:12:17,30 | **2,06 s** | 1.075 m → 1.213 m | **−0,51 s** (você freou em 1.183 m, ainda durante a fala) | 0,07 s |
+| C01 | sim (2,37 s) | id 5, 19:13:43 | 19:13:43,45 | 0,44 s | 4.227 m → 58 m | **0,22 s** | 1,07 s |
+
+**O que explica o problema (1), "não falou nada":**
+1. **Só 2 dos 14 avisos tinham voz,** e isso é pela regra do ADR 0033:
+   - 7 avisos são de trechos em que a referência não freia (a voz só vale onde ela freia);
+   - 2 são "sem tirar o pé";
+   - 2 são de trechos sem bloco de voz (C07);
+   - 1 é de frase que não cabe no bloco (C12);
+   - 1 foi bloqueado por outra fala.
+2. **Os 2 que tocaram ficaram em cima da frenagem,** e um falou por cima dela. É provável que tenham se perdido no meio da pilotagem. O log diz que o jogo tocou, mas não diz se ficou audível.
+3. **O aviso da C04 atrasou 2,06 s por causa do app do jogo.** Cada cartão do rádio fica na tela pelo menos max(5 s, fala + 2,5 s) (`CARTAO_MINIMO_S` e `FOLGA_DEPOIS_DA_VOZ_S`), e o aviso entra na fila atrás dele.
+   - O resumo da volta de 1:32 tocou às 19:12:07,76, com 6,85 s; o cartão dele ficou até 19:12:17,1.
+   - O aviso, que o backend entregou às 19:12:15, só tocou às 19:12:17,30. A prioridade que o backend dá ao aviso não chega ao jogo.
+4. **O segundo aviso da C04 foi para a janela por "outra fala em andamento".**
+   - O resumo da volta de 1:50 começou no começo do bloco (554 m) a 166,6 km/h. O backend calculou que ele acabava antes do `s_fala` da C04 (965 m), pela velocidade daquele momento.
+   - O carro acelerou até uns 235 km/h e chegou ao `s_fala` antes: a reserva usa a velocidade do momento, e não o tempo que o carro leva até lá.
+
+**O que explica o problema (2), "chega muito em cima":**
+1. **O aviso foi feito para acabar 1,0 s antes da frenagem da referência, mas você freia antes dela,** e é justamente isso que o aviso corrige ("frenagem cedo").
+   - Na C01, a referência freia em 122 m e você freou em 72 m: 50 m, uns 0,7 s antes.
+   - Na C04, a referência freia em 1.216 m e você freou em 1.176 a 1.183 m.
+   - Por isso, mesmo sem atraso, a fala acaba quase na sua frenagem: 0,22 s antes, na C01.
+2. **Na janela, cada aviso aparece de 1,2 a 5,8 s antes da sua ação** (mediana de 3,7 s), porque o `s_fala` usa a mesma conta da voz. A frase escrita tem de 15 a 52 caracteres. A 200 km/h, isso é pouco para tirar o olho da pista, ler e agir.
+
+### E.3.2 O tempo entre as ações, nas suas voltas desta sessão
+
+Medi nas três voltas completas (1:42,045, 1:32,071 e 1:50,524), nos 9 trechos que tiveram aviso. Duas medidas:
+- **"pedaço livre":** de quando a ação anterior acaba (acelerador em 0,90 ou mais e sem freio) até a sua ação no trecho;
+- **"desde a curva anterior":** do começo da ação na curva anterior até a ação no trecho.
+
+| trecho | a sua ação | pedaço livre (1:42 / 1:32 / 1:50) | desde a curva anterior (1:42 / 1:32 / 1:50) |
+|---|---|---|---|
+| C01 | frenagem (100 / 96 / 73 m) | **19,1 / 19,9 / 19,4 s** (a reta dos boxes, desde a C13) | 12,8 / 12,9 / 12,2 s |
+| C02 | alívio (334 m) | 0 s (emendada na C01) | 6,5 / 7,0 / 6,4 s |
+| C04 | frenagem (1.159 / 1.189 / 1.183 m) | **12,5 / 14,9 / 12,7 s** (a reta oposta) | 12,2 / 12,6 / 14,9 s |
+| C05 | entrada (1.480 m) | 0 s (emendada na C04) | 7,4 / 7,6 / 7,3 s |
+| C06 | alívio (1.827 / 1.845 / 1.834 m) | **8,4 / 8,9 / 8,6 s** | 6,5 / 6,6 / 6,4 s |
+| C07 | frenagem (2.187 / 2.175 / 2.162 m) | 0 s (emendada na C06) | 7,3 / 6,3 / 6,1 s |
+| C09 | alívio (2.555 / 2.606 / 2.606 m) | 3,0 / 2,9 / 3,6 s | 11,3 / 7,4 / 7,5 s |
+| C11 | alívio (2.758 m) | 0 s (emendada na C10) | 5,8 / 4,7 / 4,8 s |
+| C12 | frenagem (3.074 / 3.077 / 3.109 m) | 0 / 5,9 / 7,5 s | 7,4 / 6,8 / 24,3 s |
+
+- **Há três pedaços livres longos por volta:** a reta dos boxes (19 s, porque você faz a C14 sem tirar o pé), a reta oposta (12,5 a 15 s) e antes da C06 (8,4 a 8,9 s).
+- **No miolo, quase tudo é emendado:** a C09 tem 3 s, a C12 tem 6 a 7,5 s nas voltas sem rodada, e a C02, a C05, a C07 e a C11 têm 0 s.
+- **Entre uma ação e a seguinte há de 4,7 a 7,5 s no miolo.** É esse tempo que sobra para um aviso de uma curva emendada, falado durante a curva anterior (o que hoje o ADR proíbe: "nunca dentro de uma curva").
+
+### E.3.3 As opções, com os números desta sessão
+
+Para cada opção: em quantos dos 9 trechos com aviso a fala cabe, em cada uma das três voltas, e a folga (do fim da fala até a sua ação, mínimo, mediana e máximo).
+- **A condição para a fala caber:** ela começa num pedaço livre (fora de curva e de outra ação), acaba dentro dele, não passa por cima de outro aviso e acaba pelo menos 1,0 s antes da sua ação.
+- **As durações** são as medidas com a voz do projeto.
+- **As latências:** 0,45 s hoje (a C01, sem cartão na frente); 0,1 s com o aviso disparado no próprio jogo e o áudio já baixado. Esse 0,1 s é uma estimativa e não foi medido.
+- **Nas opções A a D,** a folga é a maior possível (a fala no começo do pedaço). Ela pode ser encurtada, atrasando a fala, para um alvo como 2 a 3 s.
+
+| opção | o que muda | trechos com voz (de 9; por volta) | folga (mín / mediana / máx) |
+|---|---|---|---|
+| hoje (medido) | a regra do ADR 0033: só onde a referência freia, no bloco da volta do modelo, terminando 1,0 s antes da frenagem da referência | 2 nas voltas desta sessão | **−0,51 s e 0,22 s** (os dois que tocaram) |
+| **A** | a fala no seu pedaço livre, terminando antes da **sua** ação (e não da frenagem da referência), para freie, vire, acelere e "sem tirar o pé" | 3 / 4 / 4 (C01, C04, C06 e C12) | 3,1 / 9,8 / 17,1 s |
+| **B** | A, com o aviso disparado no jogo pelo `s` do carro e o áudio baixado antes (sem a fila do cartão) | 3 / 4 / 4 | 3,4 / 10,2 / 17,5 s |
+| **C** | B, com a fala curta: o verbo e o marco, sem "metros" ("Freie no cem, mais dez.", 1,67 s; "Vire na zebra, mais cinco.", 1,84 s; "Acelere no fim da zebra.", 1,47 s; "Sem tirar o pé.", 1,00 s) | 4 / 5 / 5 (+ C09) | 1,0 / 6,8 / 18,2 s |
+| **D** | C, com a voz a 1,7x (cada fala fica 14% a 20% mais curta) | 4 / 5 / 5 | 1,3 / 7,1 / 18,4 s |
+| **E** | B, com o aviso dito mais cedo: no pedaço livre anterior mais perto em que caiba, mesmo uma ou duas curvas antes, um aviso depois do outro | **9 / 9 / 9** | 3,4 / 16,2 / **48,1 s** |
+| **E20** | E, com no máximo 20 s entre a fala e a ação | 7 / 6 / 8 | 3,4 / 10,4 / 19,9 s |
+| **F** | E, com a fala curta | **9 / 9 / 9** | 1,0 / 13,2 / 39,7 s |
+| **F20** | F, com no máximo 20 s | 6 / 7 / 7 | 1,0 / 11,0 / 19,4 s |
+| **H** | C, juntando o aviso com o da curva anterior (só os dois pedaços livres mais perto; por exemplo, "Seis: vire na zebra. Sete: freie na zebra.", que mede 2,9 a 3,2 s a 1,4x) | 7 / 9 / 9 | 1,0 / 11,7 / 27,2 s |
+| **G** | um bipe de 0,25 s disparado no jogo 1,0 s antes da sua ação, junto com a marca; ele diz "agora", e o que fazer vem da janela ou da lista (I) | **9 / 9 / 9** | 1,0 s (a escolher) |
+| **I** | a lista lida nas retas longas, com as falas curtas: "Quatro: cem, menos dez. Cinco: sem tirar o pé. Seis: vire na zebra." mede 6,0 s a 1,4x e 5,0 s a 1,7x | na reta dos boxes cabem 9 avisos curtos (10 a 1,7x); na oposta, 6 a 7 | de 10 a 40 s até a curva (é para lembrar, e não para agir) |
+
+**O que pesa em cada uma:**
+- **O que vale para todas:** a latência e a reserva.
+  - O aviso tem de furar a fila do cartão no app do jogo. Hoje ele espera o cartão anterior, como na C04, com 2,06 s.
+  - A reserva do backend tem de usar o tempo da sua volta até o `s_fala`, e não a velocidade do momento. Isso evita o "outra fala em andamento" do segundo aviso da C04.
+  - Sem essas duas correções, qualquer opção pode chegar 2 s atrasada.
+- **A, B, C e D (o seu pedaço livre):** só a C01, a C04, a C06, a C12 (nas voltas sem rodada) e, com a fala curta, a C09 têm um pedaço livre. As emendadas (C02, C05, C07 e C11) nunca têm.
+- **E e F (avisar mais cedo):** todos os 9 trechos ganham voz, mas a C09 e a C11 são ditas na reta oposta ou antes da C06, de 27 a 48 s antes da ação. É preciso guardar 2 a 4 dicas de cabeça.
+- **E20 e F20:** com o limite de 20 s, 6 a 8 dos 9 ficam com voz.
+- **H (juntar com a curva anterior):** 7 a 9 dos 9, a maioria com 6 a 22 s de antecedência. A frase de duas curvas cabe nos pedaços antes da C01, da C04 e da C06.
+- **G (o bipe):** é o único que dá o "agora" em todos os trechos com a folga exata, mas sozinho não diz o que fazer.
+- **G mais H ou I:** o que fazer chega antes, pela voz, e o bipe marca o ponto. É a combinação que cobre os 9 trechos e chega a tempo.
+- **A janela:** pode mostrar o aviso desde o começo do seu pedaço livre, ou o aviso da curva seguinte desde a ação anterior.
+  - Assim, o tempo para ler passa de 1,2 a 5,8 s para de 4,7 a 19,9 s ("desde a curva anterior", na tabela da E.3.2).
+  - Mostrar as duas próximas dicas ao mesmo tempo também ajuda nas emendadas.
+- **Duas mudanças de regra que várias opções pedem:**
+  - **o aviso contra a sua ação, e não contra a da referência.** A sua frenagem desta sessão serve de estimativa; numa sessão nova, vale a da volta anterior;
+  - **o aviso pela voz também onde a referência não freia** ("vire", "acelere" e "sem tirar o pé"). Hoje só vale onde ela freia.
+- **Os limites desta leitura:**
+  - são só três voltas completas, duas com rodada;
+  - a latência de 0,1 s do disparo no jogo é uma estimativa;
+  - a fala curta sem "metros" não foi testada no jogo para ver se você entende.
+
+**O que preciso de você:** a decisão de quais opções seguir, e se a regra do ADR 0033 muda. Nada foi mudado no código. O merge e o instalador 0.9.0 continuam parados até depois disso e de um novo teste no jogo.

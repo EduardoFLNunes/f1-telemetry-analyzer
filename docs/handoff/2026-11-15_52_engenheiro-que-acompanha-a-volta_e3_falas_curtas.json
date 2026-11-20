@@ -1,0 +1,95 @@
+{
+ "voz": "OneCore:Daniel, sem a vinheta",
+ "falas": {
+  "hoje_freie_placa": {
+   "fala": "Freie 10 metros depois da placa de 100.",
+   "1.4": 2.37,
+   "1.7": 1.99
+  },
+  "hoje_freie_zebra": {
+   "fala": "Freie 35 metros antes do começo da zebra à direita.",
+   "1.4": 3.47,
+   "1.7": 2.89
+  },
+  "hoje_vire_zebra": {
+   "fala": "Vire 5 metros depois do começo da zebra à direita.",
+   "1.4": 3.13,
+   "1.7": 2.63
+  },
+  "hoje_sem_tirar": {
+   "fala": "Sem tirar o pé.",
+   "1.4": 1.0,
+   "1.7": 0.86
+  },
+  "curta_placa": {
+   "fala": "Cem, mais dez.",
+   "1.4": 1.32,
+   "1.7": 1.13
+  },
+  "curta_placa_na": {
+   "fala": "No cinquenta.",
+   "1.4": 0.91,
+   "1.7": 0.79
+  },
+  "curta_zebra": {
+   "fala": "Zebra, menos cinco.",
+   "1.4": 1.53,
+   "1.7": 1.3
+  },
+  "curta_zebra_fim": {
+   "fala": "Fim da zebra.",
+   "1.4": 0.96,
+   "1.7": 0.83
+  },
+  "curta_freie_placa": {
+   "fala": "Freie no cem, mais dez.",
+   "1.4": 1.67,
+   "1.7": 1.41
+  },
+  "curta_vire_zebra": {
+   "fala": "Vire na zebra, mais cinco.",
+   "1.4": 1.84,
+   "1.7": 1.55
+  },
+  "curta_acelere_zebra": {
+   "fala": "Acelere no fim da zebra.",
+   "1.4": 1.47,
+   "1.7": 1.26
+  },
+  "curta_so_verbo": {
+   "fala": "Freie.",
+   "1.4": 0.63,
+   "1.7": 0.56
+  },
+  "curta_curva": {
+   "fala": "Curva sete.",
+   "1.4": 1.0,
+   "1.7": 0.87
+  },
+  "junta_7_8": {
+   "fala": "Sete e oito: freie na zebra, vire na zebra.",
+   "1.4": 2.88,
+   "1.7": 2.42
+  },
+  "junta_9_10": {
+   "fala": "Nove e dez: vire no fim da zebra, freie na zebra.",
+   "1.4": 3.18,
+   "1.7": 2.67
+  },
+  "junta_2_3": {
+   "fala": "Dois e tres: vire na zebra, acelere na zebra.",
+   "1.4": 2.96,
+   "1.7": 2.47
+  },
+  "lista_reta_oposta": {
+   "fala": "Quatro: cem, menos dez. Cinco: sem tirar o pé. Seis: vire na zebra.",
+   "1.4": 6.02,
+   "1.7": 4.99
+  },
+  "lista_reta_boxes": {
+   "fala": "Um: cem, mais dez. Dois: vire na zebra.",
+   "1.4": 3.66,
+   "1.7": 3.07
+  }
+ }
+}
