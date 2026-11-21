@@ -205,7 +205,7 @@ Emenda depois do teste no jogo de 20/11 e da leitura E.3 (o pedido 52, "Atualiza
      - só as placas perdem "placa de"; os outros marcos guardam o nome e o lado ("Vire 5 depois do começo da zebra à direita.");
      - "Sem tirar o pé." e "no ponto marcado" não mudam;
      - a velocidade da voz não muda.
-   - **O padrão é (a) até a escolha do Eduardo,** que ele faz ouvindo, antes do teste no jogo. A escolha entra neste ADR como a decisão de 20/11 sobre o molde.
+   - **O padrão era (a) até a escolha do Eduardo,** que ele fez ouvindo, antes do teste no jogo: ver "A decisão de 20/11 sobre o molde", abaixo.
    - **A janela e o cartão** continuam escrevendo "Curva N: <frase>" no molde (a), que é o mais completo para ler.
 9. **O bipe (a opção G):**
    - **O som:** um bipe curto (0,25 s), gerado pelo código (um tom só, de 2.000 Hz, diferente da vinheta e de qualquer som do rádio). Ele é instalado junto com o app do jogo (`bipe.wav`), e o app toca o bipe pelo `s` do carro num player próprio, que não corta a fala.
@@ -227,3 +227,11 @@ Emenda depois do teste no jogo de 20/11 e da leitura E.3 (o pedido 52, "Atualiza
 11. **O feedback continua como na decisão 1 de 16/11.** A reserva das retas longas é feita primeiro para os avisos, agora de todos os tipos: a reserva de um bloco começa no `s_fala` da primeira fala planejada à frente do carro dentro dele. O feedback usa o que sobrar, medido pelo tempo do perfil (item 3).
 
 **O app do jogo** sobe para a 0.8.0.
+
+## A decisão de 20/11 sobre o molde
+
+O Eduardo ouviu as três variantes (os áudios da D.2, em `data/radio/[teste] vozes do engenheiro 20-11/`) e escolheu o **molde (b)**: o verbo, a distância e o marco, sem "metros" e sem "placa" ("Freie 10 depois do 100.").
+
+- **O (b) é o padrão** de `AT_ENGENHEIRO_MOLDE` (`MOLDE_PADRAO` em `core/engenheiro/plano.py`). As variantes (a) e (c) continuam disponíveis pela variável.
+- **O resto do item 8 não muda:** só as placas perdem "placa de"; "Sem tirar o pé." e "no ponto marcado" ficam iguais; a janela e o cartão continuam escrevendo "Curva N: <frase>" no molde (a).
+- **O teste no jogo** confirma se a fala é entendida a tempo (o cartão do relatório do pedido 52: "ouvi", "entendi" e "deu tempo").
