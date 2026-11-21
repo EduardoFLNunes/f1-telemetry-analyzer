@@ -931,3 +931,14 @@ Você ouviu as três variantes e escolheu o **molde (b)**: "Freie 10 depois do 1
 4. **O merge em `develop` e o instalador 0.9.0** continuam parados até depois do teste.
 5. **O envio:** nada foi enviado. Para enviar a branch:
    `git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer push origin etapa/engenheiro`
+
+### O "pode instalar" (21/11, 0h01)
+
+- **Você deu o "pode instalar" do app do jogo 0.8.0.** Quem roda o `instalar.ps1` é você, como o script e o pedido dizem: ele pede confirmação na tela e grava na pasta do jogo, onde eu não escrevo.
+- **O que conferi antes:**
+  - o `acs.exe` está fechado;
+  - o pacote `tools/csp_app/radio_engenheiro/` está na 0.8.0 (`manifest.ini`) e tem o `bipe.wav`.
+- **O comando** (na pasta do repositório):
+  `powershell -NoProfile -ExecutionPolicy Bypass -File tools\csp_app\instalar.ps1`
+- **A mensagem final do script** lista só as janelas "Rádio", "Minimapa" e "Mapa aproximado". A janela "Engenheiro" também é instalada e é ligada na mesma barra de apps. Não mudei o script.
+- **Depois da instalação:** o app do repositório (o backend na porta 8000, o front e a janela) antes do jogo, e o teste com o roteiro da Parte E e o cartão.
