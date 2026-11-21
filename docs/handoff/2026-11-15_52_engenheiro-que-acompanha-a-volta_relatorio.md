@@ -1256,7 +1256,7 @@ Você fechou o jogo às 19h37. Rodei o resto do item 13. Nenhuma regra mudou dep
 | 21/10 | 6,9 → 3,9 s | 9,4 → 10,5 s | 16,3 → 14,4 s | 25 / 11 / 16 | 2 → 0 | 3 → 1 | 14 |
 | 12/11 | 9,0 → 6,8 s | 3,5 → 7,0 s | 12,4 → 13,8 s | 7 / 2 / 5 | 2 → 0 | 7 → 1 | 10 |
 | 20/11 | 7,3 → 5,7 s | 3,1 → 4,6 s | 10,4 → 10,3 s | 2 / 1 / 2 | 0 → 0 | 1 → 0 | 2 |
-| 21/11 (antes: a sessão real) | 5,6 → 5,7 s | 5,4 → 3,8 s | 11,0 → 9,6 s | 6 / – / 3 | – → 0 | – → 2 | 6 |
+| 21/11 (antes: a sessão real) | 5,6 → 5,7 s | 5,4 → 3,8 s | 11,0 → 9,6 s | 6 / – / 3 | 3 (na sessão real) → 0 | – → 2 | 6 |
 
 As voltas são as da gravação, com a volta de saída e as incompletas, nos dois lados da comparação.
 
