@@ -10,6 +10,9 @@ modelo do repositorio. Os limites (7,3, 8,0 e 8,8 s) e a ordem do corte sao os d
 engenheiro (`<sessao>.engenheiro.jsonl`) vai junto na saida.
 
 Uso (na pasta backend): python <este arquivo> <pasta da sessao> <sem|com> <saida.json>
+Atualizacao de 21/11: com `AT_D1_REGISTRO_ANTERIOR` (o `.engenheiro.jsonl` da rodada da sessao anterior), o registro
+e copiado para a pasta de dados temporaria antes da sessao, para o foco vir da sessao anterior (ADR 0033, emenda de
+21/11, item 5).
 Com o engenheiro, o molde da fala vem de `AT_ENGENHEIRO_MOLDE` (a, b ou c; a emenda de 20/11). A saida traz `t0`
 (o primeiro instante da gravacao): o relogio do radio e do registro e o da gravacao menos ele.
 """
@@ -84,6 +87,10 @@ coach = dc.LiveDrivingCoach(Barramento(), model_provider=lambda _t: modelo, geom
 volta = VoltaAoVivo(posicao=coach.posicao_oficial,
                     pontos=lambda: len(coach._projector.geometry.x) if coach._projector is not None else None)
 PASTA_DE_DADOS = Path(tempfile.mkdtemp(prefix="radio_52_"))
+_anterior = os.environ.get("AT_D1_REGISTRO_ANTERIOR")
+if _anterior and Path(_anterior).is_file():
+    (PASTA_DE_DADOS / "data" / "radio").mkdir(parents=True, exist_ok=True)
+    (PASTA_DE_DADOS / "data" / "radio" / Path(_anterior).name).write_bytes(Path(_anterior).read_bytes())
 radio = RadioDoEngenheiro(
     pasta_de_dados=PASTA_DE_DADOS,
     repositorio=lambda: REPO,

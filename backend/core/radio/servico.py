@@ -553,6 +553,8 @@ class RadioDoEngenheiro:
         self._grade_da_ultima = {"volta": parcial.get("volta"), "grade": g, "tempoS": tempo}
         self._guardar_a_volta({"volta": parcial.get("volta"), "tempoS": tempo}, "incompleta",
                               "fora da análise: não começou na linha (boxes ou carro movido)", medidas)
+        if self._eng() is not None:
+            self._eng().descartar(parcial.get("volta"), "não começou na linha (boxes ou carro movido)")
         self._voltas_da_sessao[-1].update(parcial=True, pontosMedidos=pontos)
 
     def _tirar_as_curvas_que_passaram(self) -> None:
@@ -626,7 +628,7 @@ class RadioDoEngenheiro:
         self._conferir_a_sessao()
         if volta.get("teveIA"):
             if self._eng() is not None:
-                self._eng().na_linha(volta.get("volta"), None, None, conta=False)
+                self._eng().na_linha(volta.get("volta"), None, None, conta=False, motivo="a IA pilotou parte da volta")
             self._guardar_a_volta(volta, "ia", "a IA pilotou parte da volta", None)
             self._fora_da_grade(volta, "a IA pilotou parte da volta")
             return
@@ -647,7 +649,9 @@ class RadioDoEngenheiro:
             anterior = round(self._anterior_que_contou - tempo, 3)
         mensagem = mensagem_de_resumo(volta.get("volta"), tempo, ref.get("tempoS"), ref.get("tipo"), pior, melhor,
                                       anterior, rodada=rodada)
-        self._engenheiro_na_linha(volta, mensagem, conta)
+        # ADR 0033, emenda de 21/11, item 5: o motivo da volta que nao conta vai para a janela do engenheiro
+        _, motivo_da_volta = self._estado_da_volta(volta, medidas, rodada)
+        self._engenheiro_na_linha(volta, mensagem, conta, motivo_da_volta.replace("fora da análise: ", ""))
         if pior:
             mensagem["_replay"] = self._replay_da_curva_da_volta(volta, pior, ref.get("tipo"))
             mensagem["_curvaDaVolta"] = pior
@@ -664,7 +668,8 @@ class RadioDoEngenheiro:
             self._anterior_que_contou = None
         self._analise_da_volta(volta, medidas, ref)
 
-    def _engenheiro_na_linha(self, volta: Dict[str, Any], mensagem: Dict[str, Any], conta: bool) -> None:
+    def _engenheiro_na_linha(self, volta: Dict[str, Any], mensagem: Dict[str, Any], conta: bool,
+                             motivo: Optional[str] = None) -> None:
         """Pedido 52 (ADR 0033, itens 1, 8 e 9): a conferencia das dicas e a lista nova; a acuracia vai no cartao
         do resumo e na variante mais completa da fala (o primeiro item a sair no corte)."""
         eng = self._eng()
@@ -673,7 +678,8 @@ class RadioDoEngenheiro:
         guardada = self._grade_da_ultima if (self._grade_da_ultima or {}).get("volta") == volta.get("volta") else None
         try:
             conf = eng.na_linha(volta.get("volta"), guardada["grade"] if guardada else None,
-                                guardada["tempoS"] if guardada else None, conta and guardada is not None)
+                                guardada["tempoS"] if guardada else None, conta and guardada is not None,
+                                motivo=motivo if not conta else ("sem a grade da volta" if guardada is None else None))
         except Exception as erro:
             logger.warning("Engenheiro sem a linha: %s", erro)
             return
@@ -718,14 +724,27 @@ class RadioDoEngenheiro:
         if sessao != self._sessao_da_analise:
             if self._eng() is not None:
                 try:
-                    self._eng().nova_sessao(sessao, self._sua_melhor_volta())
+                    self._eng().nova_sessao(sessao, self._sua_melhor_volta(), self._foco_anterior(sessao))
                 except Exception as erro:
                     logger.warning("Engenheiro sem a sua melhor volta: %s", erro)
-                    self._eng().nova_sessao(sessao, None)
+                    self._eng().nova_sessao(sessao, None, self._foco_anterior(sessao))
             self._sessao_da_analise, self._voltas_validas = sessao, []
             self._grade_voltas, self._grade_fora, self._grade_citadas = [], [], []
             self._voltas_da_sessao = []
             self._melhor_s, self._melhor_volta, self._anterior_que_contou = None, None, None
+
+    def _foco_anterior(self, sessao: Optional[str]) -> Optional[Dict[str, Any]]:
+        """ADR 0033, emenda de 21/11, item 5: o foco da ultima sessao nesta pista que tenha volta que conta (o registro
+        do engenheiro, na pasta do radio)."""
+        eng = self._eng()
+        if eng is None:
+            return None
+        try:
+            from core.engenheiro.servico import foco_do_registro
+            return foco_do_registro(self.pasta, sessao, eng.ruido_por_trecho)
+        except Exception as erro:
+            logger.warning("Engenheiro sem o foco da sessao anterior: %s", erro)
+            return None
 
     def _fora_da_grade(self, volta: Dict[str, Any], motivo: str) -> None:
         numero = int(volta["volta"]) if volta.get("volta") is not None else None

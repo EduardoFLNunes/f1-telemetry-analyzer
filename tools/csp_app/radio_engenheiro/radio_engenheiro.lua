@@ -19,10 +19,11 @@
 --     traçado e o tempo perdido. Na reta, junto com a fala; nos boxes, as voltas da sessão
 --     para estudar (pedido 45): a janela abre sozinha, com a lista das voltas, a grade e o botão
 --     "Abrir no app", que só faz um pedido ao backend local;
---   * o engenheiro (`engenheiro`, pedido 52, ADR 0033): os dois próximos avisos da lista, pelo marco da pista,
---     a conferência depois da linha e, na volta lenta, a lista inteira; com ela aberta, a marca do ponto dito
---     no asfalto (ou a contagem 3-2-1, se o CSP não tiver a API). A voz dos avisos e o bipe tocam pelo `s`
---     do carro, com a janela aberta ou não (app 0.8.0, ADR 0033, emenda de 20/11).
+--   * o engenheiro (`engenheiro`, pedido 52, ADR 0033): a ficha da curva de foco, a conferência do foco depois
+--     da linha, "Esperando uma volta que conte" sem foco e, na volta lenta, a lista inteira; com ela aberta, a
+--     marca do ponto de frenagem do foco no asfalto (ou a contagem 3-2-1, se o CSP não tiver a API). A ficha, o
+--     lembrete e a contagem de três bipes tocam pelo `s` do carro, com a janela aberta ou não (app 0.9.0, ADR
+--     0033, emenda de 21/11).
 --
 -- A voz tem três caminhos, um depois do outro (pedido 35, Parte B): a URL do backend;
 -- o arquivo que o backend grava em data/radio/audio/; e o áudio baixado para a
@@ -2308,19 +2309,20 @@ end
 
 -- ── o engenheiro (pedido 52, ADR 0033) ──────────────────────────────────
 --
--- A quinta janela: os dois próximos avisos da lista do engenheiro, cada um desde o fim da ação anterior a ele
--- até depois da ação (ADR 0033, emenda de 20/11, item 10); depois da linha, o sinal da conferência por trecho
--- e a acurácia; na volta lenta, a lista inteira com os valores. A lista e as falas planejadas vêm do backend
--- (`/api/radio/engenheiro`), uma vez por segundo. A posição do carro na volta é a do minimapa: o ponto da
--- volta de referência mais perto do carro.
+-- A quinta janela (ADR 0033, emenda de 21/11): a ficha da curva de foco, escrita, a volta toda, com a distância
+-- até o ponto de frenagem; depois da linha, a conferência do foco; sem foco, "Esperando uma volta que conte" e o
+-- motivo da última volta descartada; na volta lenta, a lista inteira com os valores. O foco, a ficha e as falas
+-- planejadas vêm do backend (`/api/radio/engenheiro`), uma vez por segundo. A posição do carro na volta é a do
+-- minimapa: o ponto da volta de referência mais perto do carro.
 --
--- A voz do aviso (emenda de 20/11, itens 1 e 2): o app baixa antes o áudio de cada fala planejada e toca no
--- quadro em que o carro passa o `sFala`, sem esperar a rede; o cartão que estiver na tela sai e a fala em
--- andamento é cortada. O bipe (item 9): no ponto dito, num player próprio, com o `bipe.wav` da pasta do app.
+-- A voz (emenda de 20/11, itens 1 e 2): o app baixa antes o áudio da ficha e do lembrete e toca cada um no quadro
+-- em que o carro passa o `sFala`, sem esperar a rede; o cartão que estiver na tela sai e a fala em andamento é
+-- cortada. A contagem de bipes (emenda de 21/11, item 12): três bipes nos `sBipes` do foco, os dois primeiros com
+-- o `bipe.wav` e o último com o `bipe_agudo.wav`, em players próprios.
 --
--- A marca na pista (ADR 0033, item 7): onde o CSP tem `render.on`, `render.quad` e `physics.raycastTrack`,
--- uma faixa no asfalto, na cor do fantasma, no ponto dito de cada aviso, desde o fim da ação anterior até o
--- carro passar. Sem isso, a janela mostra a contagem 3-2-1 até o ponto (a distância pela velocidade).
+-- A marca na pista (emenda de 21/11, item 13): onde o CSP tem `render.on`, `render.quad` e
+-- `physics.raycastTrack`, uma faixa no asfalto, na cor do fantasma, no ponto de frenagem da curva de foco, a
+-- partir de 400 m antes dele até o carro passar. Sem isso, a janela mostra a contagem 3-2-1 até o ponto.
 
 local ENG_PERIODO_S = 1
 local ENG_CONFERENCIA_S = 8         -- depois da linha, o sinal da conferência fica isto na janela
@@ -2328,7 +2330,8 @@ local ENG_ABERTA_S = 2              -- a janela (ou a marca) desenhada há menos
 local MARCA_COMPRIMENTO_M = 1.5
 local MARCA_LARGURA_M = 6
 local MARCA_ALTURA_M = 0.04         -- um pouco acima do asfalto, para não piscar com ele
-local MARCA_DEPOIS_M = 5            -- a marca some 5 m depois do ponto
+local MARCA_ANTES_M = 400           -- a marca aparece 400 m antes do ponto...
+local MARCA_DEPOIS_M = 5            -- ...e some 5 m depois dele
 local ENG_SALTO_M = 200             -- o carro andou mais que isto num quadro (boxes, reinício): nada dispara
 local ENG_ESPERA_DO_SOM_S = 3       -- o disparo sem som depois disto vai para o log como falha
 local VOLUME_DO_BIPE = 1.0
@@ -2341,7 +2344,7 @@ local MARCA_3D = MINIMAPA and #FALTA_NA_MARCA == 0
 local eng = {
   dados = nil, pedindo = false, ultimoQuadro = -100, versao = nil,
   voltaDaConferencia = nil, conferenciaEm = -100, alturas = {}, s = nil, iCarro = nil, avisouFalta = false,
-  sAnterior = nil, audios = {}, baixando = {}, disparo = nil, bipe = nil, avisouBipe = false,
+  sAnterior = nil, audios = {}, baixando = {}, disparo = nil, bipes = {}, avisouBipe = false,
 }
 
 -- O áudio de cada fala planejada é baixado antes (ADR 0033, emenda de 20/11, item 2), para a subpasta voz.
@@ -2362,7 +2365,7 @@ local function baixarAsFalas(d)
   end
 end
 
--- A lista e as falas planejadas, uma vez por segundo, com a janela aberta ou não (a voz do aviso não depende dela).
+-- O foco e as falas planejadas, uma vez por segundo, com a janela aberta ou não (a voz não depende dela).
 local function lerOEngenheiro()
   if CALADO or eng.pedindo then return end
   eng.pedindo = true
@@ -2421,26 +2424,26 @@ local function aFrente(de, ate, L)
   return (ate - de) % L
 end
 
-local function escritaDoTrecho(trecho)
+local function oFoco()
   local d = eng.dados
-  for _, it in ipairs(type(d and d.lista) == 'table' and d.lista or {}) do
-    if it.trecho == trecho then return tostring(it.janela or it.frase or trecho) end
-  end
-  return tostring(trecho)
+  if d and type(d.foco) == 'table' then return d.foco end
+  return nil
 end
 
--- O aviso nunca espera (ADR 0033, emenda de 20/11, item 1): o cartão que estiver na tela sai, a fala em
--- andamento é cortada, e o aviso toca do arquivo já baixado (ou, sem ele, pelo endereço).
+-- A fala nunca espera (ADR 0033, emenda de 20/11, item 1): o cartão que estiver na tela sai, a fala em
+-- andamento é cortada, e a ficha (ou o lembrete) toca do arquivo já baixado (ou, sem ele, pelo endereço).
 local function tocarOAviso(f, s)
   local t = relogio()
   if voz.tentativa then voz.tentativa = nil end
   pcall(function() if estado.player then estado.player:pause() end end)
   estado.atual = nil
+  local foco = oFoco()
   local trechos = type(f.trechos) == 'table' and f.trechos or {}
-  local textos = {}
-  for _, tr in ipairs(trechos) do textos[#textos + 1] = escritaDoTrecho(tr) end
-  local m = { id = 'eng_' .. tostring(f.chave), origem = 'aviso', titulo = 'Engenheiro · ' .. table.concat(trechos, ' · '),
-              texto = table.concat(textos, ' · '), duracaoS = tonumber(f.duracaoS) or 3, recebidaEm = t }
+  local texto = tostring(f.texto or '')
+  if f.tipo == 'ficha' and foco and foco.escrita then texto = tostring(foco.escrita) end
+  local m = { id = 'eng_' .. tostring(f.chave), origem = 'aviso',
+              titulo = 'Engenheiro · ' .. (f.tipo == 'lembrete' and 'lembrete · ' or 'ficha · ') .. table.concat(trechos, ' · '),
+              texto = texto, duracaoS = tonumber(f.duracaoS) or 3, recebidaEm = t }
   estado.atual = m
   estado.inicio = t
   estado.ateQuando = t + math.max(CARTAO_MINIMO_S, m.duracaoS + FOLGA_DEPOIS_DA_VOZ_S)
@@ -2448,37 +2451,45 @@ local function tocarOAviso(f, s)
   local fonte = arquivo or (type(f.audio) == 'string' and (BACKEND .. f.audio)) or nil
   local ok, erro = false, 'sem áudio'
   if fonte then ok, erro = tocarDe(fonte) end
-  eng.disparo = { t = t, s = s, chave = f.chave, trechos = table.concat(trechos, ','), arquivo = arquivo ~= nil }
-  log('engenheiro: aviso ' .. table.concat(trechos, ',') .. ' disparado em s=' .. decimal(s, 1)
+  eng.disparo = { t = t, s = s, chave = f.chave, trechos = (f.tipo or 'fala') .. ' ' .. table.concat(trechos, ','),
+                  arquivo = arquivo ~= nil }
+  log('engenheiro: ' .. tostring(f.tipo or 'fala') .. ' ' .. table.concat(trechos, ',') .. ' disparada em s=' .. decimal(s, 1)
     .. (arquivo and ' (arquivo baixado)' or ' (pelo endereço)') .. (ok and '' or (': falhou: ' .. tostring(erro))))
 end
 
-local function tocarOBipe(it, s)
-  if not eng.bipe and PASTA then
-    local ok, player = pcall(ui.MediaPlayer, nil, { use3D = false, reverbResponse = false })
-    if ok and player then
-      pcall(function()
-        player:setSource(PASTA .. '\\bipe.wav')
-        player:setVolume(VOLUME_DO_BIPE)
-        player:setAutoPlay(false)
-      end)
-      eng.bipe = player
-    end
+-- Os dois sons da contagem (emenda de 21/11, item 12): `bipe.wav` e `bipe_agudo.wav`, cada um no seu player.
+local function playerDoBipe(arquivo)
+  if eng.bipes[arquivo] or not PASTA then return eng.bipes[arquivo] end
+  local ok, player = pcall(ui.MediaPlayer, nil, { use3D = false, reverbResponse = false })
+  if ok and player then
+    pcall(function()
+      player:setSource(PASTA .. '\\' .. arquivo)
+      player:setVolume(VOLUME_DO_BIPE)
+      player:setAutoPlay(false)
+    end)
+    eng.bipes[arquivo] = player
   end
-  if not eng.bipe then
+  return eng.bipes[arquivo]
+end
+
+local function tocarOBipe(foco, j, n, s)
+  local agudo = j == n
+  local player = playerDoBipe(agudo and 'bipe_agudo.wav' or 'bipe.wav')
+  if not player then
     if not eng.avisouBipe then log('engenheiro: o bipe não tocou (o CSP não criou o player)') end
     eng.avisouBipe = true
     return
   end
   pcall(function()
-    eng.bipe:setCurrentTime(0)
-    eng.bipe:play()
+    player:setCurrentTime(0)
+    player:play()
   end)
-  log('engenheiro: bipe ' .. tostring(it.trecho) .. ' em s=' .. decimal(s, 1) .. ' (ponto dito ' .. tostring(it.sBipe) .. ')')
+  log('engenheiro: bipe ' .. j .. ' de ' .. n .. (agudo and ' (agudo)' or '') .. ' ' .. tostring(foco.trecho) .. ' em s='
+    .. decimal(s, 1) .. ' (ponto ' .. tostring(foco.sBipes[j]) .. ')')
 end
 
--- A cada quadro (ADR 0033, emenda de 20/11, itens 2 e 9): o carro passou o `s_fala` de uma fala planejada, ou o
--- ponto do bipe (o ponto dito, antecipado do tempo de reação)? Toca na hora, sem esperar a rede.
+-- A cada quadro (ADR 0033, emenda de 20/11, item 2; emenda de 21/11, item 12): o carro passou o `sFala` da ficha
+-- ou do lembrete, ou o ponto de um bipe? Toca na hora, sem esperar a rede.
 local function acompanharOsAvisos()
   local d = eng.dados
   if not d or d.disponivel == false then return end
@@ -2496,11 +2507,11 @@ local function acompanharOsAvisos()
     local okT, posicao = pcall(function() return estado.player:currentTime() end)
     if okT and type(posicao) == 'number' and posicao > 0.02 then
       dp.tocou = true
-      log('engenheiro: aviso ' .. dp.trechos .. ' tocou ' .. decimal(relogio() - dp.t, 2) .. ' s depois do disparo; s='
+      log('engenheiro: ' .. dp.trechos .. ' tocou ' .. decimal(relogio() - dp.t, 2) .. ' s depois do disparo; s='
         .. decimal(s, 1) .. ' (disparo em ' .. decimal(dp.s, 1) .. ')')
     elseif relogio() - dp.t > ENG_ESPERA_DO_SOM_S then
       dp.tocou = true
-      log('engenheiro: aviso ' .. dp.trechos .. ' sem som ' .. ENG_ESPERA_DO_SOM_S .. ' s depois do disparo')
+      log('engenheiro: ' .. dp.trechos .. ' sem som ' .. ENG_ESPERA_DO_SOM_S .. ' s depois do disparo')
     end
   end
   if not antes then return end
@@ -2515,33 +2526,13 @@ local function acompanharOsAvisos()
       if passou(f.sFala) then tocarOAviso(f, s) end
     end
   end
-  if d.bipe ~= false then
-    local v = (tonumber(carro.speedKmh) or 0) / 3.6
-    local reacao = tonumber(d.tempoDeReacaoAoBipeS) or 0
-    for _, it in ipairs(type(d.lista) == 'table' and d.lista or {}) do
-      local sb = tonumber(it.sBipe)
-      if it.bipe and sb and passou((sb - v * reacao) % L) then tocarOBipe(it, s) end
+  local foco = oFoco()
+  if d.bipe ~= false and foco and type(foco.sBipes) == 'table' then
+    local n = #foco.sBipes
+    for j, sb in ipairs(foco.sBipes) do
+      if passou(sb) then tocarOBipe(foco, j, n, s) end
     end
   end
-end
-
--- A janela (ADR 0033, emenda de 20/11, item 10): os dois próximos avisos, cada um desde o fim da ação anterior a
--- ele (`sJanela`) até 20 m depois da ação (`sFimDaJanela`); o da vez em destaque.
-local function ativos(s, L)
-  local out = {}
-  local d = eng.dados
-  if not d or type(d.lista) ~= 'table' or not s then return out end
-  for _, it in ipairs(d.lista) do
-    local sj, sf = tonumber(it.sJanela), tonumber(it.sFimDaJanela)
-    if sj and sf and it.frase and aFrente(sj, s, L) <= aFrente(sj, sf, L) then
-      out[#out + 1] = it
-    end
-  end
-  table.sort(out, function(a, b)
-    return aFrente(s, tonumber(a.sFimDaJanela), L) < aFrente(s, tonumber(b.sFimDaJanela), L)
-  end)
-  while #out > 2 do table.remove(out) end
-  return out
 end
 
 local function voltaLenta()
@@ -2553,10 +2544,10 @@ local function voltaLenta()
   return false, nil
 end
 
-local function contagem321(it, s, L, carro)
+local function contagem321(foco, s, L, carro)
   local v = (tonumber(carro.speedKmh) or 0) / 3.6
-  if v < 3 then return nil end
-  local t = aFrente(s, tonumber(it.sDito), L) / v
+  if v < 3 or not tonumber(foco.sFreada) then return nil end
+  local t = aFrente(s, tonumber(foco.sFreada), L) / v
   if t > 3 then return nil end
   return tostring(math.max(1, math.ceil(t)))
 end
@@ -2579,7 +2570,7 @@ desenharOEngenheiro = function(dt)
   ui.dwriteDrawText('ENGENHEIRO', 13, vec2(20, 8), CORES.vermelho)
   local d = eng.dados
   if not d then
-    caixa(estado.fora and 'sem backend' or 'lendo a lista do engenheiro', 13, vec2(20, 30), vec2(W - 10, H - 10), CORES.fraco)
+    caixa(estado.fora and 'sem backend' or 'lendo o engenheiro', 13, vec2(20, 30), vec2(W - 10, H - 10), CORES.fraco)
     return
   end
   if d.disponivel == false then
@@ -2593,70 +2584,63 @@ desenharOEngenheiro = function(dt)
   local lenta, motivo = voltaLenta()
   local lista = type(d.lista) == 'table' and d.lista or {}
   local conf = d.ultimaConferencia
-  -- Depois da linha: o sinal da conferência por trecho e a acurácia.
-  if not lenta and type(conf) == 'table' and t - eng.conferenciaEm < ENG_CONFERENCIA_S and type(conf.conferidas) == 'table'
-      and #conf.conferidas > 0 then
-    local partes = {}
-    for _, c in ipairs(conf.conferidas) do
-      partes[#partes + 1] = c.trecho .. (c.aplicada == true and ' aplicada' or (c.aplicada == false and ' não' or ' sem medida'))
+  local foco = oFoco()
+  -- Depois da linha: a conferência do foco.
+  if not lenta and type(conf) == 'table' and t - eng.conferenciaEm < ENG_CONFERENCIA_S and conf.texto then
+    local c = type(conf.conferidas) == 'table' and conf.conferidas[1] or {}
+    caixa(tostring(conf.texto), 20, vec2(20, 30), vec2(W - 10, H - 40),
+      c.aplicada == true and CORES.ganho or (c.aplicada == false and CORES.perda or CORES.texto))
+    if foco then
+      ui.dwriteDrawText('foco: ' .. tostring(foco.trecho) .. ' · ' .. tostring(foco.voltasEmFoco or 0) .. ' de '
+        .. tostring(foco.voltasSemAplicar or 3) .. ' voltas', 12, vec2(20, H - 26), CORES.apoio)
     end
-    caixa(table.concat(partes, ' · '), 18, vec2(20, 30), vec2(W - 10, H - 40), CORES.texto)
-    if conf.texto then ui.dwriteDrawText(conf.texto, 15, vec2(20, H - 30), CORES.apoio) end
     return
   end
   if lenta then
-    -- A volta lenta: a lista inteira, com a frase, a perda e a conferência com os valores.
+    -- A volta lenta: a lista inteira, com a frase e a perda.
     ui.dwriteDrawText('volta lenta: ' .. tostring(motivo or ''), 12, vec2(120, 10), CORES.apoio)
     local y = 30
     for _, it in ipairs(lista) do
       if y > H - 18 then break end
       local perda = it.perdaS and ('−' .. decimal(math.abs(tonumber(it.perdaS)), 2) .. ' s') or ''
-      local linha = tostring(it.janela or it.trecho) .. '  ' .. perda .. (it.voz and '' or '  (só na janela)')
+      local linha = tostring(it.janela or it.trecho) .. '  ' .. perda
       ui.dwriteDrawText(corte(linha, 80), 13, vec2(20, y), CORES.texto)
       y = y + 17
-      if it.conferencia and y <= H - 18 then
-        ui.dwriteDrawText(corte('   ' .. it.conferencia, 84), 12, vec2(20, y), it.aplicada and CORES.ganho or CORES.perda)
-        y = y + 16
-      end
     end
     if #lista == 0 then ui.dwriteDrawText('nenhum trecho na lista', 13, vec2(20, y), CORES.fraco) end
     return
   end
-  -- A volta rápida: os dois próximos avisos; o da vez em destaque.
-  local agora = ativos(s, L)
-  if #agora == 0 then
-    local n = #lista
-    ui.dwriteDrawText(n == 0 and 'nenhum trecho na lista' or (n .. (n == 1 and ' trecho' or ' trechos') .. ' na lista'),
-      12, vec2(120, 10), CORES.fraco)
-    if not s then ui.dwriteDrawText('sem a posição do carro (o minimapa ainda não baixou a referência)', 12, vec2(20, 30), CORES.fraco) end
+  -- Sem foco: a janela nunca fica vazia sem explicação (emenda de 21/11, item 5).
+  if not foco then
+    caixa(tostring(d.esperando or 'Esperando uma volta que conte'), 18, vec2(20, 30), vec2(W - 10, H - 10), CORES.apoio)
     return
   end
-  local y = 30
-  for k, it in ipairs(agora) do
-    local daVez = k == 1
-    local texto = tostring(it.janela or it.frase)
-    if daVez then ui.drawRectFilled(vec2(14, y - 4), vec2(W - 10, y + 70), comAlfa(CORES.vermelho, 0.18), 6) end
-    caixa(texto, daVez and 20 or 15, vec2(20, y), vec2(W - 70, y + (daVez and 52 or 40)), daVez and CORES.texto or CORES.apoio)
-    local dist = aFrente(s, tonumber(it.sDito) or tonumber(it.sAcao) or s, L)
-    ui.dwriteDrawText('a ' .. decimal(dist, 0) .. ' m' .. (it.voz and '' or ' · só na janela'), 12,
-      vec2(20, y + (daVez and 54 or 42)), CORES.apoio)
-    -- "sem tirar o pé": sem marca, sem bipe e sem contagem (o item não traz x e z)
-    if daVez and not MARCA_3D and okC and carro and it.x then
-      local n = contagem321(it, s, L, carro)
-      if n then ui.dwriteDrawText(n, 44, vec2(W - 60, y), CORES.vermelho) end
+  -- A ficha da curva de foco, a volta toda (emenda de 21/11, item 10).
+  ui.dwriteDrawText('foco: ' .. tostring(foco.trecho) .. ' · ' .. tostring(foco.origem or ''), 12, vec2(120, 10), CORES.apoio)
+  ui.drawRectFilled(vec2(14, 26), vec2(W - 10, H - 30), comAlfa(CORES.vermelho, 0.18), 6)
+  caixa(tostring(foco.escrita or foco.trecho), 18, vec2(20, 30), vec2(W - 70, H - 34), CORES.texto)
+  if s and L > 0 then
+    local alvo = tonumber(foco.sFreada) or tonumber(foco.sPonto)
+    if alvo then
+      ui.dwriteDrawText('a ' .. decimal(aFrente(s, alvo, L), 0) .. ' m do ponto'
+        .. (d.vozLiberada == false and ' · voz calada nesta volta' or ''), 12, vec2(20, H - 26), CORES.apoio)
     end
-    y = y + (daVez and 76 or 60)
-    if y > H - 30 then break end
+    if not MARCA_3D and okC and carro then
+      local n = contagem321(foco, s, L, carro)
+      if n then ui.dwriteDrawText(n, 44, vec2(W - 60, 30), CORES.vermelho) end
+    end
+  elseif not s then
+    ui.dwriteDrawText('sem a posição do carro (o minimapa ainda não baixou a referência)', 12, vec2(20, H - 26), CORES.fraco)
   end
 end
 
--- A marca no asfalto, no ponto da ação (ADR 0033, item 7).
-local function alturaDoAsfalto(it, carro)
-  local chave = tostring(it.sDito)
+-- A marca no asfalto, no ponto de frenagem da curva de foco (ADR 0033, emenda de 21/11, item 13).
+local function alturaDoAsfalto(marca, carro)
+  local chave = tostring(marca.x) .. ':' .. tostring(marca.z)
   local h = eng.alturas[chave]
   if h then return h end
   local topo = (carro and carro.position.y or 0) + 30
-  local ok, dist = pcall(physics.raycastTrack, vec3(it.x, topo, it.z), vec3(0, -1, 0), 200)
+  local ok, dist = pcall(physics.raycastTrack, vec3(marca.x, topo, marca.z), vec3(0, -1, 0), 200)
   if ok and tonumber(dist) and dist >= 0 then
     h = topo - dist
     eng.alturas[chave] = h
@@ -2669,27 +2653,24 @@ local function desenharAMarca()
   -- A marca acompanha a janela do engenheiro: desligada a janela na barra de apps, a marca some.
   if relogio() - eng.ultimoQuadro > ENG_ABERTA_S then return end
   local d = eng.dados
-  if not d or d.disponivel == false or not eng.s then return end
+  local foco = oFoco()
+  if not d or d.disponivel == false or not eng.s or not foco then return end
+  local marca, sp = foco.marca, tonumber(foco.sFreada)
+  if type(marca) ~= 'table' or not marca.x or not marca.z or type(marca.direcao) ~= 'table' or not sp then return end
   local L = tonumber(d.comprimentoM) or 0
   local okC, carro = pcall(ac.getCar, 0)
   if not okC or not carro or L <= 0 then return end
-  for _, it in ipairs(type(d.lista) == 'table' and d.lista or {}) do
-    local sf, sa = tonumber(it.sJanela), tonumber(it.sDito)
-    if it.frase and sf and sa and it.x and it.z and type(it.direcao) == 'table'
-        and aFrente(sf, eng.s, L) <= aFrente(sf, sa, L) + MARCA_DEPOIS_M then
-      local y = alturaDoAsfalto(it, carro)
-      if y then
-        local dx, dz = tonumber(it.direcao[1]) or 0, tonumber(it.direcao[2]) or 0
-        local nx, nz = -dz, dx
-        local a, b = MARCA_COMPRIMENTO_M / 2, MARCA_LARGURA_M / 2
-        local yy = y + MARCA_ALTURA_M
-        render.quad(vec3(it.x - dx * a - nx * b, yy, it.z - dz * a - nz * b),
-          vec3(it.x - dx * a + nx * b, yy, it.z - dz * a + nz * b),
-          vec3(it.x + dx * a + nx * b, yy, it.z + dz * a + nz * b),
-          vec3(it.x + dx * a - nx * b, yy, it.z + dz * a - nz * b), CORES.fantasma)
-      end
-    end
-  end
+  if aFrente(eng.s, sp, L) > MARCA_ANTES_M and aFrente(sp, eng.s, L) > MARCA_DEPOIS_M then return end
+  local y = alturaDoAsfalto(marca, carro)
+  if not y then return end
+  local dx, dz = tonumber(marca.direcao[1]) or 0, tonumber(marca.direcao[2]) or 0
+  local nx, nz = -dz, dx
+  local a, b = MARCA_COMPRIMENTO_M / 2, MARCA_LARGURA_M / 2
+  local yy = y + MARCA_ALTURA_M
+  render.quad(vec3(marca.x - dx * a - nx * b, yy, marca.z - dz * a - nz * b),
+    vec3(marca.x - dx * a + nx * b, yy, marca.z - dz * a + nz * b),
+    vec3(marca.x + dx * a + nx * b, yy, marca.z + dz * a + nz * b),
+    vec3(marca.x + dx * a - nx * b, yy, marca.z + dz * a - nz * b), CORES.fantasma)
 end
 
 -- ── o custo no jogo: o FPS com os mapas ligados e desligados ────────────

@@ -36,6 +36,7 @@ APLICADA_MINIMA_KMH = 5.0
 APLICADA_RETOMADA_M = 10.0
 # ADR 0033, item 6: a volta lenta
 VOLTA_LENTA_S = 5.0
+ALIVIO_MINIMO_M = 10.0               # ADR 0033, emenda de 21/11, item 8
 # As medidas (ADR 0030, item 5; o relatorio de evolucao)
 FREIO_DA_FREADA = 0.15
 ACELERADOR_DA_RETOMADA = 0.90
@@ -120,12 +121,33 @@ def retomada(acelerador: np.ndarray, track, trecho) -> Optional[float]:
     return float(s[idx[abaixo[-1] + 1]])
 
 
+def maior_alivio_m(acelerador: np.ndarray, track, idx: Sequence[int]) -> float:
+    """O maior trecho seguido (em metros) com o acelerador abaixo de 0,90 nos pontos `idx` (em ordem de s)."""
+    idx = np.asarray(idx, int)
+    if not len(idx):
+        return 0.0
+    passo = float(track.length) / float(len(track.s))
+    abaixo = np.nan_to_num(np.asarray(acelerador, float))[idx] < ACELERADOR_DA_RETOMADA
+    maior = corrida = 0
+    for b in abaixo:
+        corrida = corrida + 1 if b else 0
+        maior = max(maior, corrida)
+    return float(maior) * passo
+
+
+def tem_alivio(acelerador: np.ndarray, track, idx: Sequence[int]) -> bool:
+    """ADR 0033, emenda de 21/11, item 8: o alivio so conta com 10 m ou mais seguidos de acelerador abaixo de 0,90
+    (a queda de 2 a 4 m na troca de marcha nao conta)."""
+    return maior_alivio_m(acelerador, track, idx) >= ALIVIO_MINIMO_M - 1e-6
+
+
 def sem_tirar_o_pe(acelerador: np.ndarray, track, trecho) -> bool:
-    """ADR 0033, emenda de 16/11, item 3: o acelerador em 0,90 ou mais do comeco ao fim do trecho."""
+    """ADR 0033, emenda de 16/11, item 3, com a emenda de 21/11, item 8: nenhum alivio de 10 m ou mais do comeco
+    ao fim do trecho."""
     idx = trecho.indices(np.asarray(track.s, float), float(track.length))
     if not len(idx):
         return False
-    return bool(np.all(np.nan_to_num(np.asarray(acelerador, float))[idx] >= ACELERADOR_DA_RETOMADA))
+    return not tem_alivio(acelerador, track, idx)
 
 
 def acelerador_minimo(acelerador: np.ndarray, track, trecho) -> Optional[float]:

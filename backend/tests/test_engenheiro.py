@@ -232,13 +232,13 @@ def _engenheiro_sem_arquivos(blocos, lista, Lt=1000.0, falas=None):
 
     e = Engenheiro.__new__(Engenheiro)
     e.L, e.blocos, e.lista, e._lock, e.ativo = Lt, blocos, lista, threading.RLock(), True
-    e._dadas, e._audios, e._s_anterior, e.versao = {}, {}, None, 0
-    e.contagem = {"avisosPelaVoz": 0, "avisosSoNaJanela": 0}
+    e._audios, e._s_anterior, e.versao = {}, None, 0
+    e.contagem = {"fichas": 0, "lembretes": 0, "falasCaladas": 0}
     e.linhas = []
     e._registrar = e.linhas.append
     e.relogio, e.perfil, e.pedacos, e.falas = None, None, [], list(falas or [])
-    e._medidas_no_plano, e._sozinhas_medidas, e._voz_liberada = set(), set(), True
-    e.retas_longas = []
+    e._medidas_no_plano, e._voz_liberada = set(), True
+    e.retas_longas, e.foco, e.ficha, e.esperando = [], None, None, None
     return e
 
 
@@ -271,48 +271,6 @@ def test_a_conferencia_da_dica():
     acelere = {"trecho": "C04", "acao": "acelere", "sDito": 995.0}
     assert R.conferir(acelere, {"retomada": 4.0}, L)["aplicada"] is True             # pela linha: 9 m
     assert R.conferir(acelere, {"retomada": 6.0}, L)["aplicada"] is False
-
-
-def test_a_dica_dada_antes_da_linha_espera_o_carro_passar_a_acao():
-    """A janela mostra a dica desde `sJanela` (emenda de 20/11, item 10): a dica foi dada; a de antes da linha (a
-    C01) so e conferida depois de o carro passar a acao."""
-    item = {"k": 0, "trecho": "C01", "frase": "freie na placa de 100", "fala": "Freie na placa de 100.",
-            "voz": False, "porqueSoNaJanela": "teste", "sJanela": 950.0, "sAcao": 50.0, "sDito": 50.0, "acao": "freie",
-            "causa": "frenagem cedo", "perdaS": 0.2}
-    e = _engenheiro_sem_arquivos([], {"C01": item})
-    for s in (900.0, 940.0, 960.0):
-        e.no_quadro(s, 200.0, True, False)
-    assert "C01" in e._dadas and e._dadas["C01"]["acaoPassada"] is False
-    assert e.linhas[-1]["tipo"] == "aviso" and e.linhas[-1]["voz"] is False and e.linhas[-1]["porqueSoNaJanela"] == "teste"
-    for s in (990.0, 10.0, 40.0):                  # a linha: a acao ainda nao passou
-        e.no_quadro(s, 200.0, True, False)
-    assert e._dadas["C01"]["acaoPassada"] is False
-    e.no_quadro(60.0, 200.0, True, False)
-    assert e._dadas["C01"]["acaoPassada"] is True  # agora a linha seguinte confere
-
-
-def test_a_fala_planejada_comeca_no_s_fala_e_nao_na_volta_de_saida():
-    """Emenda de 20/11, item 2: o backend nao entrega o aviso; ele devolve a fala que comecou (o app do jogo toca
-    pelo mesmo `s`) e registra cada aviso dela. Na volta de saida dos boxes e com a IA, a fala nao sai."""
-    fala = {"sFala": 500.0, "texto": "Quatro: freie no 100. Cinco: sem tirar o pé.", "duracaoS": 3.4,
-            "trechos": ["C04", "C05"], "folgaS": {"C04": 3.0, "C05": 6.0}, "chave": "x"}
-    lista = {"C04": {"k": 3, "trecho": "C04", "frase": "freie na placa de 100", "causa": "frenagem cedo", "voz": True,
-                     "sJanela": 400.0, "sAcao": 700.0},
-             "C05": {"k": 4, "trecho": "C05", "frase": "sem tirar o pé", "causa": "mínima baixa", "voz": True,
-                     "sJanela": 400.0, "sAcao": 760.0}}
-    e = _engenheiro_sem_arquivos([], lista, falas=[fala])
-    e.perfil = type("P", (), {"origem": "teste"})()
-    e.no_quadro(480.0, 216.0, True, False)
-    comecaram = e.no_quadro(505.0, 216.0, True, False)
-    assert comecaram == [fala]
-    avisos = [x for x in e.linhas if x["tipo"] == "aviso" and x.get("fala")]
-    assert [a["trecho"] for a in avisos] == ["C04", "C05"] and all(a["voz"] and a["falaJunta"] for a in avisos)
-    e.linhas.clear()
-    e._s_anterior = 480.0
-    assert e.no_quadro(505.0, 216.0, False, False) == []           # a volta de saida dos boxes
-    assert {a["porqueSoNaJanela"] for a in e.linhas if a.get("fala")} == {"volta de saída dos boxes"}
-    e._s_anterior = 480.0
-    assert e.no_quadro(505.0, 216.0, True, True) == []             # a IA no volante
 
 
 # ── a referencia do trecho ──────────────────────────────────────────────
@@ -368,7 +326,7 @@ def test_os_arquivos_do_engenheiro_vao_no_instalador():
     assert '"*.marcos.json"' in pacote and '"*.ruido_por_trecho.json"' in pacote
     assert '"version": "0.9.0-engenheiro"' in pacote
     manifesto = (BACKEND.parent / "tools" / "csp_app" / "radio_engenheiro" / "manifest.ini").read_text(encoding="utf-8")
-    assert "VERSION = 0.8.0" in manifesto and "FUNCTION_MAIN = engenheiro" in manifesto
+    assert "VERSION = 0.9.0" in manifesto and "FUNCTION_MAIN = engenheiro" in manifesto
 
 
 # ── as decisoes do Eduardo de 16/11 (ADR 0033, emenda) ─────────────────
@@ -572,16 +530,11 @@ def test_o_perfil_vem_da_ultima_volta_que_conta_da_sua_melhor_ou_da_referencia()
     Engenheiro.nova_sessao(e, "s1", {"grade": g, "tempoS": total})
     assert e.perfil.origem == "sua melhor volta"
     versao = e.versao
-    Engenheiro.na_linha(e, 5, g, total, conta=True)                 # a lista e o plano refeitos depois da volta
+    Engenheiro.na_linha(e, 5, g, total, conta=True)                 # o perfil e o plano refeitos depois da volta
     assert e.perfil.origem == "volta 5 da sessão" and e.versao > versao
-    assert any(x["tipo"] == "plano" and x["perfil"] == "volta 5 da sessão" for x in e.linhas)
+    assert any(x["tipo"] == "volta" and x["volta"] == 5 for x in e.linhas)
     Engenheiro.na_linha(e, 6, g, total, conta=False)                 # a volta que nao conta nao muda o perfil
     assert e.perfil.origem == "volta 5 da sessão"
-
-
-def _aviso(trecho, numero, frase, s_acao, s_dito, ordem):
-    from core.engenheiro import plano as P
-    return P.Aviso(trecho=trecho, numero=numero, frase=frase, s_acao=s_acao, s_dito=s_dito, ordem=ordem)
 
 
 def test_a_folga_de_3_s_vale_contra_o_mais_cedo_entre_a_acao_e_o_ponto_dito():
@@ -593,48 +546,6 @@ def test_a_folga_de_3_s_vale_contra_o_mais_cedo_entre_a_acao_e_o_ponto_dito():
     c = P.candidatos(perfil, pedacos, 350.0)[0]                    # o ponto dentro do pedaco 260-378: acaba nele
     assert c["relFim"] == 0.0 and c["relIni"] == pytest.approx(-90.0 / 50.0, abs=0.06)
     assert not P.cabe_sozinha(c, 0.5)                              # 1,8 s de pedaco < 3,0 + 0,1 + 0,5
-
-
-def test_o_primeiro_e_o_segundo_pedaco_e_o_aviso_que_nao_cabe():
-    from core.engenheiro import plano as P
-
-    track, g, perfil, pedacos, _ = _pista_do_plano()
-    dur = {"Freie no 100.": 2.0}.get
-    av = [_aviso("C02", 2, "freie no 100", 380.0, 390.0, 1)]
-    falas = P.planejar(av, perfil, pedacos, dur)
-    # o pedaco 260-378 (2,36 s) nao cabe 3 + 0,1 + 2; vai para o segundo (470-178), que acaba 4,04 s antes
-    assert av[0].escolha == 1 and falas[0]["candidato"] == 2 and falas[0]["folgaS"]["C02"] == pytest.approx(4.04, abs=0.06)
-    longa = [_aviso("C02", 2, "freie no 100", 380.0, 390.0, 1)]
-    assert P.planejar(longa, perfil, pedacos, {"Freie no 100.": 40.0}.get) == []
-    assert longa[0].motivo == "não cabe em nenhum dos dois pedaços livres antes da ação"
-
-
-def test_a_juncao_e_de_no_maximo_dois_avisos_e_a_fala_e_o_mais_tarde_possivel():
-    from core.engenheiro import plano as P
-
-    track, g, perfil, pedacos, _ = _pista_do_plano()
-    sozinha = 2.0
-
-    def dur(texto):
-        return sozinha if texto.count(":") == 0 else None
-
-    # C01 (acao em 180 m) e C02 (no segundo pedaco, como acima) caem no mesmo pedaco 470-178: uma fala so
-    av = [_aviso("C01", 1, "vire na zebra", 180.0, 200.0, 0), _aviso("C02", 2, "freie no 100", 380.0, 390.0, 1)]
-    falas = P.planejar(av, perfil, pedacos, dur)
-    assert len(falas) == 1 and falas[0]["trechos"] == ["C01", "C02"]
-    assert falas[0]["texto"] == "Um: vire na zebra. Dois: freie no 100."
-    # o par antes de a voz medir: 2 + 2 + 0,8 s; ele acaba 3,0 s antes da acao da C01 (o mais tarde possivel)
-    assert falas[0]["duracaoS"] == pytest.approx(4.8) and falas[0]["folgaS"]["C01"] == pytest.approx(3.0, abs=0.01)
-    fim = (180.0 - 3.0 * 50.0) % float(track.length)
-    assert falas[0]["sFala"] == pytest.approx((fim - (4.8 + P.LATENCIA_NO_JOGO_S) * 50.0) % float(track.length), abs=1.0)
-    # tres avisos no mesmo pedaco: um par e uma fala sozinha, sem se encostar
-    av = [_aviso("C14", 14, "vire na zebra", 900.0, 900.0, 13), _aviso("C01", 1, "vire na zebra", 180.0, 200.0, 0),
-          _aviso("C02", 2, "freie no 100", 380.0, 390.0, 1)]
-    falas = P.planejar(av, perfil, pedacos, dur)
-    assert sorted(len(f["trechos"]) for f in falas) == [1, 2]
-    a, b = sorted(falas, key=lambda f: perfil.dt(470.0, f["sFala"]))
-    fim_a = perfil.dt(470.0, a["sFala"]) + P.LATENCIA_NO_JOGO_S + a["duracaoS"]
-    assert fim_a + P.INTERVALO_ENTRE_FALAS_S <= perfil.dt(470.0, b["sFala"]) + 1e-6
 
 
 def test_os_tres_moldes_da_fala():
@@ -651,7 +562,6 @@ def test_os_tres_moldes_da_fala():
     assert P.frase_falada("vire", zebra, 5.0, "b", "x") == "vire 5 depois do começo da zebra à direita"
     assert P.frase_falada("vire", zebra, 5.0, "c", "x") == "vire no começo da zebra à direita, mais 5"
     assert P.frase_falada(R.SEM_TIRAR_O_PE, None, None, "c", "sem tirar o pé") == "sem tirar o pé"
-    assert P.fala_do_par([6, 7], ["vire na zebra", "freie na zebra"]) == "Seis: vire na zebra. Sete: freie na zebra."
 
 
 def test_o_molde_padrao_e_o_b_da_escolha_de_20_11():
@@ -665,28 +575,6 @@ def test_o_molde_padrao_e_o_b_da_escolha_de_20_11():
     fonte = inspect.getsource(Engenheiro.__init__)
     assert 'os.environ.get("AT_ENGENHEIRO_MOLDE") or P.MOLDE_PADRAO' in fonte
     assert "else P.MOLDE_PADRAO" in fonte
-
-
-def test_o_bipe_fica_no_ponto_dito_e_nao_existe_em_sem_tirar_o_pe():
-    from core.engenheiro.servico import Engenheiro
-    from test_lap_origin import circular_track
-
-    track = circular_track()
-    g = _volta_de_teste(track)
-    total = float(track.length) / 50.0
-    e = _engenheiro_sem_arquivos([], {})
-    e.track, e.L, e.trechos, e.pontos_dos_marcos = track, float(track.length), _trechos_de_teste(track), MARCOS
-    e.molde, e.bipe, e._falar = "a", True, lambda fala: None
-    medida = _medida(freada=-30.0)
-    ref = {"grade": g, "tempoS": total, "origem": "volta_do_modelo", "rotulo": "r"}
-    item = Engenheiro._item(e, 1, ref, medida, 0.3, 3)
-    assert item["acao"] == "freie" and item["bipe"] is True and item["sBipe"] == item["sDito"]
-    cheio = dict(g, freio=np.zeros_like(g["freio"]), acelerador=np.ones_like(g["acelerador"]))
-    mp = {"reta": 0.0, "freada": 0.0, "minima": 0.3, "saida": 0.0}
-    item = Engenheiro._item(e, 1, dict(ref, grade=cheio), _medida(minima=-12.0, partes=mp), 0.3, 3)
-    assert item["acao"] == R.SEM_TIRAR_O_PE and item["bipe"] is False and item["sBipe"] is None
-    e.bipe = False                                                     # a chave AT_ENGENHEIRO_BIPE=desligado
-    assert Engenheiro._item(e, 1, ref, medida, 0.3, 3)["sBipe"] is None
 
 
 def test_o_aviso_corta_o_feedback_e_ele_volta_numa_reta_longa_seguinte(tmp_path):
@@ -732,11 +620,283 @@ def test_a_reserva_usa_o_tempo_do_perfil_e_nao_a_velocidade_do_momento():
     assert e.tempo_entre(400.0, 800.0, 144.0) == pytest.approx(400 / 40.0)          # sem perfil: a velocidade
 
 
-def test_o_app_do_jogo_toca_o_aviso_pelo_s_e_corta_o_cartao():
+
+
+# ── as decisoes do Eduardo de 21/11 (ADR 0033, emenda): a curva de foco ──
+
+PLACAS_DA_C02 = [{"id": "P1", "tipo": "placa", "s": 340.0, "valor": 100, "lado": "direita"},
+                 {"id": "P2", "tipo": "placa", "s": 400.0, "valor": 50, "lado": "direita"}]
+
+
+def _futuro(duracao):
+    from concurrent.futures import Future
+
+    f = Future()
+    f.set_result((Path("x.wav"), duracao))
+    return f
+
+
+def _volta_com_perdas(track, trechos, perdas, freada=380.0):
+    """A volta de teste (50 m/s) com `perdas` (s) espalhadas em cada trecho e a frenagem da C02 em `freada`."""
+    g = _volta_de_teste(track)
+    s = np.asarray(track.s, float)
+    extra = np.zeros(s.size)
+    for t in trechos:
+        if t.nome in perdas:
+            extra += perdas[t.nome] * np.clip((s - t.inicio_s) / (t.fim_s - t.inicio_s), 0.0, 1.0)
+    g["elapsed"] = s / 50.0 + extra
+    g["freio"] = np.where((s >= freada) & (s < freada + 40.0), 0.8, 0.0)
+    g["acelerador"] = np.where((s >= freada) & (s < 470.0), 0.2, 1.0)
+    return g, float(track.length) / 50.0 + sum(perdas.values())
+
+
+def _engenheiro_de_teste(track, bipe=True):
+    """O engenheiro sem arquivos, com a volta de teste como referencia, as placas da C02, uma reta longa
+    (de 1.000 m a 290 m, pela linha) e a voz que mede 3,0 s (a ficha) e 1,0 s (o lembrete)."""
+    from core.engenheiro.servico import Engenheiro
+
+    g = _volta_de_teste(track)
+    total = float(track.length) / 50.0
+    e = _engenheiro_sem_arquivos([], {}, Lt=float(track.length))
+    e.track, e.trechos, e.melhores = track, _trechos_de_teste(track), {}
+    e.modelo = {"grade": g, "tempoS": total, "origem": "volta_do_modelo", "rotulo": "volta de referência"}
+    e.tempos_modelo = R.tempos_dos_trechos(g["elapsed"], total, track, e.trechos)
+    e.ultima_conferencia, e.pista, e.inicio_da_freada = None, None, {}
+    e.ruido_por_trecho = {t.nome: 0.05 for t in e.trechos}
+    e.marcos = {"marcos": PLACAS_DA_C02}
+    e.pontos_dos_marcos = M.pontos_de_referencia(PLACAS_DA_C02)
+    e.bipe, e.molde, e.motivo = bipe, "b", None
+    e._falar = lambda fala: _futuro(1.0 if ":" in fala else 3.0)
+    e.blocos = e.retas_longas = [{"trecho": "C02", "inicio": 1000.0, "fim": 290.0, "duracaoS": 10.9}]
+    Engenheiro._usar_o_perfil(e, g, total, "volta de referência")
+    return e
+
+
+def test_o_foco_e_a_curva_de_maior_perda_e_troca_depois_de_3_voltas_sem_aplicar():
+    """Itens 3 e 4: o foco e a curva de maior perda acima do ruido; sem aplicar em 3 voltas que contam, ele vai
+    para a curva seguinte em perda; a curva que saiu pode voltar."""
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    e = _engenheiro_de_teste(track)
+    cedo, total = _volta_com_perdas(track, e.trechos, {"C01": 0.10, "C02": 0.30}, freada=340.0)   # 40 m antes
+    Engenheiro.na_linha(e, 1, cedo, total, conta=True)
+    assert e.foco["trecho"] == "C02" and e.foco["desdeAVolta"] == 1 and e.foco["voltasEmFoco"] == 0
+    assert [x for x in e.linhas if x["tipo"] == "foco"][-1]["trecho"] == "C02"
+    for volta in (2, 3):
+        conf = Engenheiro.na_linha(e, volta, cedo, total, conta=True)
+        assert conf["aplicada"] is False and e.foco["trecho"] == "C02"
+    assert conf["texto"] == "Curva 2: freou 40 m antes do ponto"
+    Engenheiro.na_linha(e, 4, cedo, total, conta=True)                    # a terceira volta sem aplicar
+    saida = [x for x in e.linhas if x["tipo"] == "foco" and x.get("saiu")][-1]
+    assert saida["saiu"] == "C02" and saida["motivo"] == "3 voltas sem aplicar"
+    assert e.foco["trecho"] == "C01" and e.foco["desdeAVolta"] == 4        # a curva seguinte em perda
+    Engenheiro.na_linha(e, 5, cedo, total, conta=True)                    # a C01 de pe embaixo: aplicou
+    assert e.ultima_conferencia["conferidas"][0]["aplicada"] is True
+    assert e.foco["trecho"] == "C02"                                      # a C02 voltou
+
+
+def test_o_foco_sai_quando_a_conferencia_mostra_que_aplicou():
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    e = _engenheiro_de_teste(track)
+    cedo, total = _volta_com_perdas(track, e.trechos, {"C02": 0.30}, freada=340.0)
+    Engenheiro.na_linha(e, 1, cedo, total, conta=True)
+    no_ponto, total2 = _volta_com_perdas(track, e.trechos, {"C02": 0.30}, freada=384.0)          # 4 m do ponto
+    conf = Engenheiro.na_linha(e, 2, no_ponto, total2, conta=True)
+    assert conf["aplicada"] is True and conf["texto"] == "Curva 2: freou no ponto"
+    assert [x["motivo"] for x in e.linhas if x["tipo"] == "foco" and x.get("saiu")] == ["aplicada na volta 2"]
+    assert e.foco is None and e.falas == []                               # sem outra curva acima do ruido: sem foco
+    assert Engenheiro.estado_publico(e)["esperando"] == (
+        "Esperando uma volta que conte (nenhuma curva acima do ruído na última volta que contou)")
+    Engenheiro.na_linha(e, 3, cedo, total, conta=True)                    # a C02 pode voltar na volta seguinte
+    assert e.foco["trecho"] == "C02" and e.foco["desdeAVolta"] == 3
+
+
+def test_o_foco_vem_da_sessao_anterior_e_sem_ela_a_janela_espera_uma_volta(tmp_path):
+    """Item 5: o foco com que a ultima sessao com volta que conta terminou; sem a linha `foco` (antes de 21/11), a
+    maior perda acima do ruido da ultima volta; sem sessao, "Esperando uma volta que conte" com o motivo."""
+    import json
+
+    from core.engenheiro.servico import Engenheiro, foco_do_registro
+    from test_lap_origin import circular_track
+
+    ruido = {"C01": 0.05, "C02": 0.05}
+    assert foco_do_registro(tmp_path, "2026-11-22_10-00-00_vhe_interlagos", ruido) is None
+    antiga = tmp_path / "2026-11-20_19-06-14_vhe_interlagos.engenheiro.jsonl"
+    antiga.write_text("\n".join(json.dumps(x) for x in (
+        {"tipo": "volta", "volta": 3, "perdas": {"C01": 0.30, "C02": 0.40, "C14->linha": 0.9}},
+        {"tipo": "volta", "volta": 4, "perdas": {"C01": 0.60, "C02": 0.40, "C14->linha": 0.9}})), encoding="utf-8")
+    sem_volta = tmp_path / "2026-11-21_09-00-00_vhe_interlagos.engenheiro.jsonl"
+    sem_volta.write_text(json.dumps({"tipo": "foco", "trecho": "C02"}), encoding="utf-8")   # sem volta que conta
+    f = foco_do_registro(tmp_path, "2026-11-22_10-00-00_vhe_interlagos", ruido)
+    assert f["trecho"] == "C01" and f["sessao"] == "2026-11-20_19-06-14_vhe_interlagos"      # a ultima linha volta
+    nova = tmp_path / "2026-11-21_18-10-46_vhe_interlagos.engenheiro.jsonl"
+    nova.write_text("\n".join(json.dumps(x) for x in (
+        {"tipo": "foco", "trecho": "C01"}, {"tipo": "volta", "volta": 5, "perdas": {"C01": 0.6}},
+        {"tipo": "foco", "trecho": "C02"})), encoding="utf-8")
+    assert foco_do_registro(tmp_path, "2026-11-22_10-00-00_vhe_interlagos", ruido)["trecho"] == "C02"
+    assert foco_do_registro(tmp_path, "2026-11-21_18-10-46_vhe_interlagos", ruido)["trecho"] == "C01"   # so as de antes
+    track = circular_track()
+    e = _engenheiro_de_teste(track)
+    Engenheiro.nova_sessao(e, "s2", None, {"trecho": "C02", "sessao": "2026-11-21_18-10-46_vhe_interlagos"})
+    estado = Engenheiro.estado_publico(e)
+    assert estado["foco"]["trecho"] == "C02" and estado["foco"]["origem"] == "sessão 2026-11-21_18-10-46_vhe_interlagos"
+    assert estado["esperando"] is None
+    Engenheiro.nova_sessao(e, "s3", None, None)
+    Engenheiro.na_linha(e, 3, None, None, conta=False, motivo="rodada (perdeu 19,9 s na C13)")
+    estado = Engenheiro.estado_publico(e)
+    assert estado["foco"] is None
+    assert estado["esperando"] == "Esperando uma volta que conte (volta 3: rodada (perdeu 19,9 s na C13))"
+
+
+def test_a_tecnica_vem_da_melhor_passagem_do_piloto_e_sem_ela_fica_fora():
+    """Item 7: "com trail braking" (o freio pisado 10 m ou mais depois da entrada) ou "frenagem em linha reta",
+    pela passagem do piloto; sem passagem, a tecnica fica fora da fala e da escrita."""
+    from core.engenheiro import ficha as F
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    trechos = _trechos_de_teste(track)
+    s = np.asarray(track.s, float)
+    g = _volta_de_teste(track)                                    # a C02: entrada em 430, freio de 380 a 420
+    assert F.tecnica_da_passagem(g, track, trechos, 1) == "frenagem em linha reta"
+    trail = dict(g, freio=np.where((s >= 380) & (s < 445), 0.6, 0.0))     # pisado ate 445 (15 m depois da entrada)
+    assert F.tecnica_da_passagem(trail, track, trechos, 1) == "com trail braking"
+    assert F.tecnica_da_passagem(None, track, trechos, 1) is None
+    sem = dict(g, freio=np.zeros_like(g["freio"]))
+    assert F.tecnica_da_passagem(sem, track, trechos, 1) is None          # a passagem dele sem frenagem
+    ref = {"grade": g, "tempoS": float(track.length) / 50.0}
+    pts = M.pontos_de_referencia(PLACAS_DA_C02)
+    f = F.ficha_da_curva(1, ref, track, trechos, PLACAS_DA_C02, pts, None)
+    assert f["tipo"] == F.FRENAGEM and f["tecnica"] is None
+    assert "Freie entre o 100 e o 50." in f["fala"] and "trail" not in f["fala"]
+    assert f["escrita"].startswith("Curva 2; freie entre a placa de 100 e a de 50; ")
+    assert f["lembrete"] == "Dois: entre o 100 e o 50."
+    f = F.ficha_da_curva(1, ref, track, trechos, PLACAS_DA_C02, pts, trail)
+    assert "Freie entre o 100 e o 50, com trail braking." in f["fala"] and f["tecnicaDe"] == "sua melhor passagem"
+    c01 = F.ficha_da_curva(0, ref, track, trechos, PLACAS_DA_C02, pts, trail)
+    assert c01["tipo"] == F.PE_EMBAIXO and c01["tecnica"] == "de pé embaixo" and c01["tecnicaDe"] == "referência"
+    assert c01["lembrete"] == "Um: pé embaixo." and "Passe a 180." in c01["fala"] and c01["marca"] is None
+
+
+def test_o_alivio_so_conta_com_10_m_ou_mais():
+    """Item 8: a queda de 2 a 4 m na troca de marcha nao e alivio; a mesma regra vale para o "sem tirar o pe"."""
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    s = np.asarray(track.s, float)
+    trechos = _trechos_de_teste(track)
+    idx = trechos[0].indices(s, float(track.length))
+    troca = np.where((s >= 100) & (s < 104), 0.0, 1.0)                    # 4 m: dois pontos da grade
+    assert not R.tem_alivio(troca, track, idx) and R.sem_tirar_o_pe(troca, track, trechos[0])
+    alivio = np.where((s >= 100) & (s < 112), 0.5, 1.0)                   # 12 m
+    assert R.tem_alivio(alivio, track, idx) and not R.sem_tirar_o_pe(alivio, track, trechos[0])
+    assert R.maior_alivio_m(alivio, track, idx) == pytest.approx(12.0, abs=2.1)
+
+
+def test_a_ficha_uma_vez_por_volta_na_reta_longa_com_prioridade_sobre_o_feedback():
+    """Item 9: a ficha no pedaco livre que contem o fim da reta longa, 3,0 s antes do fim dele e do ponto da curva,
+    o mais tarde possivel; uma vez por volta; a reserva do bloco comeca nela."""
+    from core.engenheiro import plano as P
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    Lt = float(track.length)
+    e = _engenheiro_de_teste(track)
+    cedo, total = _volta_com_perdas(track, e.trechos, {"C02": 0.30}, freada=340.0)
+    Engenheiro.na_linha(e, 1, cedo, total, conta=True)
+    ficha = next(f for f in e.falas if f["tipo"] == "ficha")
+    assert ficha["duracaoS"] == pytest.approx(3.0) and ficha["folgaS"]["C02"] >= P.FOLGA_MINIMA_S - 1e-6
+    # o pedaco livre da volta (470 a 338 m, pela linha) acaba na frenagem dele (340): a ficha acaba 3,0 s antes
+    fim_da_ficha = (ficha["sFala"] + (P.LATENCIA_NO_JOGO_S + 3.0) * 50.0) % Lt
+    assert (338.0 - fim_da_ficha) % Lt == pytest.approx(150.0, abs=6.0)
+    assert [f["tipo"] for f in e.falas] == ["ficha"]                     # o lembrete cairia no mesmo pedaco
+    assert e.ficha["planoDoLembrete"]["motivo"] == "a ficha já é dita neste pedaço livre"
+    assert e.reserva(1100.0) == pytest.approx(ficha["sFala"])            # o feedback acaba antes da ficha
+    assert e.reserva(100.0) == pytest.approx(290.0)                      # depois da ficha, o fim do bloco
+    ditas = []
+    for _volta in range(2):                                              # duas voltas inteiras: uma ficha em cada
+        for s in np.arange(0.0, Lt, 20.0):
+            ditas += e.no_quadro(float(s), 180.0, True, False)
+    assert [f["tipo"] for f in ditas] == ["ficha", "ficha"]
+    assert [x["tipo"] for x in e.linhas if x["tipo"] in ("ficha", "lembrete")] == ["ficha", "ficha"]
+
+
+def test_o_lembrete_com_a_folga_e_o_lembrete_que_nao_cabe():
+    """Item 11: o lembrete no pedaco livre logo antes da curva, o mais tarde possivel com a folga de 3,0 s; se nao
+    couber, nao ha lembrete; no pedaco da ficha, fica so a ficha."""
+    from core.engenheiro import plano as P
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    s = np.asarray(track.s, float)
+    g = _volta_de_teste(track)
+    g["acelerador"] = np.where((s >= 180) & (s < 200), 0.5, g["acelerador"])   # um alivio de 20 m
+    perfil = P.Perfil(g, float(track.length) / 50.0, track, "teste")
+    pedacos = P.pedacos_livres(g, track)                                       # 200 a 378 m e 470 a 178 m
+    reta = {"inicio": 600.0, "fim": 1000.0}
+    pf = P.planejar_a_ficha(perfil, pedacos, reta, 380.0, 3.0)
+    assert pf["folgaS"] == pytest.approx(3.0 + 202.0 / 50.0, abs=0.1)          # 3,0 s antes do fim do pedaco (178)
+    pl = P.planejar_o_lembrete(perfil, pedacos, 380.0, 0.4, pf["pedaco"])
+    assert pl["folgaS"] == pytest.approx(3.0, abs=0.05) and pl["pedaco"] != pf["pedaco"]
+    assert pl["sFala"] == pytest.approx(380.0 - (3.0 + P.LATENCIA_NO_JOGO_S + 0.4) * 50.0, abs=2.0)
+    nao = P.planejar_o_lembrete(perfil, pedacos, 380.0, 1.0, pf["pedaco"])     # 3,0 + 0,1 + 1,0 > 3,56 s
+    assert "sFala" not in nao and nao["motivo"] == "o lembrete não cabe no pedaço livre antes da curva"
+    assert P.planejar_a_ficha(perfil, pedacos, reta, 380.0, 40.0)["motivo"] == "a ficha não cabe na reta longa"
+
+
+def test_a_contagem_de_tres_bipes_e_a_falta_dela_nas_curvas_sem_frenagem():
+    """Item 12: tres bipes a 0,5 s um do outro pelo perfil, o ultimo no ponto de frenagem da referencia; nas curvas
+    de pe embaixo (e com o bipe desligado), nenhum."""
+    from core.engenheiro import plano as P
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    e = _engenheiro_de_teste(track)
+    assert P.pontos_da_contagem(e.perfil, 380.0) == [pytest.approx(330.0, abs=1.0), pytest.approx(355.0, abs=1.0), 380.0]
+    cedo, total = _volta_com_perdas(track, e.trechos, {"C02": 0.30}, freada=340.0)
+    Engenheiro.na_linha(e, 1, cedo, total, conta=True)
+    assert e.ficha["sBipes"][-1] == pytest.approx(380.0, abs=2.0) and len(e.ficha["sBipes"]) == 3
+    e.foco = None
+    Engenheiro._novo_foco(e, 0, 1, "teste", None)                        # a C01: de pe embaixo
+    Engenheiro._planejar_o_foco(e)
+    assert e.ficha["tipo"] == "pé embaixo" and e.ficha["sBipes"] == []
+    e2 = _engenheiro_de_teste(track, bipe=False)
+    Engenheiro.na_linha(e2, 1, cedo, total, conta=True)
+    assert e2.ficha["trecho"] == "C02" and e2.ficha["sBipes"] == []
+
+
+def test_a_marca_so_na_curva_de_foco():
+    """Item 13: a marca no asfalto so na curva de foco (no ponto de frenagem da referencia); a lista da volta nao
+    leva marca nem bipe."""
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    e = _engenheiro_de_teste(track)
+    cedo, total = _volta_com_perdas(track, e.trechos, {"C01": 0.10, "C02": 0.30}, freada=340.0)
+    Engenheiro.na_linha(e, 1, cedo, total, conta=True)
+    estado = Engenheiro.estado_publico(e)
+    assert estado["foco"]["trecho"] == "C02" and estado["foco"]["marca"]["x"] is not None
+    assert estado["foco"]["sFreada"] == pytest.approx(380.0, abs=2.0)
+    assert all("x" not in i and "sBipe" not in i and "sBipes" not in i for i in estado["lista"])
+
+
+def test_o_app_do_jogo_toca_a_ficha_e_a_contagem_pelo_s_e_mostra_o_foco():
     pasta = BACKEND.parent / "tools" / "csp_app" / "radio_engenheiro"
     lua = (pasta / "radio_engenheiro.lua").read_text(encoding="utf-8")
     assert "function tocarOAviso" in lua and "function acompanharOsAvisos" in lua
     assert "setInterval(acompanharOsAvisos, 0)" in lua                 # a cada quadro, pelo s do carro
     corpo = lua.split("function tocarOAviso", 1)[1].split("\nend", 1)[0]
     assert "estado.atual = nil" in corpo                                # o cartao que estava na tela sai
-    assert "bipe.wav" in lua and (pasta / "bipe.wav").exists()
+    assert "foco.sBipes" in lua and "'bipe_agudo.wav'" in lua and "'bipe.wav'" in lua
+    assert (pasta / "bipe.wav").exists() and (pasta / "bipe_agudo.wav").exists()
+    marca = lua.split("local function desenharAMarca", 1)[1].split("\nend", 1)[0]
+    assert "foco.marca" in marca and "d.lista" not in marca            # a marca so na curva de foco
+    assert "Esperando uma volta que conte" in lua

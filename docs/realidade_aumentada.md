@@ -562,7 +562,7 @@ O marco de menor custo na janela da ação (para frear, até 150 m antes do pont
 
 `<pasta de dados>/data/radio/<sessão>.engenheiro.jsonl`: uma linha por aviso (o trecho, a causa, a frase, o `s_fala`, se foi pela voz ou só pela janela e por quê, a folga até a freada), uma por conferência (aplicada ou não, com o valor) e uma por volta que conta (a perda em cada um dos 15 trechos e a lista). É a entrada do protocolo de avaliação e da tela Volta (pedido 53).
 
-### 9.7 Depois do teste de 20/11: a voz que sai a tempo (ADR 0033, emenda de 20/11; app do jogo 0.8.0)
+### 9.7 Depois do teste de 20/11: a voz que sai a tempo (ADR 0033, emenda de 20/11; app do jogo 0.8.0; a 0.9.0 está na seção 9.8)
 
 O teste no jogo de 20/11 mostrou dois problemas. Só 2 de 14 avisos foram pela voz, e os dois acabaram em cima da frenagem, um deles com 2,06 s de atraso pela fila do cartão. A emenda de 20/11 muda o caminho do aviso:
 - **Quem fala é o app do jogo, pelo `s` do carro.**
@@ -588,3 +588,19 @@ O teste no jogo de 20/11 mostrou dois problemas. Só 2 de 14 avisos foram pela v
   - `AT_ENGENHEIRO_BIPE=desligado` desliga o bipe.
 - **A janela** mostra os dois próximos avisos, cada um desde o fim da ação anterior a ele, com o da vez em destaque. **A marca no asfalto** fica no ponto dito.
 - **A reserva do feedback** usa o tempo do perfil até a primeira fala planejada à frente, e não a velocidade do momento.
+
+### 9.8 Depois do teste de 21/11: a curva de foco (ADR 0033, emenda de 21/11; app do jogo 0.9.0)
+
+O teste de 21/11 mostrou que a voz sai a tempo, mas o engenheiro falava de curvas demais, cedo demais, e o bipe marcava coisas diferentes. A emenda de 21/11 troca a entrega:
+- **Uma curva de foco por vez:** a de maior perda acima do ruído, na linha de cada volta que conta. O engenheiro só fala dela.
+  - Ela sai do foco quando a conferência mostra que o piloto aplicou a ficha ou depois de 3 voltas que contam sem aplicar. Aí vem a curva seguinte em perda.
+  - Antes da primeira volta que conta, o foco vem da última sessão na pista (o registro do engenheiro). Sem foco, a janela diz "Esperando uma volta que conte" e o motivo da última volta descartada.
+- **A ficha da curva** (`core/engenheiro/ficha.py`): a curva e o lado, onde frear entre as placas, a técnica, a linha e a velocidade, pela volta de referência.
+  - "Com trail braking" ou "frenagem em linha reta" vêm da melhor passagem do piloto, nunca do pedal da IA; sem ela, a técnica fica de fora.
+  - A marcha fica fora até ser conferida.
+  - A ficha é dita uma vez por volta na reta longa antes da curva (a dos boxes ou a oposta), com prioridade sobre o feedback, e a janela mostra a ficha escrita a volta toda.
+- **O lembrete** ("Um: entre o 100 e o 50.") é dito no pedaço livre logo antes da curva, com a folga de 3,0 s; se não couber, ou se cair no pedaço da ficha, não há lembrete.
+- **A contagem de três bipes:** os dois primeiros iguais (`bipe.wav`, 2.000 Hz) e o último mais agudo (`bipe_agudo.wav`, 3.000 Hz), no ponto de frenagem da referência, a 0,5 s um do outro (o intervalo não foi confirmado por nenhuma fonte). Só nas curvas em que a referência freia. `AT_ENGENHEIRO_BIPE=desligado` desliga.
+- **A marca no asfalto** fica só na curva de foco, no ponto de frenagem.
+- **O alívio só conta com 10 m ou mais** de acelerador abaixo de 0,90 (a queda na troca de marcha não conta), também no "sem tirar o pé".
+- **O registro** ganha as linhas `foco`, `ficha`, `lembrete` e `plano` da ficha, e a `conferencia` só do foco; a linha `aviso` sai.

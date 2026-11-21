@@ -1,15 +1,14 @@
-"""O plano das falas do engenheiro (pedido 52; ADR 0033, decisoes do Eduardo de 20/11): funcoes puras, sem
-estado, testadas com dados sinteticos. Vale para qualquer pista e qualquer trecho.
+"""O plano das falas do engenheiro (pedido 52; ADR 0033, decisoes do Eduardo de 20/11 e de 21/11): funcoes puras,
+sem estado, testadas com dados sinteticos. Vale para qualquer pista e qualquer trecho.
 
 * **o perfil:** a volta de onde vem o tempo e a acao do piloto (a ultima volta que conta da sessao; antes dela,
   a "Sua melhor volta"; sem ela, a volta de referencia), tratada como um laco (o fim emenda no comeco);
 * **os pedacos livres:** acelerador em 0,90 ou mais e freio abaixo de 0,15, no perfil;
 * **a acao do piloto** em cada trecho, desde a saida do trecho anterior;
-* **os dois candidatos** de cada aviso: os pedacos livres que acabam mais perto antes do ponto (o mais cedo entre
-  a acao do piloto e o ponto dito);
-* **o plano:** cada aviso no primeiro candidato em que cabe sozinho com a folga de 3,0 s (senao, no segundo); os
-  avisos do mesmo pedaco em pares (no maximo dois por fala); as falas o mais tarde possivel, de tras para a
-  frente, sem encostar uma na outra; a fala que nao cabe manda os avisos para o segundo candidato;
+* **a ficha** da curva de foco (21/11, item 9): no pedaco livre que contem o fim da reta longa antes dela, 3,0 s
+  antes do fim do pedaco e do ponto da curva, o mais tarde possivel;
+* **o lembrete** (21/11, item 11): no pedaco livre logo antes da curva de foco, com a folga de 3,0 s;
+* **a contagem de bipes** (21/11, item 12): tres pontos, o ultimo no ponto de frenagem, a 0,5 s um do outro;
 * **o molde** da fala: (a), (b) ou (c).
 """
 from __future__ import annotations
@@ -24,11 +23,11 @@ from . import regras as R
 # ADR 0033, emenda de 20/11
 LATENCIA_NO_JOGO_S = 0.1            # item 2: uma estimativa, a ser medida no teste
 FOLGA_MINIMA_S = 3.0                # item 6
-INTERVALO_ENTRE_FALAS_S = 0.3       # item 7
-ESTIMATIVA_DO_PAR_S = 0.8           # item 7: o par antes de a voz medir (a soma das falas sozinhas mais isto)
-ESTIMATIVA_DA_FALA_S = 3.5          # uma fala sozinha antes de a voz medir
-TEMPO_DE_REACAO_AO_BIPE_S = 0.0     # item 9: nao confirmado (o ADR cita as fontes); o bipe soa no ponto
-DEPOIS_DA_ACAO_M = 20.0             # item 10: a janela tira o aviso 20 m depois da acao
+ESTIMATIVA_DA_FALA_S = 3.5          # o lembrete antes de a voz medir
+ESTIMATIVA_DA_FICHA_S = 8.0         # a ficha antes de a voz medir (as fichas de Interlagos: 5,4 a 11 s)
+# ADR 0033, emenda de 21/11, item 12: a contagem de tres bipes; o intervalo nao confirmado (o ADR diz por que)
+INTERVALO_DA_CONTAGEM_S = 0.5
+BIPES_DA_CONTAGEM = 3
 MOLDES = ("a", "b", "c")
 MOLDE_PADRAO = "b"             # ADR 0033, a decisao de 20/11 sobre o molde: o Eduardo escolheu o (b) ouvindo
 
@@ -114,11 +113,15 @@ def acao_do_piloto(grade: Dict[str, np.ndarray], track, trechos: Sequence[Any], 
         if f is not None:
             return float(f), "frenagem"
     idx = _window(track, de, float(t.apice_s))
-    cond = (freio[idx] >= R.FREIO_DA_FREADA) | (acel[idx] < R.ACELERADOR_DA_RETOMADA)
-    hits = np.flatnonzero(cond)
-    if hits.size:
-        i = idx[hits[0]]
-        return float(track.s[i]), ("frenagem" if freio[i] >= R.FREIO_DA_FREADA else "alívio")
+    # a primeira frenagem, ou o comeco do primeiro alivio de 10 m ou mais (emenda de 21/11, item 8)
+    passo = L / float(len(track.s))
+    minimo = max(1, int(round(R.ALIVIO_MINIMO_M / passo)))
+    abaixo = acel[idx] < R.ACELERADOR_DA_RETOMADA
+    for j in range(len(idx)):
+        if freio[idx[j]] >= R.FREIO_DA_FREADA:
+            return float(track.s[idx[j]]), "frenagem"
+        if abaixo[j] and (j == 0 or not abaixo[j - 1]) and bool(np.all(abaixo[j:j + minimo])) and j + minimo <= len(idx):
+            return float(track.s[idx[j]]), "alívio"
     return float(t.entrada_s), "entrada"
 
 
@@ -176,111 +179,68 @@ def fala_sozinha(frase: str) -> str:
     return f"{frase[0].upper()}{frase[1:]}."
 
 
-def fala_do_par(numeros: Sequence[Optional[int]], frases: Sequence[str]) -> str:
-    """"Seis: vire na zebra. Sete: freie na zebra." (o numero da curva por extenso)."""
-    partes = []
-    for n, f in zip(numeros, frases):
-        nome = NUMEROS.get(int(n), str(n)) if n is not None else ""
-        partes.append(f"{nome.capitalize()}: {f}." if nome else fala_sozinha(f))
-    return " ".join(partes)
+# ── a ficha, o lembrete e a contagem (ADR 0033, emenda de 21/11) ─────────
+
+def candidato(perfil: Perfil, pedacos: Sequence[Dict[str, float]], s_ponto: float, i: int) -> Optional[Dict[str, Any]]:
+    """O pedaco livre `i` visto do ponto (os tempos relativos ao ponto, negativos antes dele)."""
+    return next((c for c in candidatos(perfil, pedacos, s_ponto, quantos=len(pedacos)) if c["i"] == i), None)
 
 
-# ── o plano ──────────────────────────────────────────────────────────────
-
-@dataclass
-class Aviso:
-    trecho: str
-    numero: Optional[int]
-    frase: str                 # a frase falada no molde, sem o ponto final
-    s_acao: float              # a acao do piloto (no perfil)
-    s_dito: float
-    ordem: int
-    candidatos: List[Dict[str, Any]] = field(default_factory=list)
-    escolha: int = 0           # 0: o pedaco mais perto; 1: o segundo
-    motivo: Optional[str] = None
+def pedaco_com(perfil: Perfil, pedacos: Sequence[Dict[str, float]], s: float) -> Optional[int]:
+    """O pedaco livre que contem `s` (ou, sem nenhum, o que acaba mais perto antes dele)."""
+    c = candidatos(perfil, pedacos, s, quantos=1)
+    return c[0]["i"] if c else None
 
 
-def planejar(avisos: List[Aviso], perfil: Perfil, pedacos: Sequence[Dict[str, float]],
-             duracao: Callable[[str], Optional[float]], max_rodadas: int = 10) -> List[Dict[str, Any]]:
-    """O plano das falas (item 7). `duracao(texto)`: a duracao medida pela voz, ou None (vale a estimativa).
-    Devolve as falas: o pedaco, o `s_fala`, o texto, a duracao, os avisos e a folga planejada de cada um.
-    Os avisos que ficam fora recebem `motivo`."""
-    L = perfil.L
-    for a in avisos:
-        a.candidatos = candidatos(perfil, pedacos, ponto_limite(perfil, a.s_acao, a.s_dito))
-        a.escolha, a.motivo = 0, None
-
-    def dur(texto: str, partes: Sequence[Aviso]) -> float:
-        d = duracao(texto)
-        if d is not None:
-            return float(d)
-        if len(partes) == 1:
-            return ESTIMATIVA_DA_FALA_S
-        soma = 0.0
-        for p in partes:
-            x = duracao(fala_sozinha(p.frase))
-            soma += float(x) if x is not None else ESTIMATIVA_DA_FALA_S
-        return soma + ESTIMATIVA_DO_PAR_S
-
-    falas: List[Dict[str, Any]] = []
-    for _ in range(max_rodadas):
-        # 1. cada aviso no primeiro candidato em que cabe sozinho
-        por_pedaco: Dict[int, List[Aviso]] = {}
-        for a in avisos:
-            if a.motivo is not None and a.escolha >= len(a.candidatos):
-                continue
-            d1 = dur(fala_sozinha(a.frase), [a])
-            while a.escolha < len(a.candidatos) and not cabe_sozinha(a.candidatos[a.escolha], d1):
-                a.escolha += 1
-            if a.escolha >= len(a.candidatos):
-                a.motivo = a.motivo or "não cabe em nenhum dos dois pedaços livres antes da ação"
-                continue
-            por_pedaco.setdefault(a.candidatos[a.escolha]["i"], []).append(a)
-        # 2. em cada pedaco, os pares na ordem da pista e as falas de tras para a frente
-        falas, mudou = [], False
-        for i, lista in por_pedaco.items():
-            p = pedacos[i]
-            x = lambda s: perfil.dt(p["sIni"], s)                     # noqa: E731 (o tempo desde o comeco do pedaco)
-            lista.sort(key=lambda a: x(ponto_limite(perfil, a.s_acao, a.s_dito)))
-            grupos = [lista[j:j + 2] for j in range(0, len(lista), 2)]
-            limite = float("inf")
-            agendadas = []
-            for g in reversed(grupos):
-                pontos = [ponto_limite(perfil, a.s_acao, a.s_dito) for a in g]
-                fim_do_pedaco = min(x(a.candidatos[a.escolha]["sFimEfetivo"]) for a in g)
-                fim = min(fim_do_pedaco, min(x(pt) for pt in pontos) - FOLGA_MINIMA_S, limite) \
-                    if len(g) else 0.0
-                texto = fala_sozinha(g[0].frase) if len(g) == 1 else fala_do_par([a.numero for a in g], [a.frase for a in g])
-                d = dur(texto, g)
-                # a fala acaba em `fim`: o disparo e `fim - d - latencia`
-                inicio = fim - d - LATENCIA_NO_JOGO_S
-                if inicio < -1e-9:
-                    for a in g:
-                        a.escolha += 1
-                        if a.escolha >= len(a.candidatos):
-                            a.motivo = "não coube com as outras falas do pedaço livre"
-                    mudou = True
-                    continue
-                limite = inicio - INTERVALO_ENTRE_FALAS_S
-                s_fala = perfil.s_em(perfil.t(p["sIni"]) + inicio)
-                agendadas.append({
-                    "pedaco": [round(p["sIni"], 1), round(p["sFim"], 1)], "candidato": g[0].escolha + 1,
-                    "sFala": round(s_fala, 1), "texto": texto, "duracaoS": round(d, 2),
-                    "duracaoMedida": duracao(texto) is not None,
-                    "trechos": [a.trecho for a in g],
-                    "folgaS": {a.trecho: round(x(pt) - (inicio + LATENCIA_NO_JOGO_S + d), 2) for a, pt in zip(g, pontos)},
-                })
-            falas.extend(reversed(agendadas))
-        if not mudou:
-            break
-    falas.sort(key=lambda f: f["sFala"])
-    return falas
+def reta_longa_antes(retas_longas: Sequence[Dict[str, Any]], s_ponto: float, L: float) -> Optional[Dict[str, Any]]:
+    """Item 9: a reta longa (um bloco de 8,8 s ou mais na volta do modelo) que vem primeiro antes do ponto: a de
+    fim mais perto para tras."""
+    if not retas_longas:
+        return None
+    return min(retas_longas, key=lambda b: (float(s_ponto) - float(b["fim"])) % L)
 
 
-def s_da_janela(perfil: Perfil, pedacos: Sequence[Dict[str, float]], s_acao: float) -> float:
-    """ADR 0033, emenda de 20/11, item 10: o aviso aparece desde o fim da acao anterior (o comeco do pedaco livre
-    logo antes da acao do piloto); sem pedaco livre, 150 m antes da acao."""
-    c = candidatos(perfil, pedacos, s_acao, quantos=1)
+def planejar_a_ficha(perfil: Perfil, pedacos: Sequence[Dict[str, float]], reta: Optional[Dict[str, Any]],
+                     s_ponto: float, duracao: float) -> Dict[str, Any]:
+    """Item 9: a ficha no pedaco livre do perfil que contem o fim da reta longa; ela acaba 3,0 s antes do fim do
+    pedaco (a acao seguinte) e do ponto da curva de foco, e comeca o mais tarde possivel. Devolve {sFala,
+    duracaoS, folgaS, folgaAoFimDoPedacoS, pedaco} ou {motivo}."""
+    if reta is None:
+        return {"motivo": "sem reta longa na pista"}
+    i = pedaco_com(perfil, pedacos, float(reta["fim"]))
+    c = candidato(perfil, pedacos, s_ponto, i) if i is not None else None
+    if c is None:
+        return {"motivo": "sem pedaço livre na reta longa"}
+    fim = float(c["relFim"]) - FOLGA_MINIMA_S
+    inicio = fim - float(duracao) - LATENCIA_NO_JOGO_S
+    if inicio < float(c["relIni"]) - 1e-9:
+        return {"motivo": "a ficha não cabe na reta longa", "pedaco": i}
+    return {"sFala": round(perfil.s_em(perfil.t(s_ponto) + inicio), 1), "duracaoS": round(float(duracao), 2),
+            "folgaS": round(-fim, 2), "folgaAoFimDoPedacoS": round(float(c["relFim"]) - fim, 2), "pedaco": i,
+            "relInicioS": round(inicio, 2)}
+
+
+def planejar_o_lembrete(perfil: Perfil, pedacos: Sequence[Dict[str, float]], s_ponto: float, duracao: float,
+                        pedaco_da_ficha: Optional[int]) -> Dict[str, Any]:
+    """Item 11: o lembrete no pedaco livre logo antes do ponto, o mais tarde possivel, com a folga de 3,0 s. No
+    mesmo pedaco da ficha, fica so a ficha. Devolve {sFala, duracaoS, folgaS, pedaco} ou {motivo}."""
+    c = candidatos(perfil, pedacos, s_ponto, quantos=1)
     if not c:
-        return (float(s_acao) - 150.0) % perfil.L
-    return float(c[0]["sIni"])
+        return {"motivo": "sem pedaço livre antes da curva"}
+    c = c[0]
+    if pedaco_da_ficha is not None and c["i"] == pedaco_da_ficha:
+        return {"motivo": "a ficha já é dita neste pedaço livre", "pedaco": c["i"]}
+    if not cabe_sozinha(c, duracao):
+        return {"motivo": "o lembrete não cabe no pedaço livre antes da curva", "pedaco": c["i"]}
+    fim = min(float(c["relFim"]), -FOLGA_MINIMA_S)
+    inicio = fim - float(duracao) - LATENCIA_NO_JOGO_S
+    return {"sFala": round(perfil.s_em(perfil.t(s_ponto) + inicio), 1), "duracaoS": round(float(duracao), 2),
+            "folgaS": round(-fim, 2), "pedaco": c["i"], "relInicioS": round(inicio, 2)}
+
+
+def pontos_da_contagem(perfil: Perfil, s_freada: float, intervalo: float = INTERVALO_DA_CONTAGEM_S,
+                       n: int = BIPES_DA_CONTAGEM) -> List[float]:
+    """Item 12: os `s` dos bipes, pelo tempo do perfil: o ultimo no ponto de frenagem; os outros `intervalo` e
+    2 x `intervalo` antes dele."""
+    t = perfil.t(s_freada)
+    return [round(perfil.s_em(t - (n - 1 - j) * float(intervalo)), 1) for j in range(n - 1)] + [round(float(s_freada) % perfil.L, 1)]
