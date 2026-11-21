@@ -12,7 +12,7 @@
   - a suíte do backend passou (**1080 testes**);
   - **parado antes do novo teste no jogo:** você escolhe o molde ouvindo os áudios.
 - **A decisão de 20/11 sobre o molde (a última seção):** você escolheu o **(b)**. Ela está no ADR 0033 (`e6147005`, antes do código), e o (b) é o padrão no código. **Parado antes do teste no jogo:** falta o seu "pode instalar".
-- **A atualização de 21/11 (a última seção): em andamento.** O ADR (`a9f94d20`), o código, o app do jogo 0.9.0 e os testes (`72e2f0d8`) estão feitos. **Parado antes da D.1:** o jogo está aberto.
+- **A atualização de 21/11 (a última seção):** o ADR (`a9f94d20`), o código, o app do jogo 0.9.0 e os testes (`72e2f0d8`), a D.1 nas 6 sessões, a D.2 e as suítes (**1085 passando**) estão feitos. **Parado antes do teste no jogo:** falta o seu "pode instalar" do app do jogo 0.9.0. O cartão novo está no fim.
 - **A Parte E (20/11), a seção "Parte E: o teste no jogo":**
   - o teste no jogo foi feito, e a leitura E.3 está feita, com o foco na voz e no tempo;
   - **parado para a sua decisão:** nenhum código foi mudado depois do teste;
@@ -42,7 +42,8 @@
   - `a2d4f023`, `fdc8abc8`, `af8d452b`, `06e92f15`, `e47afb97` e `760d245a`: o "pode instalar", o teste de 21/11, os problemas e a ficha da curva (só relatório e scripts)
   - `a9f94d20` atualização de 21/11: o texto e as decisões no ADR 0033, antes do código
   - `72e2f0d8` atualização de 21/11: o código, o app do jogo 0.9.0, os testes e a documentação
-  - o commit deste relatório
+  - `82b7b076` o relatório do ADR, do código e dos testes (parado com o jogo aberto)
+  - o commit da D.1, da D.2, das suítes e deste relatório
 - **Merge:** nenhum (depois do teste no jogo). **Envio:** nenhum feito por mim (os comandos estão no fim).
 - **Arquivos de handoff** (`docs/handoff/2026-11-15_52_engenheiro-que-acompanha-a-volta_…`):
   - `_relatorio.md` (este);
@@ -53,6 +54,7 @@
   - `_radio_offline.py`, `_radio_contar.py` e `_radio_com_e_sem.json` (a D.1);
   - `_previa.py`, `_previa.html` e `_previa.png` (a D.2);
   - `_testes.txt` e `_conferir_lua.txt` (a D.4).
+  - atualização de 21/11: `_d1_2111_contar.py` e `_d1_2111.json` (a D.1), `_d2_2111.py`, `_d2_2111.json`, `_previa_2111.html` e `_previa_2111.png` (a D.2), `_testes_2111.txt` e `_conferir_lua_2111.txt`; `_radio_offline.py` ganhou `AT_D1_REGISTRO_ANTERIOR`.
 
 ## Parte 0: a pasta
 
@@ -1205,3 +1207,130 @@ Os testes do rádio (66) e o da referência do app (agora com a 0.9.0) também p
 5. **Depois,** o seu "pode instalar" do app do jogo 0.9.0 e o teste no jogo.
 
 **Para continuar, feche o jogo** (o `acs.exe` está aberto) e me avise.
+
+
+### Depois de o jogo fechar: a D.1, a D.2 e as suítes (parado antes do teste no jogo)
+
+Você fechou o jogo às 19h37. Rodei o resto do item 13. Nenhuma regra mudou depois dos números.
+
+#### D.1: as 6 sessões, em cadeia
+
+**Como rodou:**
+- As rodadas são as do rádio fora do tempo real, com a voz de verdade e o molde (b). As 6 terminaram sem erro (`_radio_offline.py`).
+- **A cadeia:** cada rodada recebeu o registro do engenheiro da rodada anterior. Assim, o foco de cada sessão começa pelo da sessão anterior (item 5); a de 13/10 começa sem foco.
+- **"Antes"** é a rodada da D.1 de 20/11 com o molde (b). Na sessão de 21/11, que não estava naquela D.1, "antes" é a sessão real, com o código de 20/11 no jogo.
+- **A contagem** está em `_d1_2111_contar.py` e `_d1_2111.json`.
+
+**As medidas:**
+- **A folga real** vai do fim da fala até o que você fez naquela passagem, na gravação (a regra da E.3, com o alívio de 10 m). Fora do jogo, a latência é a estimativa de 0,1 s.
+- **O bipe** é o instante em que o carro passa o último bipe (o ponto de frenagem da referência) contra a sua frenagem naquela passagem. Positivo quer dizer que você freou depois do bipe.
+
+**O foco em cada sessão:**
+
+| sessão | voltas que contam | o foco, na ordem (e como saiu) | aplicadas / conferidas |
+|---|---:|---|---:|
+| 13/10 | 8 | C01 (aplicada na volta 6) → C04 (3 sem aplicar) → C08 (3 sem aplicar: "sem frenagem na volta" nas três) → C07 | 1 / 7 |
+| 18/10 | 9 | C07, da sessão anterior (3 sem aplicar) → C04 (3 sem aplicar) → C06 (3 sem aplicar; 2 "sem frenagem") → C07 | 0 / 9 |
+| 21/10 | 7 | C07, da sessão anterior (aplicada na volta 9) → C12 (3 sem aplicar) → C07 (3 sem aplicar) → C01 | 1 / 7 |
+| 12/11 | 5 | C01, da sessão anterior (aplicada na volta 5) → C04 | 1 / 5 |
+| 20/11 | 1 | C04, da sessão anterior | 0 / 1 |
+| 21/11 | 3 | C04, da sessão anterior (3 sem aplicar) → C07 | 0 / 3 |
+
+**As falas, as folgas e o bipe:**
+
+| sessão | fichas ditas | lembretes ditos | folga até a sua ação (mín / mediana) | abaixo de 3 s | folga até o ponto (mín / mediana) | a sua frenagem depois do último bipe (mediana) |
+|---|---:|---:|---|---:|---|---|
+| 13/10 | 10 | 6 | 2,04 / 12,2 s | 3 de 16 | 2,96 / 12,4 s | −0,53 s (−37 m) |
+| 18/10 | 8 | 6 | 1,35 / 5,4 s | 3 de 14 | 3,14 / 5,8 s | −0,61 s (−26 m) |
+| 21/10 | 6 | 7 | 3,72 / 8,8 s | 0 de 12 | 4,14 / 7,7 s | −0,65 s (−34 m) |
+| 12/11 | 8 | 0 | 2,70 / 3,5 s | 2 de 8 | 3,39 / 3,7 s | −0,42 s (−30 m) |
+| 20/11 | 4 | 0 | 2,52 / 3,2 s | 1 de 4 | 3,38 / 3,7 s | −0,57 s (−37 m) |
+| 21/11 | 9 | 0 | 2,52 / 3,0 s | 4 de 8 | 3,07 / 3,5 s | −0,43 s (−29 m) |
+
+**Os segundos de fala por volta (a medida do "muita informação") e o feedback:**
+
+| sessão | engenheiro por volta (antes → agora) | feedback por volta (antes → agora) | total por volta (antes → agora) | feedback com a causa na voz (sem engenheiro / 20/11 (b) / agora) | cortes (20/11 → agora) | pendentes no fim (20/11 → agora) | feedback que mudou de bloco |
+|---|---|---|---|---|---|---|---:|
+| 13/10 | 12,0 → 6,2 s | 5,4 → 9,6 s | 17,3 → 15,8 s | 16 / 2 / 9 | 5 → 0 | 10 → 1 | 15 |
+| 18/10 | 10,0 → 4,5 s | 7,3 → 8,0 s | 17,4 → 12,6 s | 15 / 6 / 10 | 4 → 0 | 4 → 1 | 10 |
+| 21/10 | 6,9 → 3,9 s | 9,4 → 10,5 s | 16,3 → 14,4 s | 25 / 11 / 16 | 2 → 0 | 3 → 1 | 14 |
+| 12/11 | 9,0 → 6,8 s | 3,5 → 7,0 s | 12,4 → 13,8 s | 7 / 2 / 5 | 2 → 0 | 7 → 1 | 10 |
+| 20/11 | 7,3 → 5,7 s | 3,1 → 4,6 s | 10,4 → 10,3 s | 2 / 1 / 2 | 0 → 0 | 1 → 0 | 2 |
+| 21/11 (antes: a sessão real) | 5,6 → 5,7 s | 5,4 → 3,8 s | 11,0 → 9,6 s | 6 / – / 3 | – → 0 | – → 2 | 6 |
+
+As voltas são as da gravação, com a volta de saída e as incompletas, nos dois lados da comparação.
+
+**O que os números mostram:**
+- **O engenheiro fala de 30 a 55% menos por volta** nas cinco sessões da D.1 de 20/11. Na de 21/11 fica igual: na sessão real, o engenheiro só começou a falar na volta 5.
+- **O feedback ganhou espaço de volta:**
+  - o feedback com a causa na voz subiu de 2, 6, 11, 2 e 1 para 9, 10, 16, 5 e 2;
+  - nenhum feedback foi cortado (antes, 2 a 5 por sessão);
+  - ficou 1 pendente no fim, contra 3 a 10.
+- **A folga até o ponto** ficou sempre em 3,0 s ou mais (o mínimo é 2,96 s, num lembrete).
+- **A folga até a sua ação** ficou abaixo de 3,0 s em 13 de 62 falas, com o mínimo de 1,35 s. Nessas passagens, você freou antes do que na volta usada como perfil (a sua última volta que contou).
+- **No último bipe,** você já tinha freado em quase todas as passagens: em média 0,4 a 0,65 s antes, ou 26 a 37 m. É a correção que a ficha pede, porque a referência freia mais tarde. Duas exceções:
+  - em 3 passagens, você freou até 0,6 s depois do bipe;
+  - na C06 de 18/10, você freou 4,4 s (178 m) antes.
+
+**Pontos para você olhar** (não mudei nenhuma regra):
+1. **A ficha das curvas do miolo sai muito antes da curva.** A reta longa antes delas é a reta oposta:
+   - C06: 14 a 17 s antes;
+   - C08: 28 a 35 s antes;
+   - C12: 47 a 61 s antes.
+2. **A ficha da C07 (10 a 11 s) quase nunca coube na reta oposta.** Ela ficou de fora em 10 planos, e a C07 ficou só com o lembrete e os bipes. Em 21/11, ela coube uma vez, começando em s = 338: o pedaço livre começava na saída da C02 e passava pela Curva do Sol de pé embaixo.
+3. **O lembrete das curvas do miolo sai 6 a 14 s antes delas.** Nas suas voltas não há pedaço livre (acelerador em 0,90 ou mais) entre a C06 e a C07, nem entre a C07 e a C08. Assim, o "pedaço logo antes" fica antes da C06:
+   - o lembrete da C07, 6 a 10 s antes;
+   - o da C08, 12 a 14 s antes.
+4. **"Sem frenagem na volta" conta como não aplicou.** Na C08 de 13/10 e na C06 de 18/10, você não freou (só aliviou). Assim, a instrução "freie…" nunca podia ser aplicada, e a curva saiu depois de 3 voltas.
+5. **A C04 foi o foco nas três últimas sessões** e não foi aplicada nenhuma vez. Você freou 22 a 64 m antes do ponto.
+
+#### D.2: as fichas com a técnica da sua melhor passagem, e a prévia da janela
+
+- **A melhor passagem** de cada curva é a de menor tempo no trecho entre as 153 voltas humanas do store (`_d2_2111.py` e `_d2_2111.json`).
+- **A técnica que saiu:**
+  - da sua passagem: C01 "com trail braking"; C04 e C12 "frenagem em linha reta";
+  - da referência: C05, C09, C11, C13 e C14 "de pé embaixo"; C03 "só um alívio".
+- **Sem técnica:** C02, C06, C07, C08 e C10, porque a sua melhor passagem nelas não tem frenagem.
+- **Os áudios:** `data/radio/[teste] fichas da curva de foco 21-11/`, fora da pasta do jogo e fora do git. São 28 arquivos, a ficha e o lembrete de cada curva:
+  - as fichas, de 5,4 a 10,0 s;
+  - os lembretes, de 1,4 a 3,7 s.
+- **A prévia da janela** (`_previa_2111.html` e `.png`) mostra três estados:
+  - a ficha da C01 em foco, "a 180 m do ponto";
+  - a conferência depois da linha ("Curva 2: freou 40 m antes do ponto");
+  - "Esperando uma volta que conte (volta 3: rodada (perdeu 19,9 s na C13))".
+
+#### As suítes
+
+- **backend, a suíte inteira:** **1085 passando**, nenhuma falha (11 min 28 s; os 37 avisos de sempre; `_testes_2111.txt`);
+- **front:** 180 testes passando, e o `tsc` sem erro;
+- **desktop:** 4 testes passando;
+- **Lua:** passa na conferência contra o SDK do CSP (`_conferir_lua_2111.txt`).
+
+#### O cartão para o teste no jogo (preencha depois da sessão)
+
+Uma linha por volta:
+
+| volta | curva de foco | entendi a ficha | o lembrete chegou a tempo | a contagem me ajudou a frear no ponto | anotação |
+|---|---|---|---|---|---|
+| 1 | | | | | |
+| 2 | | | | | |
+| 3 | | | | | |
+| 4 | | | | | |
+| 5 | | | | | |
+| 6 | | | | | |
+| 7 | | | | | |
+| 8 | | | | | |
+| 9 | | | | | |
+| 10 | | | | | |
+| 11 | | | | | |
+| 12 | | | | | |
+
+#### O que falta
+
+1. **O seu "pode instalar":** depois dele, você roda o `instalar.ps1` do app do jogo 0.9.0, que leva o `bipe_agudo.wav` novo.
+2. **O teste no jogo,** com o roteiro da Parte E: pelo menos 10 voltas, até 45 minutos, na pista original. Antes, eu abro o app do repositório. Depois, preencha o cartão acima.
+3. **A leitura:** as tabelas da D.1 nessa sessão, mais a latência, o FPS, os logs do CSP e o seu cartão.
+4. **O merge em `develop` e o instalador 0.9.0** continuam parados até depois do teste.
+5. **O envio:** nada foi enviado. Para enviar a branch:
+   `git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer push origin etapa/engenheiro`
+6. **Para o backlog:** conferir se a marcha gravada é a marcha real do carro (item 6).

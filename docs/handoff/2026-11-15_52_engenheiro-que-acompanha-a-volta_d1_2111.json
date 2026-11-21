@@ -1,0 +1,2924 @@
+{
+ "regras": "Pedido 52, D.1 da atualizacao de 21/11 (a curva de foco): junta as rodadas do radio fora do tempo real das 6\nsessoes (em cadeia: cada rodada recebe o registro do engenheiro da anterior) e mede, contra a gravacao, o que o\npiloto fez de fato. So leitura das gravacoes.\n\n* **o foco:** as linhas `foco` (a curva, a volta do radio, o motivo da escolha ou da troca) e `conferencia`;\n* **a ficha e o lembrete:** as linhas `ficha` e `lembrete` (a fala que comecou no `s_fala`); a fala comeca no\n  `s_fala` mais a latencia de 0,1 s e acaba depois da duracao; a folga ate a acao do piloto naquela passagem (a\n  regra da E.3, pelo tipo da ficha: a frenagem; de pe embaixo, a entrada; so um alivio, a primeira frenagem ou o\n  primeiro alivio) e ate o ponto da ficha (o ponto de frenagem da referencia, ou a entrada);\n* **a contagem de bipes:** em cada passagem pela curva de foco com frenagem, o instante em que o carro passa o\n  ultimo bipe (o ponto de frenagem da referencia; fora do jogo, sem latencia) contra a frenagem do piloto\n  naquela passagem (positivo: ele freou depois do bipe);\n* **o feedback:** os cortes e as mensagens que mudaram de bloco contra a rodada sem o engenheiro;\n* **os segundos de fala por volta, antes e depois desta emenda:** a soma das falas do engenheiro e do feedback,\n  dividida pelas voltas da gravacao. \"Antes\" e a rodada da D.1 de 20/11 com o molde (b); na sessao de 21/11, que\n  nao estava na D.1 de 20/11, e a sessao real (o codigo de 20/11 no jogo: o registro e as mensagens entregues).\n\nOs instantes do registro fora do tempo real vem do campo `em` (o relogio do radio, que e o da gravacao menos `t0`,\nem segundos inteiros).\n\nUso (na pasta backend): python <este arquivo> <pasta das rodadas de 21/11> <pasta das rodadas de 20/11> <saida.json>\n",
+ "sessoes": {
+  "2026-10-13": {
+   "voltasQueContam": [
+    2.0,
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0,
+    13.0,
+    14.0
+   ],
+   "focos": [
+    {
+     "volta": 2.0,
+     "trecho": "C01",
+     "saiu": null,
+     "origem": "volta 2 da sessão",
+     "motivo": "a maior perda acima do ruído (1,29 s)",
+     "t": 283.0
+    },
+    {
+     "volta": 6.0,
+     "trecho": null,
+     "saiu": "C01",
+     "origem": null,
+     "motivo": "aplicada na volta 6",
+     "t": 709.0
+    },
+    {
+     "volta": 6.0,
+     "trecho": "C04",
+     "saiu": null,
+     "origem": "volta 6 da sessão",
+     "motivo": "a maior perda acima do ruído (1,34 s)",
+     "t": 709.0
+    },
+    {
+     "volta": 9.0,
+     "trecho": null,
+     "saiu": "C04",
+     "origem": null,
+     "motivo": "3 voltas sem aplicar",
+     "t": 982.0
+    },
+    {
+     "volta": 9.0,
+     "trecho": "C08",
+     "saiu": null,
+     "origem": "volta 9 da sessão",
+     "motivo": "a maior perda acima do ruído (2,08 s)",
+     "t": 982.0
+    },
+    {
+     "volta": 14.0,
+     "trecho": null,
+     "saiu": "C08",
+     "origem": null,
+     "motivo": "3 voltas sem aplicar",
+     "t": 1588.0
+    },
+    {
+     "volta": 14.0,
+     "trecho": "C07",
+     "saiu": null,
+     "origem": "volta 14 da sessão",
+     "motivo": "a maior perda acima do ruído (1,83 s)",
+     "t": 1588.0
+    }
+   ],
+   "conferencias": [
+    {
+     "volta": 6.0,
+     "trecho": "C01",
+     "aplicada": true,
+     "texto": "Curva 1: freou no ponto",
+     "voltasEmFoco": 1
+    },
+    {
+     "volta": 7.0,
+     "trecho": "C04",
+     "aplicada": false,
+     "texto": "Curva 4: freou 64 m antes do ponto",
+     "voltasEmFoco": 1
+    },
+    {
+     "volta": 8.0,
+     "trecho": "C04",
+     "aplicada": false,
+     "texto": "Curva 4: freou 38 m antes do ponto",
+     "voltasEmFoco": 2
+    },
+    {
+     "volta": 9.0,
+     "trecho": "C04",
+     "aplicada": false,
+     "texto": "Curva 4: freou 22 m antes do ponto",
+     "voltasEmFoco": 3
+    },
+    {
+     "volta": 10.0,
+     "trecho": "C08",
+     "aplicada": null,
+     "texto": "Curva 8: sem frenagem na volta",
+     "voltasEmFoco": 1
+    },
+    {
+     "volta": 13.0,
+     "trecho": "C08",
+     "aplicada": null,
+     "texto": "Curva 8: sem frenagem na volta",
+     "voltasEmFoco": 2
+    },
+    {
+     "volta": 14.0,
+     "trecho": "C08",
+     "aplicada": null,
+     "texto": "Curva 8: sem frenagem na volta",
+     "voltasEmFoco": 3
+    }
+   ],
+   "fichas": [
+    {
+     "tipo": "ficha",
+     "volta": 2,
+     "trecho": "C01",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva um, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita e tangencie a zebra da esquerda. Mínima de 105.",
+     "sFala": 3582.7,
+     "duracaoS": 9.75,
+     "folgaPlanejadaS": 3.04,
+     "ateASuaAcaoS": 2.75,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.31
+    },
+    {
+     "tipo": "ficha",
+     "volta": 3,
+     "trecho": "C01",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva um, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita e tangencie a zebra da esquerda. Mínima de 105.",
+     "sFala": 3582.7,
+     "duracaoS": 9.75,
+     "folgaPlanejadaS": 3.04,
+     "ateASuaAcaoS": 2.42,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.23
+    },
+    {
+     "tipo": "ficha",
+     "volta": 4,
+     "trecho": "C01",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva um, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita e tangencie a zebra da esquerda. Mínima de 105.",
+     "sFala": 3582.7,
+     "duracaoS": 9.75,
+     "folgaPlanejadaS": 3.04,
+     "ateASuaAcaoS": 3.16,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.17
+    },
+    {
+     "tipo": "ficha",
+     "volta": 5,
+     "trecho": "C01",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva um, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita e tangencie a zebra da esquerda. Mínima de 105.",
+     "sFala": 3582.7,
+     "duracaoS": 9.75,
+     "folgaPlanejadaS": 3.04,
+     "ateASuaAcaoS": 3.06,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.48
+    },
+    {
+     "tipo": "ficha",
+     "volta": 7,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 512.0,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.02,
+     "ateASuaAcaoS": 3.18,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.7
+    },
+    {
+     "tipo": "ficha",
+     "volta": 8,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 496.7,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.45,
+     "ateASuaAcaoS": 4.29,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 4.58
+    },
+    {
+     "tipo": "ficha",
+     "volta": 10,
+     "trecho": "C08",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva oito, à esquerda. Freie no começo da zebra à esquerda. Mínima de 95.",
+     "sFala": 564.5,
+     "duracaoS": 6.13,
+     "folgaPlanejadaS": 27.61,
+     "ateASuaAcaoS": 27.59,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 27.78
+    },
+    {
+     "tipo": "ficha",
+     "volta": 11,
+     "trecho": "C08",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva oito, à esquerda. Freie no começo da zebra à esquerda. Mínima de 95.",
+     "sFala": 564.5,
+     "duracaoS": 6.13,
+     "folgaPlanejadaS": 27.61,
+     "ateASuaAcaoS": 35.52,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 35.73
+    },
+    {
+     "tipo": "ficha",
+     "volta": 12,
+     "trecho": "C08",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva oito, à esquerda. Freie no começo da zebra à esquerda. Mínima de 95.",
+     "sFala": 564.5,
+     "duracaoS": 6.13,
+     "folgaPlanejadaS": 27.61,
+     "ateASuaAcaoS": 28.82,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 29.01
+    },
+    {
+     "tipo": "ficha",
+     "volta": 13,
+     "trecho": "C08",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva oito, à esquerda. Freie no começo da zebra à esquerda. Mínima de 95.",
+     "sFala": 556.3,
+     "duracaoS": 6.13,
+     "folgaPlanejadaS": 28.47,
+     "ateASuaAcaoS": 30.74,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 30.95
+    }
+   ],
+   "lembretes": [
+    {
+     "tipo": "lembrete",
+     "volta": 6,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Quatro: entre o 200 e o 100.",
+     "sFala": 866.7,
+     "duracaoS": 1.96,
+     "folgaPlanejadaS": 3.0,
+     "ateASuaAcaoS": 2.04,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 2.96
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 9,
+     "trecho": "C08",
+     "tipoDaFicha": "frenagem",
+     "fala": "Oito: freie no começo da zebra à esquerda.",
+     "sFala": 1580.3,
+     "duracaoS": 2.6,
+     "folgaPlanejadaS": 13.07,
+     "ateASuaAcaoS": 13.68,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 13.9
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 10,
+     "trecho": "C08",
+     "tipoDaFicha": "frenagem",
+     "fala": "Oito: freie no começo da zebra à esquerda.",
+     "sFala": 1655.0,
+     "duracaoS": 2.6,
+     "folgaPlanejadaS": 11.81,
+     "ateASuaAcaoS": 11.95,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 12.14
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 11,
+     "trecho": "C08",
+     "tipoDaFicha": "frenagem",
+     "fala": "Oito: freie no começo da zebra à esquerda.",
+     "sFala": 1655.0,
+     "duracaoS": 2.6,
+     "folgaPlanejadaS": 11.81,
+     "ateASuaAcaoS": 14.28,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 14.48
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 12,
+     "trecho": "C08",
+     "tipoDaFicha": "frenagem",
+     "fala": "Oito: freie no começo da zebra à esquerda.",
+     "sFala": 1655.0,
+     "duracaoS": 2.6,
+     "folgaPlanejadaS": 11.81,
+     "ateASuaAcaoS": 12.45,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 12.64
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 13,
+     "trecho": "C08",
+     "tipoDaFicha": "frenagem",
+     "fala": "Oito: freie no começo da zebra à esquerda.",
+     "sFala": 1649.0,
+     "duracaoS": 2.6,
+     "folgaPlanejadaS": 12.03,
+     "ateASuaAcaoS": 13.32,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 13.53
+    }
+   ],
+   "folgaAteASuaAcaoS": {
+    "n": 16,
+    "min": 2.04,
+    "mediana": 12.2,
+    "max": 35.52
+   },
+   "folgaAteOPontoS": {
+    "n": 16,
+    "min": 2.96,
+    "mediana": 12.39,
+    "max": 35.73
+   },
+   "folgaAbaixoDe3S": 3,
+   "bipes": [
+    {
+     "volta": 2,
+     "trecho": "C01",
+     "sBipe": 122.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.29,
+     "aSuaFrenagemDepoisDoBipeM": -20.5
+    },
+    {
+     "volta": 3,
+     "trecho": "C01",
+     "sBipe": 122.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.56,
+     "aSuaFrenagemDepoisDoBipeM": -38.2
+    },
+    {
+     "volta": 4,
+     "trecho": "C01",
+     "sBipe": 122.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.81,
+     "aSuaFrenagemDepoisDoBipeM": -54.0
+    },
+    {
+     "volta": 5,
+     "trecho": "C01",
+     "sBipe": 122.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.01,
+     "aSuaFrenagemDepoisDoBipeM": -0.6
+    },
+    {
+     "volta": 6,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.92,
+     "aSuaFrenagemDepoisDoBipeM": -62.8
+    },
+    {
+     "volta": 7,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.53,
+     "aSuaFrenagemDepoisDoBipeM": -36.7
+    },
+    {
+     "volta": 8,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.29,
+     "aSuaFrenagemDepoisDoBipeM": -21.3
+    }
+   ],
+   "frenagemDepoisDoUltimoBipeS": {
+    "n": 7,
+    "min": -0.92,
+    "mediana": -0.53,
+    "max": -0.01
+   },
+   "frenagemDepoisDoUltimoBipeM": {
+    "n": 7,
+    "min": -62.8,
+    "mediana": -36.7,
+    "max": -0.6
+   },
+   "planosSemFicha": {
+    "a ficha não cabe na reta longa": 6
+   },
+   "planosSemLembrete": {
+    "a ficha já é dita neste pedaço livre": 4,
+    "o lembrete não cabe no pedaço livre antes da curva": 1
+   },
+   "cortes": [],
+   "feedback": {
+    "sem": 24,
+    "com": 28,
+    "mudaramDeBloco": [
+     {
+      "origem": "coach",
+      "volta": 4,
+      "titulo": "C07, direita",
+      "sem": {
+       "voltaDoCarro": 4,
+       "sCarro": 3697.7
+      },
+      "com": {
+       "voltaDoCarro": 5,
+       "sCarro": 1510.3
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 4,
+      "titulo": "C11, esquerda",
+      "sem": {
+       "voltaDoCarro": 5,
+       "sCarro": 3697.5
+      },
+      "com": {
+       "voltaDoCarro": 5,
+       "sCarro": 3306.9
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 4,
+      "titulo": "C12, esquerda",
+      "sem": {
+       "voltaDoCarro": 6,
+       "sCarro": 3697.8
+      },
+      "com": {
+       "voltaDoCarro": 6,
+       "sCarro": 1510.2
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 5,
+      "titulo": "C07, direita",
+      "sem": {
+       "voltaDoCarro": 7,
+       "sCarro": 3697.0
+      },
+      "com": {
+       "voltaDoCarro": 6,
+       "sCarro": 3306.9
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 5,
+      "titulo": "C12, esquerda",
+      "sem": {
+       "voltaDoCarro": 8,
+       "sCarro": 3697.9
+      },
+      "com": {
+       "voltaDoCarro": 7,
+       "sCarro": 1511.0
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 7,
+      "titulo": "Volta 7: 1:30,363",
+      "sem": {
+       "voltaDoCarro": 8,
+       "sCarro": 723.4
+      },
+      "com": {
+       "voltaDoCarro": 8,
+       "sCarro": 1510.8
+      }
+     },
+     {
+      "origem": "analise",
+      "volta": 7,
+      "titulo": "Análise das voltas 2, 6 e 7",
+      "sem": {
+       "voltaDoCarro": 9,
+       "sCarro": 3697.8
+      },
+      "com": {
+       "voltaDoCarro": 8,
+       "sCarro": 3618.3
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 9,
+      "titulo": "C07, direita",
+      "sem": {
+       "voltaDoCarro": 10,
+       "sCarro": 3697.9
+      },
+      "com": {
+       "voltaDoCarro": 9,
+       "sCarro": 3618.3
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 9,
+      "titulo": "C12, esquerda",
+      "sem": {
+       "voltaDoCarro": 11,
+       "sCarro": 3962.2
+      },
+      "com": {
+       "voltaDoCarro": 9,
+       "sCarro": 4112.8
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 10,
+      "titulo": "Volta 10: 1:29,767",
+      "sem": {
+       "voltaDoCarro": 11,
+       "sCarro": 3697.3
+      },
+      "com": {
+       "voltaDoCarro": 11,
+       "sCarro": 3306.3
+      }
+     },
+     {
+      "origem": "analise",
+      "volta": 10,
+      "titulo": "Análise das voltas 8 a 10",
+      "sem": {
+       "voltaDoCarro": 11,
+       "sCarro": 4158.3
+      },
+      "com": {
+       "voltaDoCarro": 11,
+       "sCarro": 3618.4
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 11,
+      "titulo": "C12, esquerda",
+      "sem": {
+       "voltaDoCarro": 12,
+       "sCarro": 3697.1
+      },
+      "com": {
+       "voltaDoCarro": 11,
+       "sCarro": 3882.8
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 11,
+      "titulo": "Volta 11: 2:45,313",
+      "sem": {
+       "voltaDoCarro": 12,
+       "sCarro": 723.6
+      },
+      "com": {
+       "voltaDoCarro": 12,
+       "sCarro": 3618.1
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 12,
+      "titulo": "Volta 12: 2:48,154",
+      "sem": {
+       "voltaDoCarro": 13,
+       "sCarro": 723.6
+      },
+      "com": {
+       "voltaDoCarro": 13,
+       "sCarro": 3618.5
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 13,
+      "titulo": "Volta 13: 1:30,928",
+      "sem": {
+       "voltaDoCarro": 14,
+       "sCarro": 723.2
+      },
+      "com": {
+       "voltaDoCarro": 14,
+       "sCarro": 3307.0
+      }
+     }
+    ],
+    "soCom": [
+     {
+      "origem": "curva",
+      "volta": 7,
+      "titulo": "C01, esquerda",
+      "fala": "Curva 1: 9 décimos.",
+      "sCarro": 4205.4
+     },
+     {
+      "origem": "curva",
+      "volta": 8,
+      "titulo": "C01, esquerda",
+      "fala": "Curva 1: 1,5 segundo, freou 62 metros antes da referência.",
+      "sCarro": 1510.1
+     },
+     {
+      "origem": "curva",
+      "volta": 10,
+      "titulo": "C01, esquerda",
+      "fala": "Curva 1: 1,0 segundo.",
+      "sCarro": 4086.1
+     },
+     {
+      "origem": "curva",
+      "volta": 13,
+      "titulo": "C01, esquerda",
+      "fala": "Curva 1: 1,3 segundo, freou 54 metros antes da referência.",
+      "sCarro": 3618.2
+     }
+    ],
+    "pendentesNoFim": {
+     "sem": 1,
+     "com": 1
+    },
+    "comCausaNaVoz": {
+     "sem": 16,
+     "com": 9
+    }
+   },
+   "segundosDeFala": {
+    "antes": {
+     "voltasDaGravacao": 15,
+     "engenheiroS": 179.6,
+     "feedbackS": 80.4,
+     "porVolta": {
+      "engenheiro": 12.0,
+      "feedback": 5.4,
+      "total": 17.3
+     },
+     "falasDoEngenheiro": 48,
+     "origem": "a rodada da D.1 de 20/11, molde (b)"
+    },
+    "depois": {
+     "voltasDaGravacao": 15,
+     "engenheiroS": 92.8,
+     "feedbackS": 144.7,
+     "porVolta": {
+      "engenheiro": 6.2,
+      "feedback": 9.6,
+      "total": 15.8
+     },
+     "falasDoEngenheiro": 16
+    }
+   }
+  },
+  "2026-10-18": {
+   "voltasQueContam": [
+    2.0,
+    3.0,
+    7.0,
+    8.0,
+    9.0,
+    12.0,
+    13.0,
+    14.0,
+    15.0
+   ],
+   "focos": [
+    {
+     "volta": null,
+     "trecho": "C07",
+     "saiu": null,
+     "origem": "sessão 2026-10-13_19-24-10_vhe_interlagos",
+     "motivo": "o foco com que a sessão terminou",
+     "t": 162.0
+    },
+    {
+     "volta": 7.0,
+     "trecho": null,
+     "saiu": "C07",
+     "origem": null,
+     "motivo": "3 voltas sem aplicar",
+     "t": 991.0
+    },
+    {
+     "volta": 7.0,
+     "trecho": "C04",
+     "saiu": null,
+     "origem": "volta 7 da sessão",
+     "motivo": "a maior perda acima do ruído (1,27 s)",
+     "t": 991.0
+    },
+    {
+     "volta": 12.0,
+     "trecho": null,
+     "saiu": "C04",
+     "origem": null,
+     "motivo": "3 voltas sem aplicar",
+     "t": 1524.0
+    },
+    {
+     "volta": 12.0,
+     "trecho": "C06",
+     "saiu": null,
+     "origem": "volta 12 da sessão",
+     "motivo": "a maior perda acima do ruído (0,97 s)",
+     "t": 1524.0
+    },
+    {
+     "volta": 15.0,
+     "trecho": null,
+     "saiu": "C06",
+     "origem": null,
+     "motivo": "3 voltas sem aplicar",
+     "t": 1797.0
+    },
+    {
+     "volta": 15.0,
+     "trecho": "C07",
+     "saiu": null,
+     "origem": "volta 15 da sessão",
+     "motivo": "a maior perda acima do ruído (0,76 s)",
+     "t": 1797.0
+    }
+   ],
+   "conferencias": [
+    {
+     "volta": 2.0,
+     "trecho": "C07",
+     "aplicada": false,
+     "texto": "Curva 7: freou 28 m antes do ponto",
+     "voltasEmFoco": 1
+    },
+    {
+     "volta": 3.0,
+     "trecho": "C07",
+     "aplicada": false,
+     "texto": "Curva 7: freou 20 m antes do ponto",
+     "voltasEmFoco": 2
+    },
+    {
+     "volta": 7.0,
+     "trecho": "C07",
+     "aplicada": false,
+     "texto": "Curva 7: freou 20 m antes do ponto",
+     "voltasEmFoco": 3
+    },
+    {
+     "volta": 8.0,
+     "trecho": "C04",
+     "aplicada": false,
+     "texto": "Curva 4: freou 50 m antes do ponto",
+     "voltasEmFoco": 1
+    },
+    {
+     "volta": 9.0,
+     "trecho": "C04",
+     "aplicada": false,
+     "texto": "Curva 4: freou 38 m antes do ponto",
+     "voltasEmFoco": 2
+    },
+    {
+     "volta": 12.0,
+     "trecho": "C04",
+     "aplicada": false,
+     "texto": "Curva 4: freou 30 m antes do ponto",
+     "voltasEmFoco": 3
+    },
+    {
+     "volta": 13.0,
+     "trecho": "C06",
+     "aplicada": false,
+     "texto": "Curva 6: freou 178 m antes do ponto",
+     "voltasEmFoco": 1
+    },
+    {
+     "volta": 14.0,
+     "trecho": "C06",
+     "aplicada": null,
+     "texto": "Curva 6: sem frenagem na volta",
+     "voltasEmFoco": 2
+    },
+    {
+     "volta": 15.0,
+     "trecho": "C06",
+     "aplicada": null,
+     "texto": "Curva 6: sem frenagem na volta",
+     "voltasEmFoco": 3
+    }
+   ],
+   "fichas": [
+    {
+     "tipo": "ficha",
+     "volta": 7,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 511.0,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.1,
+     "ateASuaAcaoS": 3.24,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.97
+    },
+    {
+     "tipo": "ficha",
+     "volta": 8,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 517.4,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.09,
+     "ateASuaAcaoS": 3.62,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 4.2
+    },
+    {
+     "tipo": "ficha",
+     "volta": 9,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 547.9,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.05,
+     "ateASuaAcaoS": 3.48,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.24
+    },
+    {
+     "tipo": "ficha",
+     "volta": 10,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 547.9,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.05,
+     "ateASuaAcaoS": 2.82,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.32
+    },
+    {
+     "tipo": "ficha",
+     "volta": 11,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 547.9,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.05,
+     "ateASuaAcaoS": 2.73,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.14
+    },
+    {
+     "tipo": "ficha",
+     "volta": 12,
+     "trecho": "C06",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva seis, à direita. Freie logo depois do 50. Mínima de 175.",
+     "sFala": 572.4,
+     "duracaoS": 6.34,
+     "folgaPlanejadaS": 15.77,
+     "ateASuaAcaoS": 14.45,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 18.82
+    },
+    {
+     "tipo": "ficha",
+     "volta": 13,
+     "trecho": "C06",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva seis, à direita. Freie logo depois do 50. Mínima de 175.",
+     "sFala": 587.9,
+     "duracaoS": 6.34,
+     "folgaPlanejadaS": 14.18,
+     "ateASuaAcaoS": 16.98,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 16.4
+    },
+    {
+     "tipo": "ficha",
+     "volta": 14,
+     "trecho": "C06",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva seis, à direita. Freie logo depois do 50. Mínima de 175.",
+     "sFala": 579.8,
+     "duracaoS": 6.34,
+     "folgaPlanejadaS": 15.9,
+     "ateASuaAcaoS": 17.44,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 16.84
+    }
+   ],
+   "lembretes": [
+    {
+     "tipo": "lembrete",
+     "volta": 1,
+     "trecho": "C07",
+     "tipoDaFicha": "frenagem",
+     "fala": "Sete: freie 35 antes do começo da zebra à direita.",
+     "sFala": 1617.5,
+     "duracaoS": 3.73,
+     "folgaPlanejadaS": 5.98,
+     "ateASuaAcaoS": 7.09,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 7.74
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 2,
+     "trecho": "C07",
+     "tipoDaFicha": "frenagem",
+     "fala": "Sete: freie 35 antes do começo da zebra à direita.",
+     "sFala": 1582.7,
+     "duracaoS": 3.73,
+     "folgaPlanejadaS": 7.75,
+     "ateASuaAcaoS": 6.9,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 7.32
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 12,
+     "trecho": "C06",
+     "tipoDaFicha": "frenagem",
+     "fala": "Seis: logo depois do 50.",
+     "sFala": 1527.1,
+     "duracaoS": 2.14,
+     "folgaPlanejadaS": 3.0,
+     "ateASuaAcaoS": 1.35,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 5.72
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 13,
+     "trecho": "C06",
+     "tipoDaFicha": "frenagem",
+     "fala": "Seis: logo depois do 50.",
+     "sFala": 1448.2,
+     "duracaoS": 2.14,
+     "folgaPlanejadaS": 3.0,
+     "ateASuaAcaoS": 6.41,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 5.83
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 14,
+     "trecho": "C06",
+     "tipoDaFicha": "frenagem",
+     "fala": "Seis: logo depois do 50.",
+     "sFala": 1552.6,
+     "duracaoS": 2.14,
+     "folgaPlanejadaS": 3.0,
+     "ateASuaAcaoS": 4.29,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 3.69
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 15,
+     "trecho": "C07",
+     "tipoDaFicha": "frenagem",
+     "fala": "Sete: freie 35 antes do começo da zebra à direita.",
+     "sFala": 1615.0,
+     "duracaoS": 3.73,
+     "folgaPlanejadaS": 6.9,
+     "ateASuaAcaoS": 6.41,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 7.07
+    }
+   ],
+   "folgaAteASuaAcaoS": {
+    "n": 14,
+    "min": 1.35,
+    "mediana": 5.35,
+    "max": 17.44
+   },
+   "folgaAteOPontoS": {
+    "n": 14,
+    "min": 3.14,
+    "mediana": 5.78,
+    "max": 18.82
+   },
+   "folgaAbaixoDe3S": 3,
+   "bipes": [
+    {
+     "volta": 1,
+     "trecho": "C07",
+     "sBipe": 2194.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.65,
+     "aSuaFrenagemDepoisDoBipeM": -26.5
+    },
+    {
+     "volta": 2,
+     "trecho": "C07",
+     "sBipe": 2194.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.42,
+     "aSuaFrenagemDepoisDoBipeM": -20.0
+    },
+    {
+     "volta": 4,
+     "trecho": "C07",
+     "sBipe": 2194.0,
+     "aSuaFrenagemDepoisDoBipeS": 0.61,
+     "aSuaFrenagemDepoisDoBipeM": 22.1
+    },
+    {
+     "volta": 7,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.73,
+     "aSuaFrenagemDepoisDoBipeM": -50.0
+    },
+    {
+     "volta": 8,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.58,
+     "aSuaFrenagemDepoisDoBipeM": -39.4
+    },
+    {
+     "volta": 9,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": 0.25,
+     "aSuaFrenagemDepoisDoBipeM": 16.3
+    },
+    {
+     "volta": 12,
+     "trecho": "C06",
+     "sBipe": 1904.0,
+     "aSuaFrenagemDepoisDoBipeS": -4.37,
+     "aSuaFrenagemDepoisDoBipeM": -178.4
+    },
+    {
+     "volta": 15,
+     "trecho": "C07",
+     "sBipe": 2194.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.66,
+     "aSuaFrenagemDepoisDoBipeM": -25.2
+    }
+   ],
+   "frenagemDepoisDoUltimoBipeS": {
+    "n": 8,
+    "min": -4.37,
+    "mediana": -0.61,
+    "max": 0.61
+   },
+   "frenagemDepoisDoUltimoBipeM": {
+    "n": 8,
+    "min": -178.4,
+    "mediana": -25.85,
+    "max": 22.1
+   },
+   "planosSemFicha": {
+    "a ficha não cabe na reta longa": 4
+   },
+   "planosSemLembrete": {
+    "o lembrete não cabe no pedaço livre antes da curva": 1,
+    "a ficha já é dita neste pedaço livre": 4
+   },
+   "cortes": [],
+   "feedback": {
+    "sem": 22,
+    "com": 25,
+    "mudaramDeBloco": [
+     {
+      "origem": "coach",
+      "volta": 1,
+      "titulo": "C11, esquerda",
+      "sem": {
+       "voltaDoCarro": 2,
+       "sCarro": 723.2
+      },
+      "com": {
+       "voltaDoCarro": 1,
+       "sCarro": 4088.1
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 4,
+      "titulo": "C11, esquerda",
+      "sem": {
+       "voltaDoCarro": 5,
+       "sCarro": 723.2
+      },
+      "com": {
+       "voltaDoCarro": 4,
+       "sCarro": 4082.4
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 7,
+      "titulo": "Volta 7: 1:30,828",
+      "sem": {
+       "voltaDoCarro": 8,
+       "sCarro": 723.6
+      },
+      "com": {
+       "voltaDoCarro": 8,
+       "sCarro": 1510.3
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 8,
+      "titulo": "Volta 8: 1:29,059",
+      "sem": {
+       "voltaDoCarro": 9,
+       "sCarro": 723.2
+      },
+      "com": {
+       "voltaDoCarro": 9,
+       "sCarro": 1510.3
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 10,
+      "titulo": "Volta 10: 2:39,748",
+      "sem": {
+       "voltaDoCarro": 11,
+       "sCarro": 3697.0
+      },
+      "com": {
+       "voltaDoCarro": 11,
+       "sCarro": 1510.1
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 11,
+      "titulo": "Volta 11: 1:44,317",
+      "sem": {
+       "voltaDoCarro": 12,
+       "sCarro": 723.5
+      },
+      "com": {
+       "voltaDoCarro": 12,
+       "sCarro": 1510.2
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 12,
+      "titulo": "Volta 12: 1:29,346",
+      "sem": {
+       "voltaDoCarro": 13,
+       "sCarro": 723.6
+      },
+      "com": {
+       "voltaDoCarro": 13,
+       "sCarro": 3307.0
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 13,
+      "titulo": "Volta 13: 1:33,309",
+      "sem": {
+       "voltaDoCarro": 14,
+       "sCarro": 723.8
+      },
+      "com": {
+       "voltaDoCarro": 14,
+       "sCarro": 1589.5
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 13,
+      "titulo": "C07, direita",
+      "sem": {
+       "voltaDoCarro": 14,
+       "sCarro": 3697.5
+      },
+      "com": {
+       "voltaDoCarro": 14,
+       "sCarro": 3306.4
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 14,
+      "titulo": "Volta 14: 1:29,884",
+      "sem": {
+       "voltaDoCarro": 15,
+       "sCarro": 723.8
+      },
+      "com": {
+       "voltaDoCarro": 15,
+       "sCarro": 3306.1
+      }
+     }
+    ],
+    "soCom": [
+     {
+      "origem": "curva",
+      "volta": 7,
+      "titulo": "C04, esquerda",
+      "fala": "Curva 4: 1,3 segundo.",
+      "sCarro": 4085.1
+     },
+     {
+      "origem": "curva",
+      "volta": 9,
+      "titulo": "C01, esquerda",
+      "fala": "Curva 1: 8 décimos, freou 24 metros antes da referência.",
+      "sCarro": 3618.6
+     },
+     {
+      "origem": "curva",
+      "volta": 14,
+      "titulo": "C09, direita",
+      "fala": "Curva 9: 8 décimos, mínima 43 quilômetros por hora abaixo da referência.",
+      "sCarro": 3618.1
+     }
+    ],
+    "pendentesNoFim": {
+     "sem": 1,
+     "com": 1
+    },
+    "comCausaNaVoz": {
+     "sem": 15,
+     "com": 10
+    }
+   },
+   "segundosDeFala": {
+    "antes": {
+     "voltasDaGravacao": 16,
+     "engenheiroS": 160.8,
+     "feedbackS": 117.0,
+     "porVolta": {
+      "engenheiro": 10.0,
+      "feedback": 7.3,
+      "total": 17.4
+     },
+     "falasDoEngenheiro": 58,
+     "origem": "a rodada da D.1 de 20/11, molde (b)"
+    },
+    "depois": {
+     "voltasDaGravacao": 16,
+     "engenheiroS": 72.5,
+     "feedbackS": 128.4,
+     "porVolta": {
+      "engenheiro": 4.5,
+      "feedback": 8.0,
+      "total": 12.6
+     },
+     "falasDoEngenheiro": 14
+    }
+   }
+  },
+  "2026-10-21": {
+   "voltasQueContam": [
+    9.0,
+    10.0,
+    11.0,
+    13.0,
+    16.0,
+    17.0,
+    18.0
+   ],
+   "focos": [
+    {
+     "volta": null,
+     "trecho": "C07",
+     "saiu": null,
+     "origem": "sessão 2026-10-18_12-38-44_vhe_interlagos",
+     "motivo": "o foco com que a sessão terminou",
+     "t": 188.0
+    },
+    {
+     "volta": 9.0,
+     "trecho": null,
+     "saiu": "C07",
+     "origem": null,
+     "motivo": "aplicada na volta 9",
+     "t": 1272.0
+    },
+    {
+     "volta": 9.0,
+     "trecho": "C12",
+     "saiu": null,
+     "origem": "volta 9 da sessão",
+     "motivo": "a maior perda acima do ruído (1,05 s)",
+     "t": 1272.0
+    },
+    {
+     "volta": 13.0,
+     "trecho": null,
+     "saiu": "C12",
+     "origem": null,
+     "motivo": "3 voltas sem aplicar",
+     "t": 1641.0
+    },
+    {
+     "volta": 13.0,
+     "trecho": "C07",
+     "saiu": null,
+     "origem": "volta 13 da sessão",
+     "motivo": "a maior perda acima do ruído (0,84 s)",
+     "t": 1641.0
+    },
+    {
+     "volta": 18.0,
+     "trecho": null,
+     "saiu": "C07",
+     "origem": null,
+     "motivo": "3 voltas sem aplicar",
+     "t": 2400.0
+    },
+    {
+     "volta": 18.0,
+     "trecho": "C01",
+     "saiu": null,
+     "origem": "volta 18 da sessão",
+     "motivo": "a maior perda acima do ruído (0,51 s)",
+     "t": 2400.0
+    }
+   ],
+   "conferencias": [
+    {
+     "volta": 9.0,
+     "trecho": "C07",
+     "aplicada": true,
+     "texto": "Curva 7: freou no ponto",
+     "voltasEmFoco": 1
+    },
+    {
+     "volta": 10.0,
+     "trecho": "C12",
+     "aplicada": false,
+     "texto": "Curva 12: freou 38 m antes do ponto",
+     "voltasEmFoco": 1
+    },
+    {
+     "volta": 11.0,
+     "trecho": "C12",
+     "aplicada": false,
+     "texto": "Curva 12: freou 54 m antes do ponto",
+     "voltasEmFoco": 2
+    },
+    {
+     "volta": 13.0,
+     "trecho": "C12",
+     "aplicada": false,
+     "texto": "Curva 12: freou 54 m antes do ponto",
+     "voltasEmFoco": 3
+    },
+    {
+     "volta": 16.0,
+     "trecho": "C07",
+     "aplicada": false,
+     "texto": "Curva 7: freou 22 m antes do ponto",
+     "voltasEmFoco": 1
+    },
+    {
+     "volta": 17.0,
+     "trecho": "C07",
+     "aplicada": false,
+     "texto": "Curva 7: freou 26 m antes do ponto",
+     "voltasEmFoco": 2
+    },
+    {
+     "volta": 18.0,
+     "trecho": "C07",
+     "aplicada": false,
+     "texto": "Curva 7: freou 16 m antes do ponto",
+     "voltasEmFoco": 3
+    }
+   ],
+   "fichas": [
+    {
+     "tipo": "ficha",
+     "volta": 9,
+     "trecho": "C12",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva doze, à esquerda. Freie entre o 100 e o 50, frenagem em linha reta. Entre pela direita. Mínima de 110.",
+     "sFala": 445.2,
+     "duracaoS": 8.78,
+     "folgaPlanejadaS": 47.89,
+     "ateASuaAcaoS": 48.36,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 49.03
+    },
+    {
+     "tipo": "ficha",
+     "volta": 11,
+     "trecho": "C12",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva doze, à esquerda. Freie entre o 100 e o 50, frenagem em linha reta. Entre pela direita. Mínima de 110.",
+     "sFala": 446.5,
+     "duracaoS": 8.78,
+     "folgaPlanejadaS": 46.37,
+     "ateASuaAcaoS": 61.27,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 62.27
+    },
+    {
+     "tipo": "ficha",
+     "volta": 12,
+     "trecho": "C12",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva doze, à esquerda. Freie entre o 100 e o 50, frenagem em linha reta. Entre pela direita. Mínima de 110.",
+     "sFala": 446.5,
+     "duracaoS": 8.78,
+     "folgaPlanejadaS": 46.37,
+     "ateASuaAcaoS": 47.05,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 48.07
+    },
+    {
+     "tipo": "ficha",
+     "volta": 18,
+     "trecho": "C01",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva um, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita e tangencie a zebra da esquerda. Mínima de 105.",
+     "sFala": 3529.8,
+     "duracaoS": 9.75,
+     "folgaPlanejadaS": 3.08,
+     "ateASuaAcaoS": 29.15,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 23.76
+    },
+    {
+     "tipo": "ficha",
+     "volta": 19,
+     "trecho": "C01",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva um, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita e tangencie a zebra da esquerda. Mínima de 105.",
+     "sFala": 3529.8,
+     "duracaoS": 9.75,
+     "folgaPlanejadaS": 3.08,
+     "ateASuaAcaoS": 3.72,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 4.14
+    },
+    {
+     "tipo": "ficha",
+     "volta": 20,
+     "trecho": "C01",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva um, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita e tangencie a zebra da esquerda. Mínima de 105.",
+     "sFala": 3529.8,
+     "duracaoS": 9.75,
+     "folgaPlanejadaS": 3.08,
+     "ateASuaAcaoS": null,
+     "aSuaAcao": null,
+     "ateOPontoS": null
+    }
+   ],
+   "lembretes": [
+    {
+     "tipo": "lembrete",
+     "volta": 1,
+     "trecho": "C07",
+     "tipoDaFicha": "frenagem",
+     "fala": "Sete: freie 35 antes do começo da zebra à direita.",
+     "sFala": 1617.5,
+     "duracaoS": 3.73,
+     "folgaPlanejadaS": 5.98,
+     "ateASuaAcaoS": 9.62,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 7.41
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 2,
+     "trecho": "C07",
+     "tipoDaFicha": "frenagem",
+     "fala": "Sete: freie 35 antes do começo da zebra à direita.",
+     "sFala": 1617.5,
+     "duracaoS": 3.73,
+     "folgaPlanejadaS": 5.98,
+     "ateASuaAcaoS": 7.99,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 8.01
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 3,
+     "trecho": "C07",
+     "tipoDaFicha": "frenagem",
+     "fala": "Sete: freie 35 antes do começo da zebra à direita.",
+     "sFala": 1617.5,
+     "duracaoS": 3.73,
+     "folgaPlanejadaS": 5.98,
+     "ateASuaAcaoS": 13.74,
+     "aSuaAcao": "entrada",
+     "ateOPontoS": 11.98
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 4,
+     "trecho": "C07",
+     "tipoDaFicha": "frenagem",
+     "fala": "Sete: freie 35 antes do começo da zebra à direita.",
+     "sFala": 1617.5,
+     "duracaoS": 3.73,
+     "folgaPlanejadaS": 5.98,
+     "ateASuaAcaoS": 6.26,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 6.64
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 5,
+     "trecho": "C07",
+     "tipoDaFicha": "frenagem",
+     "fala": "Sete: freie 35 antes do começo da zebra à direita.",
+     "sFala": 1617.5,
+     "duracaoS": 3.73,
+     "folgaPlanejadaS": 5.98,
+     "ateASuaAcaoS": 6.61,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 6.83
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 6,
+     "trecho": "C07",
+     "tipoDaFicha": "frenagem",
+     "fala": "Sete: freie 35 antes do começo da zebra à direita.",
+     "sFala": 1617.5,
+     "duracaoS": 3.73,
+     "folgaPlanejadaS": 5.98,
+     "ateASuaAcaoS": 6.47,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 6.46
+    },
+    {
+     "tipo": "lembrete",
+     "volta": 8,
+     "trecho": "C07",
+     "tipoDaFicha": "frenagem",
+     "fala": "Sete: freie 35 antes do começo da zebra à direita.",
+     "sFala": 1617.5,
+     "duracaoS": 3.73,
+     "folgaPlanejadaS": 5.98,
+     "ateASuaAcaoS": 6.79,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 7.01
+    }
+   ],
+   "folgaAteASuaAcaoS": {
+    "n": 12,
+    "min": 3.72,
+    "mediana": 8.8,
+    "max": 61.27
+   },
+   "folgaAteOPontoS": {
+    "n": 12,
+    "min": 4.14,
+    "mediana": 7.71,
+    "max": 62.27
+   },
+   "folgaAbaixoDe3S": 0,
+   "bipes": [
+    {
+     "volta": 9,
+     "trecho": "C12",
+     "sBipe": 3124.1,
+     "aSuaFrenagemDepoisDoBipeS": -0.68,
+     "aSuaFrenagemDepoisDoBipeM": -37.4
+    },
+    {
+     "volta": 10,
+     "trecho": "C12",
+     "sBipe": 3124.1,
+     "aSuaFrenagemDepoisDoBipeS": -1.03,
+     "aSuaFrenagemDepoisDoBipeM": -54.5
+    },
+    {
+     "volta": 11,
+     "trecho": "C12",
+     "sBipe": 3124.1,
+     "aSuaFrenagemDepoisDoBipeS": -0.99,
+     "aSuaFrenagemDepoisDoBipeM": -52.8
+    },
+    {
+     "volta": 12,
+     "trecho": "C12",
+     "sBipe": 3124.1,
+     "aSuaFrenagemDepoisDoBipeS": -1.02,
+     "aSuaFrenagemDepoisDoBipeM": -54.1
+    },
+    {
+     "volta": 13,
+     "trecho": "C07",
+     "sBipe": 2194.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.15,
+     "aSuaFrenagemDepoisDoBipeM": -6.9
+    },
+    {
+     "volta": 16,
+     "trecho": "C07",
+     "sBipe": 2194.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.61,
+     "aSuaFrenagemDepoisDoBipeM": -26.0
+    },
+    {
+     "volta": 17,
+     "trecho": "C07",
+     "sBipe": 2194.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.32,
+     "aSuaFrenagemDepoisDoBipeM": -15.7
+    },
+    {
+     "volta": 18,
+     "trecho": "C01",
+     "sBipe": 122.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.43,
+     "aSuaFrenagemDepoisDoBipeM": -30.9
+    }
+   ],
+   "frenagemDepoisDoUltimoBipeS": {
+    "n": 8,
+    "min": -1.03,
+    "mediana": -0.65,
+    "max": -0.15
+   },
+   "frenagemDepoisDoUltimoBipeM": {
+    "n": 8,
+    "min": -54.5,
+    "mediana": -34.15,
+    "max": -6.9
+   },
+   "planosSemFicha": {
+    "a ficha não cabe na reta longa": 5
+   },
+   "planosSemLembrete": {
+    "o lembrete não cabe no pedaço livre antes da curva": 7,
+    "a ficha já é dita neste pedaço livre": 2
+   },
+   "cortes": [],
+   "feedback": {
+    "sem": 35,
+    "com": 37,
+    "mudaramDeBloco": [
+     {
+      "origem": "coach",
+      "volta": 1,
+      "titulo": "C12, esquerda",
+      "sem": {
+       "voltaDoCarro": 2,
+       "sCarro": 724.1
+      },
+      "com": {
+       "voltaDoCarro": 1,
+       "sCarro": 4125.7
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 2,
+      "titulo": "C12, esquerda",
+      "sem": {
+       "voltaDoCarro": 3,
+       "sCarro": 3697.4
+      },
+      "com": {
+       "voltaDoCarro": 2,
+       "sCarro": 4154.3
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 5,
+      "titulo": "C12, esquerda",
+      "sem": {
+       "voltaDoCarro": 6,
+       "sCarro": 3697.7
+      },
+      "com": {
+       "voltaDoCarro": 5,
+       "sCarro": 4130.3
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 6,
+      "titulo": "Volta 6: 1:54,296",
+      "sem": {
+       "voltaDoCarro": 7,
+       "sCarro": 3697.6
+      },
+      "com": {
+       "voltaDoCarro": 7,
+       "sCarro": 554.4
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 7,
+      "titulo": "C12, esquerda",
+      "sem": {
+       "voltaDoCarro": 8,
+       "sCarro": 1181.1
+      },
+      "com": {
+       "voltaDoCarro": 7,
+       "sCarro": 3619.5
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 11,
+      "titulo": "Volta 11: 1:28,116",
+      "sem": {
+       "voltaDoCarro": 12,
+       "sCarro": 3698.3
+      },
+      "com": {
+       "voltaDoCarro": 12,
+       "sCarro": 1511.0
+      }
+     },
+     {
+      "origem": "analise",
+      "volta": 11,
+      "titulo": "Análise das voltas 9 a 11",
+      "sem": {
+       "voltaDoCarro": 13,
+       "sCarro": 3697.6
+      },
+      "com": {
+       "voltaDoCarro": 12,
+       "sCarro": 3618.1
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 12,
+      "titulo": "Volta 12: 1:43,199",
+      "sem": {
+       "voltaDoCarro": 13,
+       "sCarro": 723.3
+      },
+      "com": {
+       "voltaDoCarro": 13,
+       "sCarro": 1510.5
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 12,
+      "titulo": "C07, direita",
+      "sem": {
+       "voltaDoCarro": 14,
+       "sCarro": 3697.2
+      },
+      "com": {
+       "voltaDoCarro": 13,
+       "sCarro": 3306.2
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 16,
+      "titulo": "Volta 16: 1:30,180",
+      "sem": {
+       "voltaDoCarro": 17,
+       "sCarro": 3697.2
+      },
+      "com": {
+       "voltaDoCarro": 17,
+       "sCarro": 554.7
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 17,
+      "titulo": "C02, direita",
+      "sem": {
+       "voltaDoCarro": 19,
+       "sCarro": 3697.4
+      },
+      "com": {
+       "voltaDoCarro": 17,
+       "sCarro": 1510.6
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 17,
+      "titulo": "Volta 17: 1:28,539",
+      "sem": {
+       "voltaDoCarro": 18,
+       "sCarro": 3697.8
+      },
+      "com": {
+       "voltaDoCarro": 18,
+       "sCarro": 554.3
+      }
+     },
+     {
+      "origem": "analise",
+      "volta": 17,
+      "titulo": "Análise das voltas 13, 16 e 17",
+      "sem": {
+       "voltaDoCarro": 19,
+       "sCarro": 4001.4
+      },
+      "com": {
+       "voltaDoCarro": 18,
+       "sCarro": 3619.0
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 19,
+      "titulo": "C12, esquerda",
+      "sem": {
+       "voltaDoCarro": 19,
+       "sCarro": 4333.6
+      },
+      "com": {
+       "voltaDoCarro": 20,
+       "sCarro": 1510.1
+      }
+     }
+    ],
+    "soCom": [
+     {
+      "origem": "curva",
+      "volta": 9,
+      "titulo": "C12, esquerda",
+      "fala": "Curva 12: 9 décimos, freou 76 metros antes da referência.",
+      "sCarro": 1510.8
+     },
+     {
+      "origem": "resumo",
+      "volta": 20,
+      "titulo": "Volta 20: 3:17,412",
+      "fala": "Volta com rodada: 3 minutos e 17,4 segundos, 110,5 segundos atrás da melhor da sessão.",
+      "sCarro": 554.5
+     }
+    ],
+    "pendentesNoFim": {
+     "sem": 2,
+     "com": 1
+    },
+    "comCausaNaVoz": {
+     "sem": 25,
+     "com": 16
+    }
+   },
+   "segundosDeFala": {
+    "antes": {
+     "voltasDaGravacao": 21,
+     "engenheiroS": 144.7,
+     "feedbackS": 198.2,
+     "porVolta": {
+      "engenheiro": 6.9,
+      "feedback": 9.4,
+      "total": 16.3
+     },
+     "falasDoEngenheiro": 44,
+     "origem": "a rodada da D.1 de 20/11, molde (b)"
+    },
+    "depois": {
+     "voltasDaGravacao": 21,
+     "engenheiroS": 81.7,
+     "feedbackS": 221.5,
+     "porVolta": {
+      "engenheiro": 3.9,
+      "feedback": 10.5,
+      "total": 14.4
+     },
+     "falasDoEngenheiro": 13
+    }
+   }
+  },
+  "2026-11-12": {
+   "voltasQueContam": [
+    2.0,
+    3.0,
+    5.0,
+    7.0,
+    8.0
+   ],
+   "focos": [
+    {
+     "volta": null,
+     "trecho": "C01",
+     "saiu": null,
+     "origem": "sessão 2026-10-21_20-30-54_vhe_interlagos",
+     "motivo": "o foco com que a sessão terminou",
+     "t": 153.0
+    },
+    {
+     "volta": 5.0,
+     "trecho": null,
+     "saiu": "C01",
+     "origem": null,
+     "motivo": "aplicada na volta 5",
+     "t": 585.0
+    },
+    {
+     "volta": 5.0,
+     "trecho": "C04",
+     "saiu": null,
+     "origem": "volta 5 da sessão",
+     "motivo": "a maior perda acima do ruído (0,83 s)",
+     "t": 585.0
+    }
+   ],
+   "conferencias": [
+    {
+     "volta": 2.0,
+     "trecho": "C01",
+     "aplicada": false,
+     "texto": "Curva 1: freou 16 m antes do ponto",
+     "voltasEmFoco": 1
+    },
+    {
+     "volta": 3.0,
+     "trecho": "C01",
+     "aplicada": false,
+     "texto": "Curva 1: freou 28 m antes do ponto",
+     "voltasEmFoco": 2
+    },
+    {
+     "volta": 5.0,
+     "trecho": "C01",
+     "aplicada": true,
+     "texto": "Curva 1: freou no ponto",
+     "voltasEmFoco": 3
+    },
+    {
+     "volta": 7.0,
+     "trecho": "C04",
+     "aplicada": false,
+     "texto": "Curva 4: freou 34 m antes do ponto",
+     "voltasEmFoco": 1
+    },
+    {
+     "volta": 8.0,
+     "trecho": "C04",
+     "aplicada": false,
+     "texto": "Curva 4: freou 48 m antes do ponto",
+     "voltasEmFoco": 2
+    }
+   ],
+   "fichas": [
+    {
+     "tipo": "ficha",
+     "volta": 1,
+     "trecho": "C01",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva um, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita e tangencie a zebra da esquerda. Mínima de 105.",
+     "sFala": 3563.0,
+     "duracaoS": 9.75,
+     "folgaPlanejadaS": 3.03,
+     "ateASuaAcaoS": 3.0,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.39
+    },
+    {
+     "tipo": "ficha",
+     "volta": 2,
+     "trecho": "C01",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva um, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita e tangencie a zebra da esquerda. Mínima de 105.",
+     "sFala": 3567.3,
+     "duracaoS": 9.75,
+     "folgaPlanejadaS": 3.21,
+     "ateASuaAcaoS": 3.47,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.42
+    },
+    {
+     "tipo": "ficha",
+     "volta": 3,
+     "trecho": "C01",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva um, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita e tangencie a zebra da esquerda. Mínima de 105.",
+     "sFala": 3562.3,
+     "duracaoS": 9.75,
+     "folgaPlanejadaS": 3.11,
+     "ateASuaAcaoS": 5.01,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 4.99
+    },
+    {
+     "tipo": "ficha",
+     "volta": 4,
+     "trecho": "C01",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva um, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita e tangencie a zebra da esquerda. Mínima de 105.",
+     "sFala": 3562.3,
+     "duracaoS": 9.75,
+     "folgaPlanejadaS": 3.11,
+     "ateASuaAcaoS": 2.7,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.41
+    },
+    {
+     "tipo": "ficha",
+     "volta": 5,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 514.4,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.53,
+     "ateASuaAcaoS": 3.53,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.95
+    },
+    {
+     "tipo": "ficha",
+     "volta": 6,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 514.4,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.53,
+     "ateASuaAcaoS": 3.5,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.99
+    },
+    {
+     "tipo": "ficha",
+     "volta": 7,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 532.3,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.26,
+     "ateASuaAcaoS": 2.75,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.44
+    },
+    {
+     "tipo": "ficha",
+     "volta": 8,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 506.2,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.23,
+     "ateASuaAcaoS": 3.62,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 4.99
+    }
+   ],
+   "lembretes": [],
+   "folgaAteASuaAcaoS": {
+    "n": 8,
+    "min": 2.7,
+    "mediana": 3.49,
+    "max": 5.01
+   },
+   "folgaAteOPontoS": {
+    "n": 8,
+    "min": 3.39,
+    "mediana": 3.7,
+    "max": 4.99
+   },
+   "folgaAbaixoDe3S": 2,
+   "bipes": [
+    {
+     "volta": 1,
+     "trecho": "C01",
+     "sBipe": 122.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.22,
+     "aSuaFrenagemDepoisDoBipeM": -16.9
+    },
+    {
+     "volta": 2,
+     "trecho": "C01",
+     "sBipe": 122.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.39,
+     "aSuaFrenagemDepoisDoBipeM": -29.5
+    },
+    {
+     "volta": 3,
+     "trecho": "C01",
+     "sBipe": 122.0,
+     "aSuaFrenagemDepoisDoBipeS": 0.05,
+     "aSuaFrenagemDepoisDoBipeM": 2.6
+    },
+    {
+     "volta": 5,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.42,
+     "aSuaFrenagemDepoisDoBipeM": -29.4
+    },
+    {
+     "volta": 6,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.49,
+     "aSuaFrenagemDepoisDoBipeM": -33.3
+    },
+    {
+     "volta": 7,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.69,
+     "aSuaFrenagemDepoisDoBipeM": -48.6
+    },
+    {
+     "volta": 8,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -1.37,
+     "aSuaFrenagemDepoisDoBipeM": -78.6
+    }
+   ],
+   "frenagemDepoisDoUltimoBipeS": {
+    "n": 7,
+    "min": -1.37,
+    "mediana": -0.42,
+    "max": 0.05
+   },
+   "frenagemDepoisDoUltimoBipeM": {
+    "n": 7,
+    "min": -78.6,
+    "mediana": -29.5,
+    "max": 2.6
+   },
+   "planosSemFicha": {},
+   "planosSemLembrete": {
+    "a ficha já é dita neste pedaço livre": 8
+   },
+   "cortes": [],
+   "feedback": {
+    "sem": 13,
+    "com": 13,
+    "mudaramDeBloco": [
+     {
+      "origem": "resumo",
+      "volta": 4,
+      "titulo": "Volta 4: 2:39,061",
+      "sem": {
+       "voltaDoCarro": 5,
+       "sCarro": 3698.1
+      },
+      "com": {
+       "voltaDoCarro": 5,
+       "sCarro": 554.4
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 4,
+      "titulo": "C07, direita",
+      "sem": {
+       "voltaDoCarro": 4,
+       "sCarro": 3697.6
+      },
+      "com": {
+       "voltaDoCarro": 5,
+       "sCarro": 1511.0
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 4,
+      "titulo": "C11, esquerda",
+      "sem": {
+       "voltaDoCarro": 7,
+       "sCarro": 3697.0
+      },
+      "com": {
+       "voltaDoCarro": 5,
+       "sCarro": 3306.2
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 5,
+      "titulo": "Volta 5: 1:29,389",
+      "sem": {
+       "voltaDoCarro": 6,
+       "sCarro": 3697.6
+      },
+      "com": {
+       "voltaDoCarro": 6,
+       "sCarro": 1510.4
+      }
+     },
+     {
+      "origem": "analise",
+      "volta": 5,
+      "titulo": "Análise das voltas 2, 3 e 5",
+      "sem": {
+       "voltaDoCarro": 8,
+       "sCarro": 3697.5
+      },
+      "com": {
+       "voltaDoCarro": 6,
+       "sCarro": 3618.4
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 6,
+      "titulo": "Volta 6: 1:48,713",
+      "sem": {
+       "voltaDoCarro": 7,
+       "sCarro": 723.1
+      },
+      "com": {
+       "voltaDoCarro": 7,
+       "sCarro": 1510.4
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 6,
+      "titulo": "C12, esquerda",
+      "sem": {
+       "voltaDoCarro": 9,
+       "sCarro": 3697.7
+      },
+      "com": {
+       "voltaDoCarro": 7,
+       "sCarro": 3306.3
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 7,
+      "titulo": "C07, direita",
+      "sem": {
+       "voltaDoCarro": 9,
+       "sCarro": 4138.9
+      },
+      "com": {
+       "voltaDoCarro": 7,
+       "sCarro": 3618.3
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 7,
+      "titulo": "Volta 7: 1:32,299",
+      "sem": {
+       "voltaDoCarro": 8,
+       "sCarro": 723.7
+      },
+      "com": {
+       "voltaDoCarro": 8,
+       "sCarro": 1510.9
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 8,
+      "titulo": "Volta 8: 1:27,962",
+      "sem": {
+       "voltaDoCarro": 9,
+       "sCarro": 737.9
+      },
+      "com": {
+       "voltaDoCarro": 9,
+       "sCarro": 1510.0
+      }
+     }
+    ],
+    "soCom": [
+     {
+      "origem": "curva",
+      "volta": 8,
+      "titulo": "C04, esquerda",
+      "fala": "Curva 4: 1,0 segundo, freou 48 metros antes da referência.",
+      "sCarro": 3618.5
+     }
+    ],
+    "pendentesNoFim": {
+     "sem": 0,
+     "com": 1
+    },
+    "comCausaNaVoz": {
+     "sem": 7,
+     "com": 5
+    }
+   },
+   "segundosDeFala": {
+    "antes": {
+     "voltasDaGravacao": 10,
+     "engenheiroS": 89.6,
+     "feedbackS": 34.6,
+     "porVolta": {
+      "engenheiro": 9.0,
+      "feedback": 3.5,
+      "total": 12.4
+     },
+     "falasDoEngenheiro": 31,
+     "origem": "a rodada da D.1 de 20/11, molde (b)"
+    },
+    "depois": {
+     "voltasDaGravacao": 10,
+     "engenheiroS": 67.7,
+     "feedbackS": 70.1,
+     "porVolta": {
+      "engenheiro": 6.8,
+      "feedback": 7.0,
+      "total": 13.8
+     },
+     "falasDoEngenheiro": 8
+    }
+   }
+  },
+  "2026-11-20": {
+   "voltasQueContam": [
+    3.0
+   ],
+   "focos": [
+    {
+     "volta": null,
+     "trecho": "C04",
+     "saiu": null,
+     "origem": "sessão 2026-11-12_22-57-03_vhe_interlagos",
+     "motivo": "o foco com que a sessão terminou",
+     "t": 146.0
+    }
+   ],
+   "conferencias": [
+    {
+     "volta": 3.0,
+     "trecho": "C04",
+     "aplicada": false,
+     "texto": "Curva 4: freou 28 m antes do ponto",
+     "voltasEmFoco": 1
+    }
+   ],
+   "fichas": [
+    {
+     "tipo": "ficha",
+     "volta": 1,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 542.2,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.14,
+     "ateASuaAcaoS": 2.52,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.38
+    },
+    {
+     "tipo": "ficha",
+     "volta": 2,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 542.2,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.14,
+     "ateASuaAcaoS": 3.07,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.46
+    },
+    {
+     "tipo": "ficha",
+     "volta": 3,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 542.6,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.08,
+     "ateASuaAcaoS": 4.73,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 5.28
+    },
+    {
+     "tipo": "ficha",
+     "volta": 4,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 542.6,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.08,
+     "ateASuaAcaoS": 3.25,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.84
+    }
+   ],
+   "lembretes": [],
+   "folgaAteASuaAcaoS": {
+    "n": 4,
+    "min": 2.52,
+    "mediana": 3.16,
+    "max": 4.73
+   },
+   "folgaAteOPontoS": {
+    "n": 4,
+    "min": 3.38,
+    "mediana": 3.65,
+    "max": 5.28
+   },
+   "folgaAbaixoDe3S": 1,
+   "bipes": [
+    {
+     "volta": 1,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.86,
+     "aSuaFrenagemDepoisDoBipeM": -57.2
+    },
+    {
+     "volta": 2,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.39,
+     "aSuaFrenagemDepoisDoBipeM": -27.5
+    },
+    {
+     "volta": 3,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.56,
+     "aSuaFrenagemDepoisDoBipeM": -33.0
+    },
+    {
+     "volta": 4,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.59,
+     "aSuaFrenagemDepoisDoBipeM": -39.9
+    }
+   ],
+   "frenagemDepoisDoUltimoBipeS": {
+    "n": 4,
+    "min": -0.86,
+    "mediana": -0.57,
+    "max": -0.39
+   },
+   "frenagemDepoisDoUltimoBipeM": {
+    "n": 4,
+    "min": -57.2,
+    "mediana": -36.45,
+    "max": -27.5
+   },
+   "planosSemFicha": {},
+   "planosSemLembrete": {
+    "a ficha já é dita neste pedaço livre": 3
+   },
+   "cortes": [],
+   "feedback": {
+    "sem": 4,
+    "com": 5,
+    "mudaramDeBloco": [
+     {
+      "origem": "resumo",
+      "volta": 2,
+      "titulo": "Volta 2: 1:42,053",
+      "sem": {
+       "voltaDoCarro": 3,
+       "sCarro": 723.2
+      },
+      "com": {
+       "voltaDoCarro": 3,
+       "sCarro": 1510.8
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 4,
+      "titulo": "Volta 4: 1:50,532",
+      "sem": {
+       "voltaDoCarro": 5,
+       "sCarro": 724.5
+      },
+      "com": {
+       "voltaDoCarro": 5,
+       "sCarro": 1510.4
+      }
+     }
+    ],
+    "soCom": [
+     {
+      "origem": "curva",
+      "volta": 3,
+      "titulo": "C01, esquerda",
+      "fala": "Curva 1: 2,0 segundos, freou 28 metros antes da referência.",
+      "sCarro": 1510.7
+     }
+    ],
+    "pendentesNoFim": {
+     "sem": 0,
+     "com": 0
+    },
+    "comCausaNaVoz": {
+     "sem": 2,
+     "com": 2
+    }
+   },
+   "segundosDeFala": {
+    "antes": {
+     "voltasDaGravacao": 5,
+     "engenheiroS": 36.7,
+     "feedbackS": 15.4,
+     "porVolta": {
+      "engenheiro": 7.3,
+      "feedback": 3.1,
+      "total": 10.4
+     },
+     "falasDoEngenheiro": 9,
+     "origem": "a rodada da D.1 de 20/11, molde (b)"
+    },
+    "depois": {
+     "voltasDaGravacao": 5,
+     "engenheiroS": 28.7,
+     "feedbackS": 22.8,
+     "porVolta": {
+      "engenheiro": 5.7,
+      "feedback": 4.6,
+      "total": 10.3
+     },
+     "falasDoEngenheiro": 4
+    }
+   }
+  },
+  "2026-11-21": {
+   "voltasQueContam": [
+    5.0,
+    6.0,
+    9.0
+   ],
+   "focos": [
+    {
+     "volta": null,
+     "trecho": "C04",
+     "saiu": null,
+     "origem": "sessão 2026-11-20_19-06-14_vhe_interlagos",
+     "motivo": "o foco com que a sessão terminou",
+     "t": 273.0
+    },
+    {
+     "volta": 9.0,
+     "trecho": null,
+     "saiu": "C04",
+     "origem": null,
+     "motivo": "3 voltas sem aplicar",
+     "t": 1577.0
+    },
+    {
+     "volta": 9.0,
+     "trecho": "C07",
+     "saiu": null,
+     "origem": "volta 9 da sessão",
+     "motivo": "a maior perda acima do ruído (0,92 s)",
+     "t": 1577.0
+    }
+   ],
+   "conferencias": [
+    {
+     "volta": 5.0,
+     "trecho": "C04",
+     "aplicada": false,
+     "texto": "Curva 4: freou 56 m antes do ponto",
+     "voltasEmFoco": 1
+    },
+    {
+     "volta": 6.0,
+     "trecho": "C04",
+     "aplicada": false,
+     "texto": "Curva 4: freou 28 m antes do ponto",
+     "voltasEmFoco": 2
+    },
+    {
+     "volta": 9.0,
+     "trecho": "C04",
+     "aplicada": false,
+     "texto": "Curva 4: freou 38 m antes do ponto",
+     "voltasEmFoco": 3
+    }
+   ],
+   "fichas": [
+    {
+     "tipo": "ficha",
+     "volta": 3,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 542.2,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.14,
+     "ateASuaAcaoS": 4.62,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 5.12
+    },
+    {
+     "tipo": "ficha",
+     "volta": 4,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 542.2,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.14,
+     "ateASuaAcaoS": 2.95,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.42
+    },
+    {
+     "tipo": "ficha",
+     "volta": 5,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 542.2,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.14,
+     "ateASuaAcaoS": 2.97,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.4
+    },
+    {
+     "tipo": "ficha",
+     "volta": 6,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 542.2,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.14,
+     "ateASuaAcaoS": 2.86,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.67
+    },
+    {
+     "tipo": "ficha",
+     "volta": 7,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 529.2,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.1,
+     "ateASuaAcaoS": 3.81,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 4.2
+    },
+    {
+     "tipo": "ficha",
+     "volta": 8,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 557.2,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.15,
+     "ateASuaAcaoS": 3.75,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.78
+    },
+    {
+     "tipo": "ficha",
+     "volta": 9,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 557.2,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.15,
+     "ateASuaAcaoS": 3.02,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.21
+    },
+    {
+     "tipo": "ficha",
+     "volta": 10,
+     "trecho": "C04",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135.",
+     "sFala": 557.2,
+     "duracaoS": 7.17,
+     "folgaPlanejadaS": 3.15,
+     "ateASuaAcaoS": 2.52,
+     "aSuaAcao": "frenagem",
+     "ateOPontoS": 3.07
+    },
+    {
+     "tipo": "ficha",
+     "volta": 11,
+     "trecho": "C07",
+     "tipoDaFicha": "frenagem",
+     "fala": "Curva sete, à direita. Freie 35 antes do começo da zebra à direita, frenagem em linha reta. Entre pela esquerda e tangencie a zebra da direita. Mínima de 90.",
+     "sFala": 338.3,
+     "duracaoS": 11.39,
+     "folgaPlanejadaS": 23.96,
+     "ateASuaAcaoS": null,
+     "aSuaAcao": null,
+     "ateOPontoS": null
+    }
+   ],
+   "lembretes": [],
+   "folgaAteASuaAcaoS": {
+    "n": 8,
+    "min": 2.52,
+    "mediana": 3.0,
+    "max": 4.62
+   },
+   "folgaAteOPontoS": {
+    "n": 8,
+    "min": 3.07,
+    "mediana": 3.54,
+    "max": 5.12
+   },
+   "folgaAbaixoDe3S": 4,
+   "bipes": [
+    {
+     "volta": 3,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.5,
+     "aSuaFrenagemDepoisDoBipeM": -28.9
+    },
+    {
+     "volta": 4,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.47,
+     "aSuaFrenagemDepoisDoBipeM": -33.7
+    },
+    {
+     "volta": 5,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.43,
+     "aSuaFrenagemDepoisDoBipeM": -31.4
+    },
+    {
+     "volta": 7,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.4,
+     "aSuaFrenagemDepoisDoBipeM": -28.0
+    },
+    {
+     "volta": 8,
+     "trecho": "C04",
+     "sBipe": 1216.0,
+     "aSuaFrenagemDepoisDoBipeS": -0.03,
+     "aSuaFrenagemDepoisDoBipeM": -3.5
+    }
+   ],
+   "frenagemDepoisDoUltimoBipeS": {
+    "n": 5,
+    "min": -0.5,
+    "mediana": -0.43,
+    "max": -0.03
+   },
+   "frenagemDepoisDoUltimoBipeM": {
+    "n": 5,
+    "min": -33.7,
+    "mediana": -28.9,
+    "max": -3.5
+   },
+   "planosSemFicha": {},
+   "planosSemLembrete": {
+    "a ficha já é dita neste pedaço livre": 4
+   },
+   "cortes": [],
+   "feedback": {
+    "sem": 11,
+    "com": 10,
+    "mudaramDeBloco": [
+     {
+      "origem": "resumo",
+      "volta": 2,
+      "titulo": "Volta 2: 1:36,567",
+      "sem": {
+       "voltaDoCarro": 3,
+       "sCarro": 723.1
+      },
+      "com": {
+       "voltaDoCarro": 3,
+       "sCarro": 1510.1
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 3,
+      "titulo": "Volta 3: 1:51,310",
+      "sem": {
+       "voltaDoCarro": 4,
+       "sCarro": 723.4
+      },
+      "com": {
+       "voltaDoCarro": 4,
+       "sCarro": 1510.6
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 6,
+      "titulo": "Volta 6: 1:33,745",
+      "sem": {
+       "voltaDoCarro": 7,
+       "sCarro": 724.6
+      },
+      "com": {
+       "voltaDoCarro": 7,
+       "sCarro": 1511.1
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 7,
+      "titulo": "C07, direita",
+      "sem": {
+       "voltaDoCarro": 8,
+       "sCarro": 4213.6
+      },
+      "com": {
+       "voltaDoCarro": 7,
+       "sCarro": 4025.0
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 7,
+      "titulo": "Volta 7: 2:32,690",
+      "sem": {
+       "voltaDoCarro": 8,
+       "sCarro": 3697.0
+      },
+      "com": {
+       "voltaDoCarro": 8,
+       "sCarro": 1510.3
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 7,
+      "titulo": "C12, esquerda",
+      "sem": {
+       "voltaDoCarro": 8,
+       "sCarro": 4250.0
+      },
+      "com": {
+       "voltaDoCarro": 8,
+       "sCarro": 2922.8
+      }
+     }
+    ],
+    "soCom": [],
+    "pendentesNoFim": {
+     "sem": 1,
+     "com": 2
+    },
+    "comCausaNaVoz": {
+     "sem": 6,
+     "com": 3
+    }
+   },
+   "segundosDeFala": {
+    "antes": {
+     "voltasDaGravacao": 12,
+     "engenheiroS": 67.7,
+     "feedbackS": 64.4,
+     "porVolta": {
+      "engenheiro": 5.6,
+      "feedback": 5.4,
+      "total": 11.0
+     },
+     "falasDoEngenheiro": 20,
+     "origem": "a sessão real (o código de 20/11 no jogo)"
+    },
+    "depois": {
+     "voltasDaGravacao": 12,
+     "engenheiroS": 68.8,
+     "feedbackS": 45.9,
+     "porVolta": {
+      "engenheiro": 5.7,
+      "feedback": 3.8,
+      "total": 9.6
+     },
+     "falasDoEngenheiro": 9
+    }
+   }
+  }
+ }
+}
