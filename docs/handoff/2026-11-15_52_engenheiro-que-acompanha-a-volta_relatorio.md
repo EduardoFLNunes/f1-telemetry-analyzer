@@ -12,6 +12,7 @@
   - a suíte do backend passou (**1080 testes**);
   - **parado antes do novo teste no jogo:** você escolhe o molde ouvindo os áudios.
 - **A decisão de 20/11 sobre o molde (a última seção):** você escolheu o **(b)**. Ela está no ADR 0033 (`e6147005`, antes do código), e o (b) é o padrão no código. **Parado antes do teste no jogo:** falta o seu "pode instalar".
+- **A atualização de 21/11 (a última seção): em andamento.** O ADR (`a9f94d20`), o código, o app do jogo 0.9.0 e os testes (`72e2f0d8`) estão feitos. **Parado antes da D.1:** o jogo está aberto.
 - **A Parte E (20/11), a seção "Parte E: o teste no jogo":**
   - o teste no jogo foi feito, e a leitura E.3 está feita, com o foco na voz e no tempo;
   - **parado para a sua decisão:** nenhum código foi mudado depois do teste;
@@ -37,7 +38,11 @@
   - `9a40c004` atualização de 20/11: o código, o app do jogo 0.8.0, os testes e a documentação
   - `d0a13eba` atualização de 20/11: a D.1 com as três variantes, a D.2, as suítes e o relatório
   - `e6147005` a decisão de 20/11 sobre o molde: o (b), no ADR 0033, antes do código
-  - o commit do (b) como padrão no código, do teste e deste relatório
+  - `e4f549e1` o (b) como padrão no código, o teste e o relatório
+  - `a2d4f023`, `fdc8abc8`, `af8d452b`, `06e92f15`, `e47afb97` e `760d245a`: o "pode instalar", o teste de 21/11, os problemas e a ficha da curva (só relatório e scripts)
+  - `a9f94d20` atualização de 21/11: o texto e as decisões no ADR 0033, antes do código
+  - `72e2f0d8` atualização de 21/11: o código, o app do jogo 0.9.0, os testes e a documentação
+  - o commit deste relatório
 - **Merge:** nenhum (depois do teste no jogo). **Envio:** nenhum feito por mim (os comandos estão no fim).
 - **Arquivos de handoff** (`docs/handoff/2026-11-15_52_engenheiro-que-acompanha-a-volta_…`):
   - `_relatorio.md` (este);
@@ -1089,3 +1094,114 @@ Fontes:
 2. **A técnica:** sair da sua melhor passagem, ou ficar fora da fala.
 3. **A entrega:** a proposta acima (uma curva de foco, a ficha na reta longa, o lembrete curto e o bipe só na frenagem), ou outra.
 4. **Depois da decisão:** o ADR 0033 ganha a emenda antes do código, como nas outras vezes. Para isso, é melhor um pedido novo com as decisões.
+
+
+## Atualização de 21/11: a curva de foco (em andamento: parado antes da D.1, com o jogo aberto)
+
+O pedido é a "Atualização de 21/11" do pedido 52. O item 13 manda, nesta ordem: o ADR, o código, os testes, a D.1, a D.2 e as suítes. Fiz o ADR, o código e os testes. **Parei antes da D.1** porque o `acs.exe` está aberto desde as 18h10 (PID 21128), e a regra é conferir que ele está fechado antes das contas pesadas. A rodada de teste da D.1 que comecei foi parada, e não sobrou nenhum processo dela.
+
+- **Commits** (em `etapa/engenheiro`):
+  - `a9f94d20`: o texto da atualização e as decisões no ADR 0033 ("Decisões do Eduardo de 21/11"), antes do código;
+  - `72e2f0d8`: o código, o app do jogo 0.9.0, os testes e a documentação.
+- **Envio:** nada foi enviado ao GitHub.
+
+### O que fixei no ADR onde a decisão deixava lacuna
+
+- **O foco escolhido na linha** vale a partir dali. A primeira volta dele é a que começa nessa linha, e é ela a primeira conferida.
+- **"Aplicou"** é a conferência da instrução principal da ficha, com as medidas do item 8:
+  - nas curvas com frenagem: a frenagem a até 10 m do ponto de frenagem da referência;
+  - nas de pé embaixo: o trecho sem tirar o pé;
+  - nas de só um alívio: a mínima a até 5 km/h da referência.
+
+  Uma volta sem a medida conta como não aplicou.
+- **A curva seguinte** é a de maior perda acima do ruído na mesma volta, sem a que acabou de sair. Sem nenhuma, não há foco até a volta seguinte que conta, e a janela diz por quê.
+- **O foco da sessão anterior:**
+  - vale o foco com que ela terminou (a última linha `foco` do registro);
+  - nas sessões gravadas antes de 21/11, que não têm essa linha, vale a maior perda acima do ruído na última volta que contou.
+- **A ficha** acaba 3,0 s antes do fim do pedaço livre da reta longa (a ação seguinte) e 3,0 s antes do ponto da curva de foco, e começa o mais tarde possível. Se não couber, fica só na janela.
+- **O lembrete** é a parte de onde frear da ficha: sem o verbo com placas ("Um: entre o 100 e o 50."), com o verbo com outro marco, e "pé embaixo" ou "só um alívio" nas curvas sem frenagem.
+- **A contagem de bipes:**
+  - o intervalo é de 0,5 s, **não confirmado**: nenhuma fonte achada trata de uma contagem sonora para frear num ponto;
+  - os pontos dos bipes são calculados no backend pelo tempo do perfil;
+  - o último bipe é o `bipe_agudo.wav`, de 3.000 Hz.
+- **A marca no asfalto** fica só nas curvas de foco com frenagem; ela aparece a 400 m do ponto.
+- **A janela com os dois próximos avisos** (item 10 de 20/11) sai. A janela mostra a ficha do foco.
+- **A lista da volta** continua a ser feita e registrada, porque é dela que sai o foco, mas não vai para a voz.
+
+### O código
+
+- **`core/engenheiro/ficha.py`** (novo) monta a ficha da curva, com estas partes:
+  - onde frear, entre as placas;
+  - a técnica: "de pé embaixo" e "só um alívio" pela referência; "com trail braking" e "frenagem em linha reta" pela melhor passagem do piloto;
+  - a linha, a velocidade e o lembrete;
+  - a instrução que a conferência mede e o texto da conferência ("Curva 2: freou 40 m antes do ponto").
+
+  Com a volta de referência, ela reproduz a tabela "As 14 fichas", sem a técnica, que agora depende das suas passagens.
+- **`core/engenheiro/plano.py`:**
+  - sai o plano de 20/11 (os pares, o segundo pedaço e o bipe no ponto dito);
+  - entram `planejar_a_ficha`, `planejar_o_lembrete`, `pontos_da_contagem` e `reta_longa_antes`;
+  - a ação do piloto "vire" só conta um alívio de 10 m ou mais.
+- **`core/engenheiro/servico.py`:**
+  - a curva de foco: a escolha, a conferência, as duas regras de troca e as linhas `foco`, `conferencia`, `plano`, `ficha` e `lembrete` no registro;
+  - `foco_do_registro`, que lê o foco da sessão anterior;
+  - `descartar`, que guarda o motivo da volta que não conta;
+  - o estado para o app do jogo: `foco`, `esperando` e `falas`.
+- **`core/engenheiro/regras.py`:** o "sem tirar o pé" com o filtro de 10 m (`tem_alivio` e `maior_alivio_m`).
+- **`core/radio/servico.py`:**
+  - o foco da sessão anterior vai para a nova sessão;
+  - o motivo da volta descartada vai para o engenheiro, também na volta que não começa na linha e na volta com a IA.
+- **O app do jogo 0.9.0:**
+  - a janela mostra a ficha do foco, a distância até o ponto e a conferência do foco depois da linha; sem foco, mostra "Esperando uma volta que conte (volta 3: rodada…)";
+  - a ficha e o lembrete tocam pelo `sFala`;
+  - os três bipes tocam pelos `sBipes`, com o último agudo, em players próprios;
+  - a marca fica só no foco;
+  - o arquivo novo é o `bipe_agudo.wav`. O `bipe.wav` não mudou: o hash é o mesmo.
+- **O `conferir_lua.py`** passa contra o `lib.lua` do SDK do CSP: 40.415 tokens, nenhum erro de léxico, os blocos ok, e as 55 chamadas e os 15 métodos existem.
+- **A documentação:** a seção 9.8 de `docs/realidade_aumentada.md` e as linhas do app do jogo 0.9.0 em `docs/app_para_producao.md`.
+
+### O filtro de 10 m (item 8): os trechos que mudam na volta de referência
+
+Com a regra antiga, nenhum trecho da volta de referência era "sem tirar o pé": o acelerador da IA cai a 0 por 2 a 4 m nas trocas de marcha. Com o filtro de 10 m, passam a ser "sem tirar o pé":
+
+| trecho | maior queda do acelerador |
+|---|---:|
+| C03 | 4 m |
+| C05 | 2 m |
+| C09 | 4 m |
+| C11 | 4 m |
+| C13 | 2 m |
+| C14 | 4 m |
+| C14→linha | 6 m |
+
+Os outros trechos têm alívio de 44 a 210 m e não mudam.
+
+Um detalhe: a C03 é "sem tirar o pé" no trecho, mas "só um alívio" na ficha. A ficha olha de 50 m antes da entrada até o ápice, e esse intervalo pega o alívio do fim da C02. Não mudei nada; fica registrado.
+
+### Os testes
+
+**41 testes do engenheiro passando** (`backend/tests/test_engenheiro.py`).
+- **Saíram** os testes do plano de 20/11: os pares, o segundo pedaço, o bipe no ponto dito, a dica dada pela janela e a linha `aviso`.
+- **Entraram:**
+  - a escolha do foco e as duas regras de troca (aplicou e 3 voltas sem aplicar), e a curva que sai e pode voltar;
+  - o foco da sessão anterior, pelas duas regras do registro, e a janela "Esperando uma volta que conte" com o motivo;
+  - a técnica da melhor passagem (trail braking, linha reta e sem passagem) e a ficha sem a técnica;
+  - o filtro de 10 m;
+  - a ficha uma vez por volta na reta longa, com prioridade sobre o feedback (a reserva começa nela);
+  - o lembrete com a folga, o lembrete que não cabe e o lembrete no pedaço da ficha;
+  - a contagem de três bipes, e a falta dela de pé embaixo e com o bipe desligado;
+  - a marca só no foco;
+  - a conferência estática do app do jogo.
+
+Os testes do rádio (66) e o da referência do app (agora com a 0.9.0) também passam.
+
+### O que falta (precisa do jogo fechado)
+
+1. **A D.1** nas 6 sessões (13/10, 18/10, 21/10, 12/11, 20/11 e 21/11), em cadeia: cada rodada recebe o registro da anterior, para o foco vir da sessão anterior. O "antes" de cada sessão é:
+   - nas cinco primeiras, a rodada da D.1 de 20/11 com o molde (b);
+   - na de 21/11, a sessão real (o código de 20/11 no jogo).
+2. **A D.2:** as fichas em áudio, com a técnica das suas passagens, e a prévia da janela.
+3. **As suítes,** o `tsc` e o `conferir_lua.py`.
+4. **O cartão novo** para o teste no jogo.
+5. **Depois,** o seu "pode instalar" do app do jogo 0.9.0 e o teste no jogo.
+
+**Para continuar, feche o jogo** (o `acs.exe` está aberto) e me avise.
