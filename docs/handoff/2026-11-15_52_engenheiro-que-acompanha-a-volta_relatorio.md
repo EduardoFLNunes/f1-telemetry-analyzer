@@ -1019,7 +1019,7 @@ O seu pedido:
 
 > "Curva X, freie entre a placa de 50 e 100, mova o carro para a zebra do lado X e mantenha X velocidade. Curva X pode ser realizada com pé embaixo ou trail braking."
 
-Montei essa fala para as 14 curvas, com a volta de referência, os marcos da pista e a geometria. Mediu a duração de cada uma com a voz do projeto. **Nenhum código do app mudou:** é um script de conferência (`_ficha_2111.py` e `_ficha_2111.json`).
+Montei essa fala para as 14 curvas, com a volta de referência, os marcos da pista e a geometria, e medi a duração de cada uma com a voz do projeto. **Nenhum código do app mudou:** é um script de conferência (`_ficha_2111.py` e `_ficha_2111.json`).
 
 ### O que entra em cada ficha e de onde sai
 
