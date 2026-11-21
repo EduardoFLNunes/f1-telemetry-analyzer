@@ -1,0 +1,1097 @@
+{
+ "voz": "OneCore:Daniel a 1,4x, sem a vinheta",
+ "pasta": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\radio\\[teste] vozes do engenheiro 20-11",
+ "variantes": {
+  "a": [
+   {
+    "arquivo": "a/C01_freie.wav",
+    "trecho": "C01",
+    "acao": "freie",
+    "texto": "Freie 10 metros depois da placa de 100.",
+    "duracaoS": 2.37
+   },
+   {
+    "arquivo": "a/C01_vire.wav",
+    "trecho": "C01",
+    "acao": "vire",
+    "texto": "Vire 35 metros antes do começo da zebra à esquerda.",
+    "duracaoS": 3.49
+   },
+   {
+    "arquivo": "a/C02_freie.wav",
+    "trecho": "C02",
+    "acao": "freie",
+    "texto": "Freie no começo da zebra à direita.",
+    "duracaoS": 2.02
+   },
+   {
+    "arquivo": "a/C02_vire.wav",
+    "trecho": "C02",
+    "acao": "vire",
+    "texto": "Vire 5 metros depois do começo da zebra à direita.",
+    "duracaoS": 3.13
+   },
+   {
+    "arquivo": "a/C02_acelere.wav",
+    "trecho": "C02",
+    "acao": "acelere",
+    "texto": "Acelere no fim da zebra à direita.",
+    "duracaoS": 1.95
+   },
+   {
+    "arquivo": "a/C03_vire.wav",
+    "trecho": "C03",
+    "acao": "vire",
+    "texto": "Vire 10 metros depois do começo da zebra à esquerda.",
+    "duracaoS": 3.02
+   },
+   {
+    "arquivo": "a/C03_acelere.wav",
+    "trecho": "C03",
+    "acao": "acelere",
+    "texto": "Acelere no ponto marcado.",
+    "duracaoS": 1.52
+   },
+   {
+    "arquivo": "a/C04_freie.wav",
+    "trecho": "C04",
+    "acao": "freie",
+    "texto": "Freie 10 metros antes da placa de 100.",
+    "duracaoS": 2.35
+   },
+   {
+    "arquivo": "a/C04_vire.wav",
+    "trecho": "C04",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à esquerda.",
+    "duracaoS": 2.02
+   },
+   {
+    "arquivo": "a/C04_acelere.wav",
+    "trecho": "C04",
+    "acao": "acelere",
+    "texto": "Acelere 15 metros depois do começo da zebra à direita.",
+    "duracaoS": 3.27
+   },
+   {
+    "arquivo": "a/C05_vire.wav",
+    "trecho": "C05",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à esquerda.",
+    "duracaoS": 2.02
+   },
+   {
+    "arquivo": "a/C05_acelere.wav",
+    "trecho": "C05",
+    "acao": "acelere",
+    "texto": "Acelere 35 metros depois do começo da zebra à esquerda.",
+    "duracaoS": 3.66
+   },
+   {
+    "arquivo": "a/C06_freie.wav",
+    "trecho": "C06",
+    "acao": "freie",
+    "texto": "Freie na placa de 50.",
+    "duracaoS": 1.66
+   },
+   {
+    "arquivo": "a/C06_vire.wav",
+    "trecho": "C06",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à direita.",
+    "duracaoS": 2.01
+   },
+   {
+    "arquivo": "a/C07_freie.wav",
+    "trecho": "C07",
+    "acao": "freie",
+    "texto": "Freie 35 metros antes do começo da zebra à direita.",
+    "duracaoS": 3.47
+   },
+   {
+    "arquivo": "a/C07_vire.wav",
+    "trecho": "C07",
+    "acao": "vire",
+    "texto": "Vire 15 metros depois do começo da zebra à direita.",
+    "duracaoS": 3.14
+   },
+   {
+    "arquivo": "a/C07_acelere.wav",
+    "trecho": "C07",
+    "acao": "acelere",
+    "texto": "Acelere no fim da zebra à direita.",
+    "duracaoS": 1.95
+   },
+   {
+    "arquivo": "a/C08_freie.wav",
+    "trecho": "C08",
+    "acao": "freie",
+    "texto": "Freie no começo da zebra à esquerda.",
+    "duracaoS": 2.05
+   },
+   {
+    "arquivo": "a/C08_vire.wav",
+    "trecho": "C08",
+    "acao": "vire",
+    "texto": "Vire 10 metros antes do começo da zebra à esquerda.",
+    "duracaoS": 3.0
+   },
+   {
+    "arquivo": "a/C08_acelere.wav",
+    "trecho": "C08",
+    "acao": "acelere",
+    "texto": "Acelere 15 metros antes do começo da zebra à direita.",
+    "duracaoS": 3.24
+   },
+   {
+    "arquivo": "a/C09_vire.wav",
+    "trecho": "C09",
+    "acao": "vire",
+    "texto": "Vire 30 metros antes do fim da zebra à direita.",
+    "duracaoS": 2.87
+   },
+   {
+    "arquivo": "a/C10_freie.wav",
+    "trecho": "C10",
+    "acao": "freie",
+    "texto": "Freie 10 metros antes do começo da zebra à direita.",
+    "duracaoS": 2.98
+   },
+   {
+    "arquivo": "a/C10_vire.wav",
+    "trecho": "C10",
+    "acao": "vire",
+    "texto": "Vire 15 metros antes do começo da zebra à direita.",
+    "duracaoS": 3.1
+   },
+   {
+    "arquivo": "a/C10_acelere.wav",
+    "trecho": "C10",
+    "acao": "acelere",
+    "texto": "Acelere no começo da zebra à esquerda.",
+    "duracaoS": 2.17
+   },
+   {
+    "arquivo": "a/C11_vire.wav",
+    "trecho": "C11",
+    "acao": "vire",
+    "texto": "Vire 5 metros depois do começo da zebra à esquerda.",
+    "duracaoS": 3.16
+   },
+   {
+    "arquivo": "a/C11_acelere.wav",
+    "trecho": "C11",
+    "acao": "acelere",
+    "texto": "Acelere 80 metros depois do começo da zebra à esquerda.",
+    "duracaoS": 3.35
+   },
+   {
+    "arquivo": "a/C12_freie.wav",
+    "trecho": "C12",
+    "acao": "freie",
+    "texto": "Freie 15 metros depois da placa de 100.",
+    "duracaoS": 2.49
+   },
+   {
+    "arquivo": "a/C12_vire.wav",
+    "trecho": "C12",
+    "acao": "vire",
+    "texto": "Vire 20 metros depois do começo da zebra à esquerda.",
+    "duracaoS": 3.12
+   },
+   {
+    "arquivo": "a/C12_acelere.wav",
+    "trecho": "C12",
+    "acao": "acelere",
+    "texto": "Acelere 10 metros depois do começo da zebra à direita.",
+    "duracaoS": 3.17
+   },
+   {
+    "arquivo": "a/C13_vire.wav",
+    "trecho": "C13",
+    "acao": "vire",
+    "texto": "Vire no fim da zebra à direita.",
+    "duracaoS": 1.82
+   },
+   {
+    "arquivo": "a/C13_acelere.wav",
+    "trecho": "C13",
+    "acao": "acelere",
+    "texto": "Acelere 30 metros antes do fim da zebra à direita.",
+    "duracaoS": 3.02
+   },
+   {
+    "arquivo": "a/C14_vire.wav",
+    "trecho": "C14",
+    "acao": "vire",
+    "texto": "Vire 40 metros depois do fim da zebra à esquerda.",
+    "duracaoS": 3.08
+   },
+   {
+    "arquivo": "a/C14_acelere.wav",
+    "trecho": "C14",
+    "acao": "acelere",
+    "texto": "Acelere no começo da zebra à esquerda.",
+    "duracaoS": 2.17
+   },
+   {
+    "arquivo": "a/C14_linha_acelere.wav",
+    "trecho": "C14->linha",
+    "acao": "acelere",
+    "texto": "Acelere 15 metros antes do posto de bandeira à direita.",
+    "duracaoS": 3.24
+   },
+   {
+    "arquivo": "a/par_01.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Cinco: vire no começo da zebra à esquerda. Seis: vire no começo da zebra à direita.",
+    "duracaoS": 5.68
+   },
+   {
+    "arquivo": "a/par_02.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Dois: vire 5 metros depois do começo da zebra à direita. Três: sem tirar o pé.",
+    "duracaoS": 5.69
+   },
+   {
+    "arquivo": "a/par_03.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Nove: vire 30 metros antes do fim da zebra à direita. Dez: vire 15 metros antes do começo da zebra à direita.",
+    "duracaoS": 7.52
+   },
+   {
+    "arquivo": "a/par_04.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Nove: vire 30 metros antes do fim da zebra à direita. Onze: vire 5 metros depois do começo da zebra à esquerda.",
+    "duracaoS": 7.59
+   },
+   {
+    "arquivo": "a/par_05.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Oito: vire 10 metros antes do começo da zebra à esquerda. Nove: vire 30 metros antes do fim da zebra à direita.",
+    "duracaoS": 7.45
+   },
+   {
+    "arquivo": "a/par_06.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie 10 metros antes da placa de 100. Cinco: sem tirar o pé.",
+    "duracaoS": 4.97
+   },
+   {
+    "arquivo": "a/par_07.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie 10 metros antes da placa de 100. Cinco: vire no começo da zebra à esquerda.",
+    "duracaoS": 6.01
+   },
+   {
+    "arquivo": "a/par_08.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie 10 metros antes da placa de 100. Dez: vire 15 metros antes do começo da zebra à direita.",
+    "duracaoS": 6.97
+   },
+   {
+    "arquivo": "a/par_09.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie 10 metros antes da placa de 100. Seis: vire no começo da zebra à direita.",
+    "duracaoS": 5.98
+   },
+   {
+    "arquivo": "a/par_10.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie 10 metros antes da placa de 100. Sete: freie 35 metros antes do começo da zebra à direita.",
+    "duracaoS": 7.5
+   },
+   {
+    "arquivo": "a/par_11.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Seis: vire no começo da zebra à direita. Sete: freie 35 metros antes do começo da zebra à direita.",
+    "duracaoS": 7.19
+   },
+   {
+    "arquivo": "a/par_12.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Seis: vire no começo da zebra à direita. Sete: vire 15 metros depois do começo da zebra à direita.",
+    "duracaoS": 6.84
+   },
+   {
+    "arquivo": "a/par_13.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Sete: freie 35 metros antes do começo da zebra à direita. Nove: vire 30 metros antes do fim da zebra à direita.",
+    "duracaoS": 8.04
+   },
+   {
+    "arquivo": "a/par_14.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Sete: freie 35 metros antes do começo da zebra à direita. Oito: vire 10 metros antes do começo da zebra à esquerda.",
+    "duracaoS": 8.09
+   },
+   {
+    "arquivo": "a/par_15.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Três: sem tirar o pé. Quatro: freie 10 metros antes da placa de 100.",
+    "duracaoS": 4.92
+   },
+   {
+    "arquivo": "a/par_16.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Um: freie 10 metros depois da placa de 100. Dois: vire 5 metros depois do começo da zebra à direita.",
+    "duracaoS": 6.86
+   },
+   {
+    "arquivo": "a/par_17.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Um: freie 10 metros depois da placa de 100. Três: sem tirar o pé.",
+    "duracaoS": 4.77
+   },
+   {
+    "arquivo": "a/par_18.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Um: freie 10 metros depois da placa de 100. Três: vire 10 metros depois do começo da zebra à esquerda.",
+    "duracaoS": 6.78
+   }
+  ],
+  "b": [
+   {
+    "arquivo": "b/C01_freie.wav",
+    "trecho": "C01",
+    "acao": "freie",
+    "texto": "Freie 10 depois do 100.",
+    "duracaoS": 1.52
+   },
+   {
+    "arquivo": "b/C01_vire.wav",
+    "trecho": "C01",
+    "acao": "vire",
+    "texto": "Vire 35 antes do começo da zebra à esquerda.",
+    "duracaoS": 3.1
+   },
+   {
+    "arquivo": "b/C02_freie.wav",
+    "trecho": "C02",
+    "acao": "freie",
+    "texto": "Freie no começo da zebra à direita.",
+    "duracaoS": 2.02
+   },
+   {
+    "arquivo": "b/C02_vire.wav",
+    "trecho": "C02",
+    "acao": "vire",
+    "texto": "Vire 5 depois do começo da zebra à direita.",
+    "duracaoS": 2.73
+   },
+   {
+    "arquivo": "b/C02_acelere.wav",
+    "trecho": "C02",
+    "acao": "acelere",
+    "texto": "Acelere no fim da zebra à direita.",
+    "duracaoS": 1.95
+   },
+   {
+    "arquivo": "b/C03_vire.wav",
+    "trecho": "C03",
+    "acao": "vire",
+    "texto": "Vire 10 depois do começo da zebra à esquerda.",
+    "duracaoS": 2.65
+   },
+   {
+    "arquivo": "b/C03_acelere.wav",
+    "trecho": "C03",
+    "acao": "acelere",
+    "texto": "Acelere no ponto marcado.",
+    "duracaoS": 1.52
+   },
+   {
+    "arquivo": "b/C04_freie.wav",
+    "trecho": "C04",
+    "acao": "freie",
+    "texto": "Freie 10 antes do 100.",
+    "duracaoS": 1.41
+   },
+   {
+    "arquivo": "b/C04_vire.wav",
+    "trecho": "C04",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à esquerda.",
+    "duracaoS": 2.02
+   },
+   {
+    "arquivo": "b/C04_acelere.wav",
+    "trecho": "C04",
+    "acao": "acelere",
+    "texto": "Acelere 15 depois do começo da zebra à direita.",
+    "duracaoS": 2.86
+   },
+   {
+    "arquivo": "b/C05_vire.wav",
+    "trecho": "C05",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à esquerda.",
+    "duracaoS": 2.02
+   },
+   {
+    "arquivo": "b/C05_acelere.wav",
+    "trecho": "C05",
+    "acao": "acelere",
+    "texto": "Acelere 35 depois do começo da zebra à esquerda.",
+    "duracaoS": 3.25
+   },
+   {
+    "arquivo": "b/C06_freie.wav",
+    "trecho": "C06",
+    "acao": "freie",
+    "texto": "Freie no 50.",
+    "duracaoS": 1.18
+   },
+   {
+    "arquivo": "b/C06_vire.wav",
+    "trecho": "C06",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à direita.",
+    "duracaoS": 2.01
+   },
+   {
+    "arquivo": "b/C07_freie.wav",
+    "trecho": "C07",
+    "acao": "freie",
+    "texto": "Freie 35 antes do começo da zebra à direita.",
+    "duracaoS": 3.07
+   },
+   {
+    "arquivo": "b/C07_vire.wav",
+    "trecho": "C07",
+    "acao": "vire",
+    "texto": "Vire 15 depois do começo da zebra à direita.",
+    "duracaoS": 2.73
+   },
+   {
+    "arquivo": "b/C07_acelere.wav",
+    "trecho": "C07",
+    "acao": "acelere",
+    "texto": "Acelere no fim da zebra à direita.",
+    "duracaoS": 1.95
+   },
+   {
+    "arquivo": "b/C08_freie.wav",
+    "trecho": "C08",
+    "acao": "freie",
+    "texto": "Freie no começo da zebra à esquerda.",
+    "duracaoS": 2.05
+   },
+   {
+    "arquivo": "b/C08_vire.wav",
+    "trecho": "C08",
+    "acao": "vire",
+    "texto": "Vire 10 antes do começo da zebra à esquerda.",
+    "duracaoS": 2.58
+   },
+   {
+    "arquivo": "b/C08_acelere.wav",
+    "trecho": "C08",
+    "acao": "acelere",
+    "texto": "Acelere 15 antes do começo da zebra à direita.",
+    "duracaoS": 2.83
+   },
+   {
+    "arquivo": "b/C09_vire.wav",
+    "trecho": "C09",
+    "acao": "vire",
+    "texto": "Vire 30 antes do fim da zebra à direita.",
+    "duracaoS": 2.51
+   },
+   {
+    "arquivo": "b/C10_freie.wav",
+    "trecho": "C10",
+    "acao": "freie",
+    "texto": "Freie 10 antes do começo da zebra à direita.",
+    "duracaoS": 2.57
+   },
+   {
+    "arquivo": "b/C10_vire.wav",
+    "trecho": "C10",
+    "acao": "vire",
+    "texto": "Vire 15 antes do começo da zebra à direita.",
+    "duracaoS": 2.68
+   },
+   {
+    "arquivo": "b/C10_acelere.wav",
+    "trecho": "C10",
+    "acao": "acelere",
+    "texto": "Acelere no começo da zebra à esquerda.",
+    "duracaoS": 2.17
+   },
+   {
+    "arquivo": "b/C11_vire.wav",
+    "trecho": "C11",
+    "acao": "vire",
+    "texto": "Vire 5 depois do começo da zebra à esquerda.",
+    "duracaoS": 2.74
+   },
+   {
+    "arquivo": "b/C11_acelere.wav",
+    "trecho": "C11",
+    "acao": "acelere",
+    "texto": "Acelere 80 depois do começo da zebra à esquerda.",
+    "duracaoS": 2.93
+   },
+   {
+    "arquivo": "b/C12_freie.wav",
+    "trecho": "C12",
+    "acao": "freie",
+    "texto": "Freie 15 depois do 100.",
+    "duracaoS": 1.62
+   },
+   {
+    "arquivo": "b/C12_vire.wav",
+    "trecho": "C12",
+    "acao": "vire",
+    "texto": "Vire 20 depois do começo da zebra à esquerda.",
+    "duracaoS": 2.71
+   },
+   {
+    "arquivo": "b/C12_acelere.wav",
+    "trecho": "C12",
+    "acao": "acelere",
+    "texto": "Acelere 10 depois do começo da zebra à direita.",
+    "duracaoS": 2.78
+   },
+   {
+    "arquivo": "b/C13_vire.wav",
+    "trecho": "C13",
+    "acao": "vire",
+    "texto": "Vire no fim da zebra à direita.",
+    "duracaoS": 1.82
+   },
+   {
+    "arquivo": "b/C13_acelere.wav",
+    "trecho": "C13",
+    "acao": "acelere",
+    "texto": "Acelere 30 antes do fim da zebra à direita.",
+    "duracaoS": 2.65
+   },
+   {
+    "arquivo": "b/C14_vire.wav",
+    "trecho": "C14",
+    "acao": "vire",
+    "texto": "Vire 40 depois do fim da zebra à esquerda.",
+    "duracaoS": 2.65
+   },
+   {
+    "arquivo": "b/C14_acelere.wav",
+    "trecho": "C14",
+    "acao": "acelere",
+    "texto": "Acelere no começo da zebra à esquerda.",
+    "duracaoS": 2.17
+   },
+   {
+    "arquivo": "b/C14_linha_acelere.wav",
+    "trecho": "C14->linha",
+    "acao": "acelere",
+    "texto": "Acelere 15 antes do posto de bandeira à direita.",
+    "duracaoS": 2.83
+   },
+   {
+    "arquivo": "b/par_01.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Cinco: vire no começo da zebra à esquerda. Seis: vire no começo da zebra à direita.",
+    "duracaoS": 5.68
+   },
+   {
+    "arquivo": "b/par_02.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Dez: vire 15 antes do começo da zebra à direita. Onze: vire 5 depois do começo da zebra à esquerda.",
+    "duracaoS": 6.91
+   },
+   {
+    "arquivo": "b/par_03.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Dois: vire 5 depois do começo da zebra à direita. Três: sem tirar o pé.",
+    "duracaoS": 5.29
+   },
+   {
+    "arquivo": "b/par_04.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Nove: vire 30 antes do fim da zebra à direita. Dez: vire 15 antes do começo da zebra à direita.",
+    "duracaoS": 6.74
+   },
+   {
+    "arquivo": "b/par_05.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Nove: vire 30 antes do fim da zebra à direita. Onze: vire 5 depois do começo da zebra à esquerda.",
+    "duracaoS": 6.83
+   },
+   {
+    "arquivo": "b/par_06.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie 10 antes do 100. Cinco: sem tirar o pé.",
+    "duracaoS": 4.05
+   },
+   {
+    "arquivo": "b/par_07.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie 10 antes do 100. Cinco: vire no começo da zebra à esquerda.",
+    "duracaoS": 5.09
+   },
+   {
+    "arquivo": "b/par_08.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie 10 antes do 100. Oito: vire 10 antes do começo da zebra à esquerda.",
+    "duracaoS": 5.57
+   },
+   {
+    "arquivo": "b/par_09.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie 10 antes do 100. Seis: vire no começo da zebra à direita.",
+    "duracaoS": 5.06
+   },
+   {
+    "arquivo": "b/par_10.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie 10 antes do 100. Sete: freie 35 antes do começo da zebra à direita.",
+    "duracaoS": 6.19
+   },
+   {
+    "arquivo": "b/par_11.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Seis: vire no começo da zebra à direita. Sete: freie 35 antes do começo da zebra à direita.",
+    "duracaoS": 6.79
+   },
+   {
+    "arquivo": "b/par_12.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Seis: vire no começo da zebra à direita. Sete: vire 15 depois do começo da zebra à direita.",
+    "duracaoS": 6.42
+   },
+   {
+    "arquivo": "b/par_13.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Sete: freie 35 antes do começo da zebra à direita. Nove: vire 30 antes do fim da zebra à direita.",
+    "duracaoS": 7.28
+   },
+   {
+    "arquivo": "b/par_14.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Sete: freie 35 antes do começo da zebra à direita. Oito: vire 10 antes do começo da zebra à esquerda.",
+    "duracaoS": 7.29
+   },
+   {
+    "arquivo": "b/par_15.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Um: freie 10 depois do 100. Dois: vire 5 depois do começo da zebra à direita.",
+    "duracaoS": 5.62
+   },
+   {
+    "arquivo": "b/par_16.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Um: freie 10 depois do 100. Três: sem tirar o pé.",
+    "duracaoS": 3.92
+   },
+   {
+    "arquivo": "b/par_17.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Um: freie 10 depois do 100. Três: vire 10 depois do começo da zebra à esquerda.",
+    "duracaoS": 5.56
+   }
+  ],
+  "c": [
+   {
+    "arquivo": "c/C01_freie.wav",
+    "trecho": "C01",
+    "acao": "freie",
+    "texto": "Freie no 100, mais 10.",
+    "duracaoS": 1.67
+   },
+   {
+    "arquivo": "c/C01_vire.wav",
+    "trecho": "C01",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à esquerda, menos 35.",
+    "duracaoS": 3.25
+   },
+   {
+    "arquivo": "c/C02_freie.wav",
+    "trecho": "C02",
+    "acao": "freie",
+    "texto": "Freie no começo da zebra à direita.",
+    "duracaoS": 2.02
+   },
+   {
+    "arquivo": "c/C02_vire.wav",
+    "trecho": "C02",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à direita, mais 5.",
+    "duracaoS": 2.81
+   },
+   {
+    "arquivo": "c/C02_acelere.wav",
+    "trecho": "C02",
+    "acao": "acelere",
+    "texto": "Acelere no fim da zebra à direita.",
+    "duracaoS": 1.95
+   },
+   {
+    "arquivo": "c/C03_vire.wav",
+    "trecho": "C03",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à esquerda, mais 10.",
+    "duracaoS": 2.8
+   },
+   {
+    "arquivo": "c/C03_acelere.wav",
+    "trecho": "C03",
+    "acao": "acelere",
+    "texto": "Acelere no ponto marcado.",
+    "duracaoS": 1.52
+   },
+   {
+    "arquivo": "c/C04_freie.wav",
+    "trecho": "C04",
+    "acao": "freie",
+    "texto": "Freie no 100, menos 10.",
+    "duracaoS": 1.7
+   },
+   {
+    "arquivo": "c/C04_vire.wav",
+    "trecho": "C04",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à esquerda.",
+    "duracaoS": 2.02
+   },
+   {
+    "arquivo": "c/C04_acelere.wav",
+    "trecho": "C04",
+    "acao": "acelere",
+    "texto": "Acelere no começo da zebra à direita, mais 15.",
+    "duracaoS": 2.94
+   },
+   {
+    "arquivo": "c/C05_vire.wav",
+    "trecho": "C05",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à esquerda.",
+    "duracaoS": 2.02
+   },
+   {
+    "arquivo": "c/C05_acelere.wav",
+    "trecho": "C05",
+    "acao": "acelere",
+    "texto": "Acelere no começo da zebra à esquerda, mais 35.",
+    "duracaoS": 3.36
+   },
+   {
+    "arquivo": "c/C06_freie.wav",
+    "trecho": "C06",
+    "acao": "freie",
+    "texto": "Freie no 50.",
+    "duracaoS": 1.18
+   },
+   {
+    "arquivo": "c/C06_vire.wav",
+    "trecho": "C06",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à direita.",
+    "duracaoS": 2.01
+   },
+   {
+    "arquivo": "c/C07_freie.wav",
+    "trecho": "C07",
+    "acao": "freie",
+    "texto": "Freie no começo da zebra à direita, menos 35.",
+    "duracaoS": 3.22
+   },
+   {
+    "arquivo": "c/C07_vire.wav",
+    "trecho": "C07",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à direita, mais 15.",
+    "duracaoS": 2.82
+   },
+   {
+    "arquivo": "c/C07_acelere.wav",
+    "trecho": "C07",
+    "acao": "acelere",
+    "texto": "Acelere no fim da zebra à direita.",
+    "duracaoS": 1.95
+   },
+   {
+    "arquivo": "c/C08_freie.wav",
+    "trecho": "C08",
+    "acao": "freie",
+    "texto": "Freie no começo da zebra à esquerda.",
+    "duracaoS": 2.05
+   },
+   {
+    "arquivo": "c/C08_vire.wav",
+    "trecho": "C08",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à esquerda, menos 10.",
+    "duracaoS": 2.85
+   },
+   {
+    "arquivo": "c/C08_acelere.wav",
+    "trecho": "C08",
+    "acao": "acelere",
+    "texto": "Acelere no começo da zebra à direita, menos 15.",
+    "duracaoS": 3.0
+   },
+   {
+    "arquivo": "c/C09_vire.wav",
+    "trecho": "C09",
+    "acao": "vire",
+    "texto": "Vire no fim da zebra à direita, menos 30.",
+    "duracaoS": 2.68
+   },
+   {
+    "arquivo": "c/C10_freie.wav",
+    "trecho": "C10",
+    "acao": "freie",
+    "texto": "Freie no começo da zebra à direita, menos 10.",
+    "duracaoS": 2.83
+   },
+   {
+    "arquivo": "c/C10_vire.wav",
+    "trecho": "C10",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à direita, menos 15.",
+    "duracaoS": 2.86
+   },
+   {
+    "arquivo": "c/C10_acelere.wav",
+    "trecho": "C10",
+    "acao": "acelere",
+    "texto": "Acelere no começo da zebra à esquerda.",
+    "duracaoS": 2.17
+   },
+   {
+    "arquivo": "c/C11_vire.wav",
+    "trecho": "C11",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à esquerda, mais 5.",
+    "duracaoS": 2.86
+   },
+   {
+    "arquivo": "c/C11_acelere.wav",
+    "trecho": "C11",
+    "acao": "acelere",
+    "texto": "Acelere no começo da zebra à esquerda, mais 80.",
+    "duracaoS": 3.08
+   },
+   {
+    "arquivo": "c/C12_freie.wav",
+    "trecho": "C12",
+    "acao": "freie",
+    "texto": "Freie no 100, mais 15.",
+    "duracaoS": 1.73
+   },
+   {
+    "arquivo": "c/C12_vire.wav",
+    "trecho": "C12",
+    "acao": "vire",
+    "texto": "Vire no começo da zebra à esquerda, mais 20.",
+    "duracaoS": 2.88
+   },
+   {
+    "arquivo": "c/C12_acelere.wav",
+    "trecho": "C12",
+    "acao": "acelere",
+    "texto": "Acelere no começo da zebra à direita, mais 10.",
+    "duracaoS": 2.9
+   },
+   {
+    "arquivo": "c/C13_vire.wav",
+    "trecho": "C13",
+    "acao": "vire",
+    "texto": "Vire no fim da zebra à direita.",
+    "duracaoS": 1.82
+   },
+   {
+    "arquivo": "c/C13_acelere.wav",
+    "trecho": "C13",
+    "acao": "acelere",
+    "texto": "Acelere no fim da zebra à direita, menos 30.",
+    "duracaoS": 2.82
+   },
+   {
+    "arquivo": "c/C14_vire.wav",
+    "trecho": "C14",
+    "acao": "vire",
+    "texto": "Vire no fim da zebra à esquerda, mais 40.",
+    "duracaoS": 2.77
+   },
+   {
+    "arquivo": "c/C14_acelere.wav",
+    "trecho": "C14",
+    "acao": "acelere",
+    "texto": "Acelere no começo da zebra à esquerda.",
+    "duracaoS": 2.17
+   },
+   {
+    "arquivo": "c/C14_linha_acelere.wav",
+    "trecho": "C14->linha",
+    "acao": "acelere",
+    "texto": "Acelere no posto de bandeira à direita, menos 15.",
+    "duracaoS": 3.01
+   },
+   {
+    "arquivo": "c/par_01.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Cinco: vire no começo da zebra à esquerda. Seis: vire no começo da zebra à direita.",
+    "duracaoS": 5.68
+   },
+   {
+    "arquivo": "c/par_02.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Dez: vire no começo da zebra à direita, menos 15. Onze: vire no começo da zebra à esquerda, mais 5.",
+    "duracaoS": 7.17
+   },
+   {
+    "arquivo": "c/par_03.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Dois: vire no começo da zebra à direita, mais 5. Três: sem tirar o pé.",
+    "duracaoS": 5.38
+   },
+   {
+    "arquivo": "c/par_04.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Nove: vire no fim da zebra à direita, menos 30. Dez: vire no começo da zebra à direita, menos 15.",
+    "duracaoS": 7.09
+   },
+   {
+    "arquivo": "c/par_05.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Nove: vire no fim da zebra à direita, menos 30. Onze: vire no começo da zebra à esquerda, mais 5.",
+    "duracaoS": 7.1
+   },
+   {
+    "arquivo": "c/par_06.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie no 100, menos 10. Cinco: sem tirar o pé.",
+    "duracaoS": 4.33
+   },
+   {
+    "arquivo": "c/par_07.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie no 100, menos 10. Cinco: vire no começo da zebra à esquerda.",
+    "duracaoS": 5.37
+   },
+   {
+    "arquivo": "c/par_08.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie no 100, menos 10. Oito: vire no começo da zebra à esquerda, menos 10.",
+    "duracaoS": 6.1
+   },
+   {
+    "arquivo": "c/par_09.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie no 100, menos 10. Seis: vire no começo da zebra à direita.",
+    "duracaoS": 5.34
+   },
+   {
+    "arquivo": "c/par_10.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Quatro: freie no 100, menos 10. Sete: freie no começo da zebra à direita, menos 35.",
+    "duracaoS": 6.61
+   },
+   {
+    "arquivo": "c/par_11.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Seis: vire no começo da zebra à direita. Sete: freie no começo da zebra à direita, menos 35.",
+    "duracaoS": 6.93
+   },
+   {
+    "arquivo": "c/par_12.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Seis: vire no começo da zebra à direita. Sete: vire no começo da zebra à direita, mais 15.",
+    "duracaoS": 6.51
+   },
+   {
+    "arquivo": "c/par_13.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Sete: freie no começo da zebra à direita, menos 35. Nove: vire no fim da zebra à direita, menos 30.",
+    "duracaoS": 7.61
+   },
+   {
+    "arquivo": "c/par_14.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Sete: freie no começo da zebra à direita, menos 35. Oito: vire no começo da zebra à esquerda, menos 10.",
+    "duracaoS": 7.71
+   },
+   {
+    "arquivo": "c/par_15.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Três: sem tirar o pé. Quatro: freie no 100, menos 10.",
+    "duracaoS": 4.3
+   },
+   {
+    "arquivo": "c/par_16.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Um: freie no 100, mais 10. Dois: vire no começo da zebra à direita, mais 5.",
+    "duracaoS": 5.83
+   },
+   {
+    "arquivo": "c/par_17.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Um: freie no 100, mais 10. Três: sem tirar o pé.",
+    "duracaoS": 4.06
+   },
+   {
+    "arquivo": "c/par_18.wav",
+    "trecho": null,
+    "acao": "par",
+    "texto": "Um: freie no 100, mais 10. Três: vire no começo da zebra à esquerda, mais 10.",
+    "duracaoS": 5.84
+   }
+  ]
+ }
+}

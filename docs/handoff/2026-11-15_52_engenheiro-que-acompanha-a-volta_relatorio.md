@@ -6,7 +6,12 @@
   - A B.4 e a D.1 foram refeitas: o feedback com o engenheiro perde a causa na voz em 6 mensagens, contra 42 antes.
   - A suíte do backend passou: **1069 testes**.
   - **Pronto para o seu teste no jogo (a Parte E).**
-- **A Parte E (20/11), a seção no fim:**
+- **A atualização de 20/11 (a última seção):**
+  - as suas decisões estão no ADR 0033 (`73c4186c`) e no código (`9a40c004`, com o app do jogo 0.8.0);
+  - a D.1 foi refeita com as três variantes do molde, e a D.2 tem a prévia da janela e os áudios;
+  - a suíte do backend passou (**1080 testes**);
+  - **parado antes do novo teste no jogo:** você escolhe o molde ouvindo os áudios.
+- **A Parte E (20/11), a seção "Parte E: o teste no jogo":**
   - o teste no jogo foi feito, e a leitura E.3 está feita, com o foco na voz e no tempo;
   - **parado para a sua decisão:** nenhum código foi mudado depois do teste;
   - arquivos novos: `_e3_voltas.py`, `_e3_analise.py` e `.json`, `_e3_falas_curtas.py` e `.json`.
@@ -26,7 +31,10 @@
   - `eb526234` a pisada em andamento na saída do trecho anterior conta desde o começo (a C10; item 10)
   - `a724ff76` a B.4 com a voz curta, a D.1 refeita e a saída da suíte (os arquivos de dados)
   - `063977be` o relatório com a B.4, a D.1 refeita e a suíte
-  - o commit da leitura do teste no jogo (E.3) e deste relatório
+  - `f1c60d00` a leitura do teste no jogo (E.3)
+  - `73c4186c` atualização de 20/11: as decisões no ADR 0033, antes do código
+  - `9a40c004` atualização de 20/11: o código, o app do jogo 0.8.0, os testes e a documentação
+  - o commit da D.1, da D.2, das suítes e deste relatório
 - **Merge:** nenhum (depois do teste no jogo). **Envio:** nenhum feito por mim (os comandos estão no fim).
 - **Arquivos de handoff** (`docs/handoff/2026-11-15_52_engenheiro-que-acompanha-a-volta_…`):
   - `_relatorio.md` (este);
@@ -683,3 +691,210 @@ Para cada opção: em quantos dos 9 trechos com aviso a fala cabe, em cada uma d
   - a fala curta sem "metros" não foi testada no jogo para ver se você entende.
 
 **O que preciso de você:** a decisão de quais opções seguir, e se a regra do ADR 0033 muda. Nada foi mudado no código. O merge e o instalador 0.9.0 continuam parados até depois disso e de um novo teste no jogo.
+
+## Atualização de 20/11: as suas decisões depois do teste no jogo (parado antes do novo teste: você escolhe o molde)
+
+**O pedido:** a "Atualização de 20/11" no fim do pedido 52 (a opção H, mais o bipe e a janela com os dois próximos avisos, com folga mínima de 3,0 s).
+
+**Os commits:**
+- `73c4186c`: a emenda "Decisões do Eduardo de 20/11" no ADR 0033, commitada antes do código;
+- `9a40c004`: o código (backend e app do jogo 0.8.0), os testes e a documentação;
+- o commit desta seção: a D.1, a D.2, as suítes e o relatório.
+
+### O que fixei no ADR onde a decisão deixava lacuna
+
+- **O perfil** (a volta de onde vêm o tempo e a sua ação):
+  - a última volta da sessão que conta (completa, sem rodada e sem a IA);
+  - antes dela, a "Sua melhor volta";
+  - sem ela, a volta de referência.
+  
+  O perfil é tratado como um laço: o pedaço livre que atravessa a linha emenda o fim no começo.
+- **A sua ação no "acelere":** a retomada do trecho (ADR 0030); sem ela, o primeiro ponto com o acelerador em 0,90 ou mais depois do ápice. No "freie" sem frenagem, vale a regra do "vire".
+- **Os candidatos:** os dois pedaços livres que acabam mais perto antes do ponto do item 6. Se o ponto cai dentro de um pedaço, o pedaço acaba nele.
+- **Os pares:**
+  - num mesmo pedaço, os avisos formam pares na ordem da pista;
+  - o número da curva vai por extenso ("Seis: …");
+  - entre duas falas do mesmo pedaço há pelo menos 0,3 s;
+  - **uma fala que não cabe manda os dois avisos dela para o segundo candidato,** e o plano é refeito.
+- **A latência do disparo no jogo:** 0,1 s nas contas. É uma estimativa; o app registra no log do CSP o `s` do disparo e quanto o som demorou.
+- **O molde:**
+  - o padrão é (a) até a sua escolha;
+  - só as placas perdem "placa de" em (b) e (c); os outros marcos guardam o nome e o lado;
+  - a janela e o cartão continuam no molde (a), com "Curva N:".
+- **O bipe:**
+  - um tom de 2.000 Hz, com 0,25 s, gerado pelo código (`tools/csp_app/gerar_bipe.py`, `bipe.wav` na pasta do app);
+  - toca num player próprio, que não corta a fala;
+  - a marca no asfalto passou para o ponto dito, que é o mesmo ponto do bipe.
+- **O tempo de reação do bipe: não confirmado, 0 s.**
+  - Green (2000, "How Long Does It Take to Stop?") dá cerca de 0,70 a 0,75 s para uma frenagem totalmente esperada, mas li só por resumos (o apêndice da FHWA), e é um sinal visual.
+  - Um estudo antigo com buzina dá 0,51 s, mas a data e a amostra não estão claras.
+  - Nenhum dos dois é um sinal sonoro esperado ao volante. Pela sua regra, fica 0 s: o bipe soa no ponto.
+- **O backend não entrega mais o aviso pela fila do rádio:** quem fala é o app do jogo. Por isso o app do jogo 0.8.0 é o par do backend 0.9.0. Um app do jogo mais antigo com este backend fica sem a voz dos avisos.
+
+### O código
+
+- **`core/engenheiro/plano.py` (novo, puro):**
+  - o perfil, os pedaços livres e a sua ação;
+  - o mais cedo entre a ação e o ponto dito, os dois candidatos e a folga de 3,0 s;
+  - os pares, as falas o mais tarde possível e os três moldes.
+- **`core/engenheiro/servico.py`:**
+  - o perfil muda e o plano é refeito depois de cada volta que conta, com uma linha "plano" no registro;
+  - a voz de cada fala é pedida, e o plano é refeito quando a duração real chega;
+  - a lista ao app do jogo traz as falas planejadas (o `s_fala`, o texto, a duração e o áudio), os pontos da janela (`sJanela`, `sFimDaJanela`) e o bipe;
+  - a reserva é medida pelo tempo do perfil.
+- **`core/radio/servico.py`:**
+  - o aviso corta o feedback em andamento, com uma linha "corte" no registro;
+  - o feedback cortado volta à fila e só sai numa reta longa seguinte;
+  - a reserva é medida pelo tempo do perfil, e não pela velocidade.
+- **A rota nova:** `GET /api/radio/engenheiro/audio/{chave}`.
+- **O app do jogo 0.8.0** (`radio_engenheiro.lua` e `manifest.ini`):
+  - baixa o áudio das falas antes;
+  - toca cada fala no quadro em que o carro passa o `s_fala` (`setInterval(acompanharOsAvisos, 0)`), com a janela aberta ou não;
+  - tira o cartão da tela e corta a voz em andamento;
+  - toca o bipe;
+  - a janela mostra os dois próximos avisos, com o da vez em destaque;
+  - a marca fica no ponto dito.
+- **A conferência do Lua:** 40.715 tokens, sem erro de léxico e com os blocos certos. As 55 chamadas da API e os 15 métodos (agora com `setCurrentTime`) existem no SDK do CSP (`_conferir_lua.txt`).
+- **A documentação:** a seção 9.7 de `docs/realidade_aumentada.md` e a linha do app do jogo em `docs/app_para_producao.md`.
+
+### Os testes (`backend/tests/test_engenheiro.py`, 36 passando)
+
+Os 11 testes novos e os 3 reescritos cobrem a lista do item 12, com dados sintéticos:
+- **o pedaço livre,** que forma um laço;
+- **a sua ação** em cada tipo de aviso, e as três voltas de onde ela pode vir: a de referência, a "Sua melhor volta" e a volta 5 da sessão. Uma volta que não conta não muda o perfil;
+- **a folga de 3,0 s** contra o mais cedo entre a ação e o ponto dito;
+- **o primeiro e o segundo pedaço,** e o aviso que não cabe;
+- **a junção** de no máximo dois avisos (três no mesmo pedaço viram um par e uma fala sozinha, sem se encostarem);
+- **a fala o mais tarde possível;**
+- **o bipe** no ponto dito, a ausência dele em "sem tirar o pé" e a chave que o desliga;
+- **o aviso que não espera:** ele não entra na fila do rádio, e o Lua tira o cartão;
+- **o corte do feedback,** que só volta numa reta longa seguinte;
+- **a reserva** pelo tempo do perfil;
+- **a lista e o plano refeitos** depois de cada volta;
+- **os três moldes.**
+
+### D.1: as 5 sessões, com as três variantes do molde
+
+As rodadas são as do rádio fora do tempo real, com a voz de verdade, sem o engenheiro e com os moldes (a), (b) e (c). As 20 rodadas terminaram sem erro (`_d1_2011_contar.py` e `_d1_2011.json`).
+- **A folga real** é medida contra o que você fez de fato naquela passagem, na gravação: a fala começa no `s_fala` mais 0,1 s e acaba depois da duração. Fora do jogo, não dá para medir a latência do jogo.
+- **Um erro meu na primeira contagem:** a busca da sua ação pegava, às vezes, a passagem da volta anterior quando o aviso era dito longe da curva. Corrigi, e os números abaixo já são os corrigidos.
+
+| sessão | molde | avisos pela voz / só na janela | trechos com voz por volta (média) | folga até a sua ação (mín / mediana / máx) | abaixo de 3 s | até o ponto dito (mín / mediana / máx) | falas com 2 avisos | bipe até a sua ação (mediana) | cortes | feedback que mudou de bloco |
+|---|---|---|---|---|---:|---|---:|---|---:|---:|
+| 13/10 | (a) | 67 / 24 | 5,2 de 7,0 | 2,39 / 8,87 / 45,78 s | 10 de 64 | 3,19 / 9,04 / 48,04 s | 25 | -0,7 s (-30,2 m) | 3 | 13 |
+| 13/10 | (b) | 73 / 19 | 5,6 de 7,1 | 2,36 / 8,89 / 44,05 s | 8 de 70 | 3,2 / 9,6 / 43,21 s | 25 | -0,7 s (-31,8 m) | 5 | 9 |
+| 13/10 | (c) | 73 / 19 | 5,6 de 7,1 | 2,38 / 8,91 / 43,94 s | 9 de 70 | 3,19 / 9,59 / 43,2 s | 25 | -0,7 s (-31,8 m) | 5 | 8 |
+| 18/10 | (a) | 67 / 41 | 4,8 de 7,1 | 2,46 / 6,75 / 49,74 s | 10 de 66 | 3,26 / 6,57 / 53,62 s | 15 | -0,68 s (-34,45 m) | 4 | 12 |
+| 18/10 | (b) | 73 / 35 | 5,2 de 7,1 | 2,46 / 6,63 / 46,16 s | 7 de 72 | 3,28 / 6,4 / 50,03 s | 15 | -0,68 s (-34,95 m) | 4 | 13 |
+| 18/10 | (c) | 69 / 39 | 4,9 de 7,1 | 2,46 / 6,8 / 47,06 s | 10 de 68 | 3,28 / 6,49 / 50,94 s | 15 | -0,68 s (-34,95 m) | 4 | 13 |
+| 21/10 | (a) | 61 / 35 | 5,1 de 7,4 | 2,34 / 11,13 / 30,84 s | 8 de 58 | 3,01 / 10,29 / 37,94 s | 18 | -0,8 s (-47,5 m) | 2 | 20 |
+| 21/10 | (b) | 62 / 34 | 5,2 de 7,3 | 2,37 / 8,1 / 30,83 s | 7 de 60 | 3,01 / 8,2 / 37,94 s | 18 | -0,8 s (-47,5 m) | 2 | 18 |
+| 21/10 | (c) | 63 / 33 | 5,2 de 7,4 | 2,34 / 8,22 / 30,83 s | 7 de 61 | 3,01 / 8,68 / 37,94 s | 18 | -0,8 s (-47,5 m) | 3 | 18 |
+| 12/11 | (a) | 38 / 16 | 5,4 de 7,7 | 2,31 / 7,44 / 22,23 s | 5 de 34 | 3,24 / 8,83 / 23,49 s | 10 | -0,6 s (-25,3 m) | 2 | 3 |
+| 12/11 | (b) | 41 / 13 | 5,9 de 7,7 | 2,34 / 7,17 / 23,54 s | 5 de 37 | 3,23 / 8,83 / 23,59 s | 10 | -0,6 s (-25,3 m) | 2 | 3 |
+| 12/11 | (c) | 40 / 14 | 5,7 de 7,7 | 2,33 / 7,46 / 23,6 s | 5 de 36 | 3,24 / 8,84 / 23,65 s | 10 | -0,6 s (-25,3 m) | 2 | 3 |
+| 20/11 | (a) | 15 / 0 | 7,5 de 7,5 | 3,1 / 16,2 / 24,63 s | 0 de 12 | 3,95 / 16,97 / 42,58 s | 7 | -0,64 s (-35,4 m) | 0 | 1 |
+| 20/11 | (b) | 14 / 0 | 7,0 de 7,0 | 3,01 / 12,95 / 21,16 s | 0 de 12 | 3,86 / 16,45 / 24,56 s | 5 | -0,64 s (-35,4 m) | 0 | 1 |
+| 20/11 | (c) | 15 / 0 | 7,5 de 7,5 | 3,05 / 15,2 / 24,67 s | 0 de 12 | 3,9 / 16,63 / 42,62 s | 7 | -0,64 s (-35,4 m) | 0 | 1 |
+
+| sessão | molde | motivos de "só na janela" | feedback sem / com | com a causa na voz (sem / com) | pendentes no fim (sem / com) |
+|---|---|---|---|---|---|
+| 13/10 | (a) | não coube com as outras falas do pedaço livre: 16; não cabe em nenhum dos dois pedaços livres antes da ação: 8 | 24 / 20 | 16 / 4 | 1 / 8 |
+| 13/10 | (b) | não coube com as outras falas do pedaço livre: 10; não cabe em nenhum dos dois pedaços livres antes da ação: 9 | 24 / 20 | 16 / 2 | 1 / 10 |
+| 13/10 | (c) | não coube com as outras falas do pedaço livre: 10; não cabe em nenhum dos dois pedaços livres antes da ação: 9 | 24 / 19 | 16 / 2 | 1 / 12 |
+| 18/10 | (a) | não cabe em nenhum dos dois pedaços livres antes da ação: 26; não coube com as outras falas do pedaço livre: 10; volta de saída dos boxes: 5 | 22 / 22 | 15 / 3 | 1 / 6 |
+| 18/10 | (b) | não cabe em nenhum dos dois pedaços livres antes da ação: 20; não coube com as outras falas do pedaço livre: 9; volta de saída dos boxes: 6 | 22 / 24 | 15 / 6 | 1 / 4 |
+| 18/10 | (c) | não cabe em nenhum dos dois pedaços livres antes da ação: 25; não coube com as outras falas do pedaço livre: 9; volta de saída dos boxes: 5 | 22 / 24 | 15 / 5 | 1 / 4 |
+| 21/10 | (a) | não cabe em nenhum dos dois pedaços livres antes da ação: 18; não coube com as outras falas do pedaço livre: 12; volta de saída dos boxes: 5 | 35 / 38 | 25 / 10 | 2 / 3 |
+| 21/10 | (b) | não coube com as outras falas do pedaço livre: 19; não cabe em nenhum dos dois pedaços livres antes da ação: 10; volta de saída dos boxes: 5 | 35 / 38 | 25 / 11 | 2 / 3 |
+| 21/10 | (c) | não coube com as outras falas do pedaço livre: 18; não cabe em nenhum dos dois pedaços livres antes da ação: 10; volta de saída dos boxes: 5 | 35 / 39 | 25 / 12 | 2 / 3 |
+| 12/11 | (a) | não cabe em nenhum dos dois pedaços livres antes da ação: 14; não coube com as outras falas do pedaço livre: 2 | 13 / 8 | 7 / 2 | 0 / 7 |
+| 12/11 | (b) | não cabe em nenhum dos dois pedaços livres antes da ação: 11; não coube com as outras falas do pedaço livre: 2 | 13 / 8 | 7 / 2 | 0 / 7 |
+| 12/11 | (c) | não cabe em nenhum dos dois pedaços livres antes da ação: 12; não coube com as outras falas do pedaço livre: 2 | 13 / 8 | 7 / 2 | 0 / 7 |
+| 20/11 | (a) | — | 4 / 3 | 2 / 1 | 0 / 1 |
+| 20/11 | (b) | — | 4 / 3 | 2 / 1 | 0 / 1 |
+| 20/11 | (c) | — | 4 / 3 | 2 / 1 | 0 / 1 |
+
+**O que os números dizem:**
+- **A voz cobre muito mais.**
+  - Antes desta emenda, a D.1 tinha 17, 16, 12 e 5 avisos pela voz por sessão, e o teste no jogo, 2.
+  - Agora são de 61 a 73 nas sessões longas, e 14 a 15 na de 20/11, onde todos os avisos foram pela voz.
+  - Por volta, de 5 a 7,5 dos 7 a 7,7 trechos com aviso têm voz.
+  - O molde (b) dá um pouco mais de voz, porque é o mais curto.
+- **A folga real até a sua ação** tem mediana de 6,6 a 16 s e mínimo de 2,3 s.
+  - Nas sessões antigas, ficam abaixo de 3,0 s de 5 a 10 avisos por sessão (7% a 17%). Na de 20/11, nenhum.
+  - O plano dá 3,0 s contra o perfil, e nessas voltas você agiu até 0,7 s antes do que no perfil. É a variação de uma volta para a outra.
+  - A folga até o ponto dito nunca fica abaixo de 3,0 s.
+- **As falas longe da ação:** algumas saem de 30 a 50 s antes. A regra manda o aviso para o segundo pedaço livre, que no miolo pode estar a duas ou três curvas.
+  - Por exemplo, "Quatro: freie 10 metros antes da placa de 100. Dez: vire 15 metros antes do começo da zebra à direita." é dita na reta oposta. A C10 vem uns 36 s depois.
+- **Um efeito da regra do par que não cabe** (o ADR, item 7). Na sessão de 20/11, a C06 e a C07 cabem sozinhas no pedaço antes da C06, mas não juntas. As duas vão para a reta oposta, e a C06 é dita uns 14 s antes, em vez de uns 6 s.
+  - Outra regra seria a C06 ficar no pedaço dela e só a C07 ir para trás.
+  - Não mudei a regra, porque ela está no ADR, gravado antes do código.
+- **O bipe soa, na mediana, de 0,6 a 0,8 s depois da sua ação** (de 25 a 48 m depois). Ele marca o ponto dito, e você freia ou alivia antes dele: o bipe é a correção.
+  - Há alguns casos de até 10 a 18 s, em voltas com rodada ou nos boxes.
+- **Os pares:** de 5 a 25 falas com dois avisos por sessão.
+- **O feedback perdeu espaço.**
+  - Com os avisos de todos os tipos reservando as retas primeiro (item 11), o feedback com a causa na voz caiu de 16 para 2 a 4 (13/10), de 15 para 3 a 6 (18/10), de 25 para 10 a 12 (21/10) e de 7 para 2 (12/11).
+  - As mensagens pendentes no fim subiram, de 1 para 8 a 12 em 13/10 e de 0 para 7 em 12/11.
+  - Houve de 0 a 5 cortes por sessão. É a regra do item 11, "o feedback usa o que sobrar", mas é uma troca que você deve ver.
+
+### D.2: a janela e os áudios
+
+- **A janela:** `_previa_2011.html` e `_previa_2011.png`, com o desenho da janela do app 0.8.0 num SVG e os avisos do engenheiro de verdade (a rodada de 20/11, molde (a)). Há três pontos com dois avisos na tela:
+  - em 0 m, a C01 em destaque e a C02 embaixo;
+  - em 1.400 m, a C05 e a C06;
+  - em 2.485 m, a C09 e a C11.
+- **Os áudios, para você ouvir e escolher:** `data/radio/[teste] vozes do engenheiro 20-11/` (fora da pasta do jogo e fora do git), uma subpasta por variante. Cada uma tem:
+  - as 34 falas sozinhas dos 15 trechos (cada ação possível na volta do modelo);
+  - de 17 a 18 falas com dois avisos que a D.1 encontrou;
+  - um `indice.json` com o texto e a duração de cada arquivo, também copiado em `_vozes_2011.json`.
+
+| variante | exemplo (C01, freie) | falas sozinhas (mín / mediana / máx) | falas com dois (mín / mediana / máx) |
+|---|---|---|---|
+| (a) | "Freie 10 metros depois da placa de 100." (2,37 s) | 1,52 / 2,99 / 3,66 s | 4,77 / 6,85 / 8,09 s |
+| (b) | "Freie 10 depois do 100." (1,52 s) | 1,18 / 2,58 / 3,25 s | 3,92 / 5,68 / 7,29 s |
+| (c) | "Freie no 100, mais 10." (1,67 s) | 1,18 / 2,79 / 3,36 s | 4,06 / 5,97 / 7,71 s |
+
+Mais exemplos:
+- C04, freie: (a) "Freie 10 metros antes da placa de 100." 2,35 s; (b) "Freie 10 antes do 100." 1,41 s; (c) "Freie no 100, menos 10." 1,70 s.
+- C02, vire: (a) "Vire 5 metros depois do começo da zebra à direita." 3,13 s; (b) "Vire 5 depois do começo da zebra à direita." 2,73 s; (c) "Vire no começo da zebra à direita, mais 5." 2,81 s.
+
+### As suítes
+
+- **backend, a suíte inteira:** **1080 passando**, nenhuma falha (11 min 11 s; 37 avisos do scikit-learn, os de sempre; `_testes.txt`). O engenheiro, o rádio, o 45 e a referência são 109 deles;
+- **front:** 180 testes passando, e o `tsc` sem erro;
+- **desktop:** 4 testes passando;
+- **Lua:** passa na conferência contra o SDK do CSP (`_conferir_lua.txt`).
+
+### O cartão para o teste no jogo (preencha depois da sessão)
+
+Para cada trecho em que o engenheiro avisou, marque sim ou não:
+
+| trecho | ouvi | entendi | deu tempo | anotação |
+|---|---|---|---|---|
+| C01 | | | | |
+| C02 | | | | |
+| C03 | | | | |
+| C04 | | | | |
+| C05 | | | | |
+| C06 | | | | |
+| C07 | | | | |
+| C08 | | | | |
+| C09 | | | | |
+| C10 | | | | |
+| C11 | | | | |
+| C12 | | | | |
+| C13 | | | | |
+| C14 | | | | |
+| o bipe | | | | |
+
+### O que falta
+
+1. **A sua escolha do molde,** ouvindo os áudios da pasta "[teste]". Ela entra no ADR como a decisão de 20/11 sobre o molde.
+   - No backend, a escolha é a variável `AT_ENGENHEIRO_MOLDE`, que hoje vale (a). Com a sua escolha, ponho o valor no padrão do código.
+2. **O seu "pode instalar":** depois disso, você roda o `instalar.ps1` do app do jogo 0.8.0.
+3. **O teste no jogo de novo,** com o roteiro da Parte E: pelo menos 10 voltas, até 45 minutos, na pista original. Depois, preencha o cartão acima.
+4. **Duas coisas para você olhar antes do teste** (não mudei nada):
+   - o feedback perdeu espaço para os avisos (D.1);
+   - a regra do par que não cabe manda os dois avisos para o segundo pedaço.
+5. **O merge em `develop` e o instalador 0.9.0** continuam parados até depois do teste.

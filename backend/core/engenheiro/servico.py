@@ -227,7 +227,8 @@ class Engenheiro:
                              "aplicadas": aplicadas, "medidas": medidas})
             self._considerar_passagens(grade, total, f"volta {volta}")
             # o perfil passa a ser esta volta, e o plano das falas e refeito (ADR 0033, emenda de 20/11, item 5)
-            self._usar_o_perfil(grade, total, f"volta {volta} da sessão")
+            numero = int(volta) if isinstance(volta, (int, float)) and float(volta).is_integer() else volta
+            self._usar_o_perfil(grade, total, f"volta {numero} da sessão")
             self._replanejar()
             self._registrar({"tipo": "plano", "volta": volta, "perfil": self.perfil.origem,
                              "falas": [{"sFala": f["sFala"], "texto": f["texto"], "duracaoS": f["duracaoS"],
