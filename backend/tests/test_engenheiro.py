@@ -654,6 +654,19 @@ def test_os_tres_moldes_da_fala():
     assert P.fala_do_par([6, 7], ["vire na zebra", "freie na zebra"]) == "Seis: vire na zebra. Sete: freie na zebra."
 
 
+def test_o_molde_padrao_e_o_b_da_escolha_de_20_11():
+    """ADR 0033, a decisao de 20/11 sobre o molde: o (b) e o padrao, sem `AT_ENGENHEIRO_MOLDE`."""
+    import inspect
+
+    from core.engenheiro import plano as P
+    from core.engenheiro.servico import Engenheiro
+
+    assert P.MOLDE_PADRAO == "b" and P.MOLDE_PADRAO in P.MOLDES
+    fonte = inspect.getsource(Engenheiro.__init__)
+    assert 'os.environ.get("AT_ENGENHEIRO_MOLDE") or P.MOLDE_PADRAO' in fonte
+    assert "else P.MOLDE_PADRAO" in fonte
+
+
 def test_o_bipe_fica_no_ponto_dito_e_nao_existe_em_sem_tirar_o_pe():
     from core.engenheiro.servico import Engenheiro
     from test_lap_origin import circular_track

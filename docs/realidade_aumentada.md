@@ -581,7 +581,7 @@ O teste no jogo de 20/11 mostrou dois problemas. Só 2 de 14 avisos foram pela v
   - (b) "Freie 10 depois do 100.";
   - (c) "Freie no 100, mais 10.".
 
-  O Eduardo escolhe ouvindo, e até lá vale a (a). A janela e o cartão continuam com "Curva N:" no molde (a).
+  O Eduardo escolheu o (b) ouvindo os áudios (ADR 0033, a decisão de 20/11 sobre o molde), e ele é o padrão. A janela e o cartão continuam com "Curva N:" no molde (a).
 - **O bipe:** um tom de 2.000 Hz e 0,25 s (`bipe.wav`, gerado por `tools/csp_app/gerar_bipe.py`), tocado pelo app no ponto dito.
   - O tempo de reação ficou em 0 s: nenhuma fonte confirmou um valor para um sinal sonoro esperado.
   - "Sem tirar o pé" não tem bipe.

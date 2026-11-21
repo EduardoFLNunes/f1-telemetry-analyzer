@@ -30,6 +30,7 @@ ESTIMATIVA_DA_FALA_S = 3.5          # uma fala sozinha antes de a voz medir
 TEMPO_DE_REACAO_AO_BIPE_S = 0.0     # item 9: nao confirmado (o ADR cita as fontes); o bipe soa no ponto
 DEPOIS_DA_ACAO_M = 20.0             # item 10: a janela tira o aviso 20 m depois da acao
 MOLDES = ("a", "b", "c")
+MOLDE_PADRAO = "b"             # ADR 0033, a decisao de 20/11 sobre o molde: o Eduardo escolheu o (b) ouvindo
 
 NUMEROS = {1: "um", 2: "dois", 3: "três", 4: "quatro", 5: "cinco", 6: "seis", 7: "sete", 8: "oito", 9: "nove",
            10: "dez", 11: "onze", 12: "doze", 13: "treze", 14: "catorze", 15: "quinze", 16: "dezesseis",

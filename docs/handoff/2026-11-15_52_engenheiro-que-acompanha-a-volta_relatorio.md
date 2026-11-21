@@ -11,6 +11,7 @@
   - a D.1 foi refeita com as três variantes do molde, e a D.2 tem a prévia da janela e os áudios;
   - a suíte do backend passou (**1080 testes**);
   - **parado antes do novo teste no jogo:** você escolhe o molde ouvindo os áudios.
+- **A decisão de 20/11 sobre o molde (a última seção):** você escolheu o **(b)**. Ela está no ADR 0033 (`e6147005`, antes do código), e o (b) é o padrão no código. **Parado antes do teste no jogo:** falta o seu "pode instalar".
 - **A Parte E (20/11), a seção "Parte E: o teste no jogo":**
   - o teste no jogo foi feito, e a leitura E.3 está feita, com o foco na voz e no tempo;
   - **parado para a sua decisão:** nenhum código foi mudado depois do teste;
@@ -34,7 +35,9 @@
   - `f1c60d00` a leitura do teste no jogo (E.3)
   - `73c4186c` atualização de 20/11: as decisões no ADR 0033, antes do código
   - `9a40c004` atualização de 20/11: o código, o app do jogo 0.8.0, os testes e a documentação
-  - o commit da D.1, da D.2, das suítes e deste relatório
+  - `d0a13eba` atualização de 20/11: a D.1 com as três variantes, a D.2, as suítes e o relatório
+  - `e6147005` a decisão de 20/11 sobre o molde: o (b), no ADR 0033, antes do código
+  - o commit do (b) como padrão no código, do teste e deste relatório
 - **Merge:** nenhum (depois do teste no jogo). **Envio:** nenhum feito por mim (os comandos estão no fim).
 - **Arquivos de handoff** (`docs/handoff/2026-11-15_52_engenheiro-que-acompanha-a-volta_…`):
   - `_relatorio.md` (este);
@@ -898,3 +901,33 @@ Para cada trecho em que o engenheiro avisou, marque sim ou não:
    - o feedback perdeu espaço para os avisos (D.1);
    - a regra do par que não cabe manda os dois avisos para o segundo pedaço.
 5. **O merge em `develop` e o instalador 0.9.0** continuam parados até depois do teste.
+
+## A decisão de 20/11 sobre o molde: o (b) (parado antes do teste no jogo)
+
+Você ouviu as três variantes e escolheu o **molde (b)**: "Freie 10 depois do 100.".
+
+- **O ADR 0033** ganhou a seção "A decisão de 20/11 sobre o molde" (`e6147005`, antes do código). O item 8 da emenda de 20/11 agora remete a ela.
+- **O código:** `MOLDE_PADRAO = "b"` em `backend/core/engenheiro/plano.py`. O `Engenheiro` usa esse padrão quando `AT_ENGENHEIRO_MOLDE` não está definida ou tem um valor que não existe. As variantes (a) e (c) continuam disponíveis pela variável.
+- **Nada mais muda:**
+  - a janela e o cartão continuam escrevendo "Curva N: <frase>" no molde (a);
+  - "Sem tirar o pé." e "no ponto marcado" ficam iguais;
+  - o app do jogo não muda: ele só toca o áudio que o backend gera.
+- **`docs/realidade_aumentada.md`** (seção 9.7): o (b) é o padrão.
+- **O teste novo:** `test_o_molde_padrao_e_o_b_da_escolha_de_20_11`.
+- **As suítes:**
+  - o engenheiro e a referência: 47 passando;
+  - os testes com "radio" no nome: 66 passando;
+  - backend, a suíte inteira: **1081 passando**, nenhuma falha (10 min 26 s; os 37 avisos de sempre).
+  - O front, o desktop e o Lua não mudaram.
+- **As durações no (b),** da D.2: a mediana é 2,58 s nas falas sozinhas e 5,68 s nos pares. Os números da D.1 com o (b) estão na tabela da D.1 acima, nas linhas "(b)": 73, 73, 62, 41 e 14 avisos pela voz (13/10, 18/10, 21/10, 12/11 e 20/11); a folga até a sua ação tem o mínimo de 2,34 s e a mediana de 6,6 a 13,0 s.
+
+### O que falta
+
+1. **O seu "pode instalar":** depois dele, você roda o `instalar.ps1` do app do jogo 0.8.0.
+2. **O teste no jogo de novo,** com o roteiro da Parte E: pelo menos 10 voltas, até 45 minutos, na pista original. O backend do repositório já fala no (b), sem precisar da variável. Depois, preencha o cartão da seção "Atualização de 20/11".
+3. **Duas coisas para você olhar antes do teste** (não mudei nada):
+   - o feedback perdeu espaço para os avisos (D.1);
+   - a regra do par que não cabe manda os dois avisos para o segundo pedaço.
+4. **O merge em `develop` e o instalador 0.9.0** continuam parados até depois do teste.
+5. **O envio:** nada foi enviado. Para enviar a branch:
+   `git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer push origin etapa/engenheiro`

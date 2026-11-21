@@ -42,7 +42,7 @@ class Engenheiro:
                  relogio: Optional[Callable[[], float]] = None, molde: Optional[str] = None, bipe: Optional[bool] = None):
         """`pista_do_radio`: a `analise.Pista` do radio; `falar_em_segundo_plano(fala)`: um futuro que devolve
         (arquivo, duracao); `registrar(linha)`: grava uma linha no `<sessao>.engenheiro.jsonl`. `molde` (a, b ou c)
-        e `bipe`: sem eles, `AT_ENGENHEIRO_MOLDE` (padrao a) e `AT_ENGENHEIRO_BIPE` (padrao ligado)."""
+        e `bipe`: sem eles, `AT_ENGENHEIRO_MOLDE` (padrao b, a escolha de 20/11) e `AT_ENGENHEIRO_BIPE` (padrao ligado)."""
         from core.assisted_analysis import volta_do_modelo as VM
         from core.radio.analise import grade
 
@@ -55,8 +55,8 @@ class Engenheiro:
         self.relogio = relogio
         self._lock = threading.RLock()
         # ADR 0033, emenda de 20/11, itens 8 e 9
-        molde = (molde or os.environ.get("AT_ENGENHEIRO_MOLDE") or "a").strip().lower()
-        self.molde = molde if molde in P.MOLDES else "a"
+        molde = (molde or os.environ.get("AT_ENGENHEIRO_MOLDE") or P.MOLDE_PADRAO).strip().lower()
+        self.molde = molde if molde in P.MOLDES else P.MOLDE_PADRAO
         self.bipe = bool(bipe) if bipe is not None else (
             os.environ.get("AT_ENGENHEIRO_BIPE", "").strip().lower() not in ("desligado", "0", "nao", "não", "false"))
         raizes = list(raizes())
