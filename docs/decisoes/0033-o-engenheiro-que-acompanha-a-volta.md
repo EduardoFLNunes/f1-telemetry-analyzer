@@ -235,3 +235,127 @@ O Eduardo ouviu as três variantes (os áudios da D.2, em `data/radio/[teste] vo
 - **O (b) é o padrão** de `AT_ENGENHEIRO_MOLDE` (`MOLDE_PADRAO` em `core/engenheiro/plano.py`). As variantes (a) e (c) continuam disponíveis pela variável.
 - **O resto do item 8 não muda:** só as placas perdem "placa de"; "Sem tirar o pé." e "no ponto marcado" ficam iguais; a janela e o cartão continuam escrevendo "Curva N: <frase>" no molde (a).
 - **O teste no jogo** confirma se a fala é entendida a tempo (o cartão do relatório do pedido 52: "ouvi", "entendi" e "deu tempo").
+
+## Decisões do Eduardo de 21/11
+
+O segundo teste no jogo (21/11, sessão `2026-11-21_18-10-46`) mostrou que a parte técnica funciona. O problema é outro: o engenheiro fala de curvas demais, cedo demais, e o bipe marca coisas diferentes. O Eduardo trocou a entrega de 20/11 pela **curva de foco**, com a **ficha da curva** que ele pediu.
+
+Esta seção é uma emenda: o texto acima dela não muda, e cada item diz o que troca. Tudo vale para qualquer pista e qualquer trecho; Interlagos é só o exemplo. Nenhuma regra muda depois de ver os números da D.1 nova.
+
+### O que sai e o que fica da emenda de 20/11
+
+1. **Sai:**
+   - o aviso de voz para toda curva (item 4 de 20/11);
+   - as falas com dois avisos e o segundo pedaço livre (item 7 de 20/11);
+   - o bipe em todo aviso de "freie", "vire" e "acelere" (item 9 de 20/11), com o tempo de reação dele;
+   - a janela com os dois próximos avisos (item 10 de 20/11): a janela passa a mostrar a ficha da curva de foco (item 10 abaixo).
+2. **Fica:**
+   - a fala que não espera a fila do app do jogo, com o corte do feedback (item 1 de 20/11);
+   - o disparo no jogo pelo `s` do carro, com o áudio já baixado (item 2 de 20/11);
+   - a reserva pelo tempo do perfil (item 3 de 20/11);
+   - a ação do piloto e o perfil (item 5 de 20/11);
+   - a folga mínima de 3,0 s, com a latência de 0,1 s (item 6 de 20/11);
+   - o molde (b), no lembrete;
+   - a conferência depois da curva (item 8), agora só da curva de foco;
+   - a lista da volta (item 1): ela continua a ser feita e registrada a cada volta que conta, porque é dela que sai a curva de foco. Ela não vai mais para a voz.
+
+### A curva de foco
+
+3. **Uma curva de foco por vez.**
+   - **A escolha:** na linha de cada volta que conta, vale o trecho de maior perda entre os trechos com curva cuja perda passa do ruído do trecho (item 1). A perda é a mesma do item 1: o tempo do trecho contra a referência dele (item 2).
+   - **O começo:** o foco escolhido na linha vale a partir dali. A primeira volta dele é a que começa nessa linha.
+   - **O engenheiro só fala da curva de foco.** As outras ficam caladas na voz e no bipe até virarem o foco.
+4. **A troca do foco**, na linha de cada volta que conta com a curva em foco:
+   - **Aplicou:** é a conferência da instrução principal da ficha, com as medidas do item 8:
+     - nas curvas em que a referência freia: a frenagem a até 10 m do ponto de frenagem da referência (`APLICADA_FREADA_M`);
+     - nas de pé embaixo: o trecho sem tirar o pé, com o filtro do item 8 abaixo;
+     - nas de só um alívio: a mínima a até 5 km/h da mínima da referência (`APLICADA_MINIMA_KMH`).
+   - **Volta sem a medida** ("sem frenagem na volta"): conta como não aplicou.
+   - **3 voltas que contam com a mesma curva em foco sem aplicar:** a curva sai do foco.
+   - **A curva seguinte:** a de maior perda acima do ruído nessa mesma volta, sem a que acabou de sair. Uma curva que saiu sem ser aplicada pode voltar mais tarde.
+   - **Sem nenhuma curva acima do ruído:** não há foco até a volta seguinte que conta.
+   - **O registro:** cada troca gera uma linha `foco`, com a curva, o motivo e a volta.
+5. **Antes da primeira volta que conta:**
+   - **O foco vem da última sessão nesta pista que tenha volta que conta.** Ele é lido do registro do engenheiro (`<sessão>.engenheiro.jsonl`, na mesma pasta):
+     - vale o foco com que aquela sessão terminou, que é a última linha `foco`;
+     - nas sessões gravadas antes desta emenda, que não têm essa linha, vale a curva de maior perda acima do ruído na última volta que contou (a última linha `volta`).
+   - **Sem essa sessão,** não há foco até a primeira volta que conta.
+   - **A janela nunca fica vazia sem explicação:**
+     - sem foco, ela mostra "Esperando uma volta que conte" e o motivo da última volta descartada ("volta 3: rodada");
+     - com um foco vindo da sessão anterior, ela diz de qual sessão ele veio.
+
+### A ficha da curva de foco
+
+6. **O texto da ficha** é o da tabela "As 14 fichas" do relatório do pedido 52: a curva e o lado, onde frear, a técnica, a linha e a velocidade. Tudo sai da volta de referência, menos a técnica com frenagem (item 7). Em detalhe:
+   - **Onde frear:** o ponto de frenagem da referência (a regra do item 9 de 16/11), descrito pelas placas em volta dele:
+     - "entre a placa de 100 e a de 50", quando há uma placa antes e outra depois;
+     - "antes da placa de 100", quando só há placa depois;
+     - "logo depois da placa de 50", quando o ponto fica até 40 m depois da última placa.
+
+     Sem placa no trecho, entra o marco mais perto, no molde (b), pela regra do item 4.
+   - **A linha:**
+     - "entre pela X": o lado da pista em que a referência está na frenagem (ou 50 m antes da entrada), quando ela passa da metade da meia largura;
+     - "tangencie a zebra da X": a zebra de dentro que cobre o ápice (até 25 m dele), quando a referência passa a 1,5 m ou menos da borda.
+   - **A velocidade:**
+     - a mínima da referência de 50 m antes da entrada até a saída, de 5 em 5 km/h ("Mínima de 105.");
+     - nas curvas de pé embaixo, a velocidade no ápice ("Passe a 190.").
+   - **A marcha fica fora da fala e da janela** até alguém conferir que a marcha gravada é a marcha real do carro. Isso vai para o backlog.
+   - **Um exemplo:**
+     - a fala: "Curva um, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita e tangencie a zebra da esquerda. Mínima de 105.";
+     - a escrita: "Curva 1, à esquerda; freie entre a placa de 100 e a de 50, com trail braking; entre pela direita e tangencie a zebra da esquerda; mínima de 105 km/h.".
+7. **A técnica:**
+   - **"De pé embaixo" e "só um alívio"** vêm da volta de referência, porque dependem só de onde ela freia ou alivia:
+     - de pé embaixo: sem frenagem e sem alívio (item 8) de 50 m antes da entrada até o ápice;
+     - só um alívio: sem frenagem, mas com alívio.
+   - **"Com trail braking" ou "frenagem em linha reta"** vêm da melhor passagem do piloto naquela curva, nunca do pedal da IA (ADR 0032, item 5):
+     - "com trail braking": o freio pisado (0,10 ou mais) 10 m ou mais depois da entrada;
+     - "frenagem em linha reta": o freio solto antes disso.
+   - **A melhor passagem do piloto** é a mesma do item 2: a de menor tempo no trecho, entre a "Sua melhor volta" e as voltas da sessão que contam.
+   - **Sem uma passagem do piloto com frenagem naquela curva,** a técnica fica fora da fala e da escrita.
+8. **O alívio só conta com 10 m ou mais seguidos de acelerador abaixo de 0,90.** A queda de 2 a 4 m na troca de marcha não conta.
+   - A mesma regra vale para o "sem tirar o pé" do engenheiro (emenda de 16/11, item 3): o trecho é "sem tirar o pé" quando não tem nenhum alívio de 10 m ou mais.
+   - A conferência do "sem tirar o pé" usa a mesma regra.
+9. **Quando a ficha é dita:** uma vez por volta, enquanto a curva for o foco, na reta longa antes dela.
+   - **A reta longa** é a reta dos boxes ou a oposta, a que vier primeiro antes da curva de foco. São os blocos de 8,8 s ou mais na volta do modelo (emenda de 16/11, item 1).
+   - **No perfil,** a ficha fica no pedaço livre que contém o fim dessa reta. Ela acaba pelo menos 3,0 s antes de dois pontos: o fim desse pedaço (a ação seguinte) e o ponto da curva de foco (item 6 de 20/11). Ela começa o mais tarde possível.
+   - **Se não couber,** não há ficha pela voz naquela volta: ela fica na janela, e o motivo vai para o registro.
+   - **A ficha tem prioridade sobre o feedback nessa reta.** A reserva do bloco começa no `s_fala` da ficha (item 11 de 20/11), e o feedback usa a outra reta longa e o que sobrar.
+10. **A janela:**
+    - mostra a escrita da ficha da curva de foco a volta toda, com a distância até o ponto de frenagem;
+    - depois da linha, por alguns segundos, mostra a conferência do foco.
+11. **O lembrete curto,** no molde (b) e com o número da curva por extenso.
+    - **O texto** é a parte da ficha que diz onde frear:
+      - com placas, sem o verbo: "Um: entre o 100 e o 50.";
+      - com outro marco, com o verbo: "Dois: freie no começo da zebra à direita.";
+      - nas curvas sem frenagem: "Cinco: pé embaixo." ou "Três: só um alívio.".
+    - **Onde:** no pedaço livre logo antes da curva de foco, o mais tarde possível, com a folga mínima de 3,0 s. É o pedaço mais perto antes do mais cedo destes dois pontos: a ação do piloto e o ponto de frenagem.
+    - **A ação do piloto** é a do item 5 de 20/11, conforme a curva:
+      - onde a referência freia, a frenagem;
+      - nas de pé embaixo, a entrada;
+      - nas de só um alívio, a primeira frenagem ou o primeiro alívio.
+    - **Se não couber,** não há lembrete, e fica só a contagem de bipes.
+    - **Se a ficha e o lembrete caírem no mesmo pedaço livre,** fica só a ficha.
+
+### A contagem de bipes
+
+12. **Três bipes em ritmo fixo,** com o último no ponto de frenagem da referência na curva de foco, que é o mesmo ponto da marca no asfalto.
+    - **O som:** os dois primeiros iguais (`bipe.wav`, 2.000 Hz, 0,25 s) e o último mais agudo (`bipe_agudo.wav`, 3.000 Hz, 0,25 s). Os dois são gerados por `tools/csp_app/gerar_bipe.py`.
+    - **O intervalo** (`INTERVALO_DA_CONTAGEM_S`) é de 0,5 s: o primeiro bipe soa 1,0 s antes do ponto. **Não confirmado:**
+      - nenhuma fonte achada dá o intervalo de uma contagem sonora para frear num ponto;
+      - os estudos de alerta sonoro ao volante tratam de um alerta sem aviso, e não de uma contagem esperada;
+      - o teste no jogo dirá se esse valor ajuda.
+    - **Os pontos dos bipes** são calculados no backend pelo tempo do perfil: o último no ponto de frenagem, e os outros 0,5 s e 1,0 s antes dele, na velocidade da volta do perfil. O app do jogo toca cada bipe quando o carro passa o ponto dele.
+    - **Só nas curvas em que a referência freia.** As de pé embaixo e as de só um alívio não têm bipe.
+    - **A chave** `AT_ENGENHEIRO_BIPE=desligado` continua a desligar o bipe. O padrão é ligado.
+13. **A marca no asfalto** fica só na curva de foco e só nas curvas em que a referência freia, no ponto de frenagem da referência.
+
+### O registro
+
+14. **Novas linhas** no `<sessão>.engenheiro.jsonl`:
+    - `foco`: a curva, a origem (a volta da sessão ou a sessão anterior), o motivo da escolha ou da troca, e as voltas em foco;
+    - `ficha` e `lembrete`: cada fala dita, com o `s_fala`, a duração e a folga planejada;
+    - `conferencia`: a do foco, com a medida.
+
+    A linha `aviso` deixa de existir.
+
+**O app do jogo** sobe para a 0.9.0.

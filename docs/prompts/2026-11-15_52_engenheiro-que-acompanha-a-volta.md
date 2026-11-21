@@ -224,3 +224,91 @@ Tudo abaixo vale para qualquer pista e qualquer trecho. Interlagos e os trechos 
       - o meu cartão.
 14. **O merge em `develop` e o instalador 0.9.0** continuam parados até depois desse teste e da conferência, como na Parte F.
 15. **No relatório,** uma seção "Atualização de 20/11" com o commit do ADR, os testes, a D.1 por variante, a D.2, as suítes e o cartão. Depois do teste, a leitura.
+
+## Atualização de 21/11 — as minhas decisões depois do segundo teste no jogo (a curva de foco)
+
+Li no relatório as seções do teste de 21/11 (sessão `2026-11-21_18-10-46`) e "A ficha da curva". A parte técnica funcionou, mas o engenheiro fala de curvas demais, cedo demais, e o bipe marca coisas diferentes. Decidi trocar a entrega de 20/11 pela curva de foco, com a ficha que eu pedi.
+
+Faça como uma atualização deste pedido, e não como um pedido novo. Registre cada decisão no ADR 0033 numa seção "Decisões do Eduardo de 21/11" (como emenda, sem mudar o texto acima dela), commite o ADR e só depois mude o código. Nenhuma regra abaixo muda depois de ver os números da D.1 nova. Tudo vale para qualquer pista e qualquer trecho: Interlagos e as curvas citadas são só o exemplo.
+
+### O que sai e o que fica da emenda de 20/11
+
+1. **Sai:**
+   - o aviso de voz para toda curva (item 4);
+   - as falas com dois avisos e o segundo pedaço livre (item 7);
+   - o bipe em todo aviso de "freie", "vire" e "acelere" (item 9).
+2. **Fica:**
+   - o aviso que não espera a fila do app do jogo (item 1);
+   - o disparo no jogo pelo `s` do carro, com o áudio já baixado (item 2);
+   - a reserva pelo tempo do perfil (item 3);
+   - a ação contra a minha volta e o perfil (item 5);
+   - a folga mínima de 3,0 s (item 6);
+   - o molde (b) do lembrete;
+   - a conferência depois da curva, como já existe.
+
+### A curva de foco
+
+3. **Uma curva de foco por vez:** a curva em que eu mais perco, com a perda acima do ruído do trecho (ADR 0033, item 1), nas voltas que contam desta sessão. O engenheiro só fala da curva de foco. As outras ficam caladas na voz e no bipe até virarem o foco.
+4. **A troca do foco** acontece em dois casos:
+   - quando a conferência mostra que apliquei a instrução;
+   - depois de 3 voltas que contam com a mesma curva em foco sem aplicar.
+
+   Aí vem a curva seguinte em perda. Uma curva que saiu do foco sem ser aplicada pode voltar mais tarde. Registre no ADR o que conta como "aplicou", com a mesma medida da conferência.
+5. **Antes da primeira volta que conta:**
+   - **O foco** vem da minha última sessão nesta pista que tenha volta que conta. Sem ela, não há foco até a primeira volta que conta.
+   - **A janela nunca fica vazia sem explicação.** Enquanto não houver foco, ela mostra "Esperando uma volta que conte" e o motivo da última volta descartada (por exemplo, "volta 3: rodada"). No teste de 21/11, eu achei que o engenheiro estava quebrado.
+
+### A ficha da curva de foco
+
+6. **O texto da ficha** é o da tabela "As 14 fichas" do relatório: a curva e o lado, onde frear, a técnica, a linha e a velocidade.
+   - **A marcha fica fora da fala e da janela** até alguém conferir que a marcha gravada é a marcha real do carro. Esse item vai para o backlog.
+   - **Sem placa no trecho,** entra o marco mais perto, no molde (b), como está no relatório.
+7. **A técnica:**
+   - **"De pé embaixo" e "só um alívio"** vêm da volta de referência, porque dependem só de onde ela freia ou alivia.
+   - **"Com trail braking" ou "frenagem em linha reta"** vêm da minha melhor passagem naquela curva, nunca do pedal da IA (ADR 0032, item 5). Use as mesmas regras do relatório: freio pisado 10 m ou mais depois da entrada, ou solto antes dela.
+   - **Sem uma passagem minha naquela curva,** a técnica fica fora da fala.
+8. **O alívio só conta com 10 m ou mais de acelerador abaixo de 0,90.** Isso evita que a queda de 2 a 4 m na troca de marcha vire "só um alívio". A mesma regra vale para o "sem tirar o pé" do engenheiro. O relatório diz quais trechos mudam com isso.
+9. **Quando a ficha é dita:** uma vez por volta, enquanto a curva for o foco, na reta longa antes dela, que é a reta dos boxes ou a oposta, a que vier primeiro antes da curva.
+   - A ficha tem prioridade sobre o feedback nessa reta. O feedback usa a outra reta longa e o que sobrar.
+   - A janela mostra a ficha escrita da curva de foco a volta toda.
+10. **O lembrete curto,** no molde (b) e com o número da curva ("Um: entre o 100 e o 50."), é dito no pedaço livre logo antes da curva de foco, com a folga mínima de 3,0 s.
+    - Se não couber, não há lembrete: fica a contagem de bipes.
+    - Se a ficha e o lembrete caírem no mesmo pedaço livre, fica só a ficha, também com a folga de 3,0 s.
+
+### A contagem de bipes
+
+11. **Três bipes em ritmo fixo, com o último no ponto de frenagem da referência** na curva de foco. Ele é o mesmo ponto da marca no asfalto.
+    - **O som:** os dois primeiros bipes são iguais, e o último é mais agudo.
+    - **O intervalo** é um parâmetro do ADR. Diga no relatório de onde tirou o valor, ou registre "não confirmado".
+    - **Só nas curvas em que a referência freia.** As de pé embaixo e as de só um alívio não têm bipe.
+    - **A chave que desliga o bipe continua,** e o padrão é ligado.
+12. **A marca no asfalto** fica só na curva de foco.
+
+### A ordem
+
+13. **O ADR 0033 com as decisões de 21/11, commitado antes do código.** Depois:
+    - **o código** no backend e no app do jogo, cuja versão sobe;
+    - **os testes,** com dados sintéticos:
+      - a escolha do foco e as duas regras de troca;
+      - o foco que vem da sessão anterior e a janela "Esperando uma volta que conte";
+      - a técnica da minha melhor passagem e a ausência dela;
+      - o filtro de 10 m do alívio;
+      - a ficha uma vez por volta na reta longa, com prioridade sobre o feedback;
+      - o lembrete com a folga e o lembrete que não cabe;
+      - a contagem de três bipes e a ausência dela nas curvas sem frenagem;
+      - a marca só na curva de foco;
+    - **a D.1 de novo,** nas 4 sessões de antes e nas de 20/11 e 21/11. Por sessão:
+      - a curva de foco de cada volta, quando ela mudou e por quê;
+      - a ficha e o lembrete, com o ponto em que foram ditos e a folga até a minha ação e até o ponto dito;
+      - o último bipe contra o ponto de frenagem e contra a minha frenagem;
+      - as conferências;
+      - o feedback que mudou de bloco;
+      - **os segundos de fala por volta, antes e depois desta emenda.** É a medida do "muita informação";
+    - **a D.2:** as fichas refeitas com a técnica da minha melhor passagem, em áudio, numa pasta "[teste]" fora da pasta do jogo, e a prévia da janela com a ficha e com "Esperando uma volta que conte";
+    - **as suítes,** o `tsc` e o `conferir_lua.py`.
+14. **Pare antes do teste no jogo.** O instalador do app do jogo só roda com o meu "pode instalar", e quem roda sou eu.
+15. **O teste no jogo, de novo,** com o roteiro da Parte E: pelo menos 10 voltas, até 45 minutos, na pista original.
+    - **Antes,** deixe no relatório um cartão novo, com uma linha por volta: qual foi a curva de foco, "entendi a ficha", "o lembrete chegou a tempo", "a contagem me ajudou a frear no ponto" e uma anotação.
+    - **A leitura** repete as tabelas da D.1 nesta sessão, com a latência, o FPS, os logs do CSP e o meu cartão. Se a minha frenagem na curva de foco se moveu na direção do ponto, entra só relatado: o veredito é do protocolo de avaliação.
+16. **O merge em `develop` e o instalador 0.9.0** continuam parados até depois desse teste e da conferência, como na Parte F.
+17. **No relatório,** uma seção "Atualização de 21/11" com o commit do ADR, os testes, a D.1, a D.2, as suítes e o cartão. Depois do teste, a leitura.
