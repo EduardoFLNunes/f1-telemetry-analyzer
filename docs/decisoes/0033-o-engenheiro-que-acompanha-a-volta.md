@@ -146,3 +146,84 @@ Emenda depois do relatório da parada na Parte E (o pedido 52, "Atualização de
 8. **A marca no asfalto fica como está** (item 7) para o teste no jogo; o Eduardo diz no jogo se ela aparece a tempo.
 9. **"Frenagem", e não "freada"** (16/11, 14h20, depois do relatório da atualização): no que o piloto ouve e lê, o substantivo é "frenagem", o termo dos pilotos no Brasil ("ponto de frenagem"). As causas do engenheiro passam a "frenagem cedo" e "frenagem tarde"; o cartão do rádio, "na frenagem" e "frenagem 15 m antes"; o app do jogo, "frenagem da referência"; as telas, "Início da frenagem" e "Frenagem emendada". O verbo fica ("Freie", "Freou"). As chaves internas (`freada`, `freadaM`) e o texto técnico da documentação não mudam.
 10. **A pisada em andamento na saída do trecho anterior** (16/11, depois do relatório da atualização; muda o item 4 desta seção): se o freio já estiver apertado (0,15 ou mais) na saída do trecho anterior, a frenagem do trecho é onde essa pisada começou, mesmo antes da saída. Senão, vale o item 4. Na volta do modelo, só a C10 está nesse caso: a frenagem dela começa em 2.622 m, 4 m antes da saída da C09 (2.626 m), e não na segunda pisada (2.680 m). A C09 continua sem frenagem.
+
+## Decisões do Eduardo de 20/11
+
+Emenda depois do teste no jogo de 20/11 e da leitura E.3 (o pedido 52, "Atualização de 20/11"). O texto acima fica como estava; onde ele e esta seção divergem, vale esta seção. Registrada antes de mudar o código. Os números da E.3 são o motivo das decisões; nenhuma regra abaixo muda depois de ver os números da D.1 nova. **Tudo vale para qualquer pista e qualquer trecho**; Interlagos é só o exemplo.
+
+**A escolha:** a opção H da E.3 (juntar o aviso com o da curva anterior, com a fala curta), mais o bipe (G) e a janela com as duas próximas dicas, com uma folga mínima de 3,0 s.
+
+### As correções (valem para todo aviso)
+
+1. **O aviso nunca espera na fila do app do jogo.**
+   - Quando o aviso chega, o cartão que estiver na tela sai, e uma fala de feedback em andamento é cortada.
+   - O corte vai para o registro do engenheiro (uma linha "corte": a mensagem cortada, a fala do aviso e onde).
+   - O feedback cortado não volta a tocar na mesma reta: ele volta à fila e só pode sair numa reta longa seguinte. Lá vale a decisão 1 de 16/11: a variante com a causa, se couber; senão, a mais completa que couber.
+2. **O aviso é disparado no próprio jogo, pelo `s` do carro, com o áudio já baixado** (a opção B).
+   - O backend manda ao app do jogo (`GET /api/radio/engenheiro`) a lista das falas planejadas, cada uma com o `s_fala`, o texto, a duração e o endereço do áudio.
+   - O app baixa os áudios antes, e toca cada fala no quadro em que o carro passa o `s_fala`, sem esperar a rede. Sem o arquivo baixado, toca pelo endereço.
+   - O backend não entrega mais o aviso pela fila de mensagens do rádio: quem fala é o app do jogo. O backend registra e acompanha a fala pelo mesmo `s`, para a reserva e o corte.
+   - **A latência do disparo no jogo** entra nas contas como 0,1 s: é uma estimativa, a ser medida no teste. O app do jogo registra no log o `s` do disparo e o do começo do som.
+3. **A reserva de fala usa o tempo da volta do item 5 até o ponto,** e não a velocidade do momento: o tempo que o carro leva de um `s` a outro vem do perfil de tempo daquela volta.
+
+### As regras novas do aviso
+
+4. **Todo aviso pode ir para a voz:** "freie", "vire", "acelere" e "sem tirar o pé". A regra "a voz só onde a referência freia" (item 5) sai. A janela e o cartão continuam para todos os avisos.
+5. **O aviso é calculado contra a ação do piloto, e não contra a da referência.**
+   - **A ação do piloto num trecho** é buscada desde a saída do trecho anterior (a emenda de 16/11, item 4) até o ápice:
+     - para "freie", a frenagem (freio de 0,15 ou mais; uma pisada em andamento na saída conta desde o começo, item 10 de 16/11). Sem frenagem, vale a regra do "vire";
+     - para "vire", a primeira frenagem ou o primeiro alívio (acelerador abaixo de 0,90); sem nenhum dos dois, a entrada da curva (`pontos_de_linha_s.entrada`);
+     - para "sem tirar o pé", a entrada da curva;
+     - para "acelere", o ponto em que ele volta ao acelerador: a retomada do trecho (ADR 0030, item 5). Sem ela, o primeiro ponto com o acelerador em 0,90 ou mais depois do ápice, até o fim do trecho. Sem nenhum dos dois, o aviso fica só na janela e no bipe.
+   - **De qual volta (o perfil):**
+     - a última volta da sessão que conta (completa pela regra do coach, sem rodada e sem a IA);
+     - antes de haver uma, a "Sua melhor volta" guardada da pista;
+     - sem ela, a volta de referência (a volta do modelo).
+   - **Depois de cada volta que conta,** o backend refaz o plano das falas (os `s_fala`) e manda a lista nova ao app do jogo.
+   - **O pedaço livre que atravessa a linha de chegada** usa a volta anterior: o perfil é tratado como um laço, e o fim da volta emenda no começo dela.
+6. **A folga mínima: 3,0 s.**
+   - A fala acaba pelo menos 3,0 s antes do mais cedo destes dois pontos: a ação esperada do piloto (item 5) e o ponto dito no aviso.
+   - "Mais cedo" é no tempo do perfil, andando para a frente desde o pedaço livre.
+   - A conta inclui a latência do item 2: o disparo, mais 0,1 s, mais a duração da fala, acaba até 3,0 s antes do ponto.
+7. **Onde a fala acontece (a opção H):**
+   - **O pedaço livre,** no perfil: um trecho contínuo com o acelerador em 0,90 ou mais e o freio abaixo de 0,15.
+     - Ele vai de quando a ação anterior acaba até a ação seguinte.
+     - Se o ponto do item 6 cair dentro de um pedaço livre, o pedaço acaba nele.
+   - **Os dois candidatos de cada aviso:** o pedaço livre que acaba mais perto antes do ponto do item 6 e o seguinte para trás. Nunca um pedaço mais antigo que esses dois.
+   - **A fala começa e acaba dentro do pedaço livre:** nunca dentro de uma curva nem durante outra ação, e nunca por cima de outro aviso. Entre duas falas do mesmo pedaço há pelo menos 0,3 s.
+   - **A escolha do pedaço:**
+     1. Cada aviso vai para o primeiro candidato em que a fala dele sozinha cabe com a folga do item 6; senão, para o segundo.
+     2. Num mesmo pedaço, os avisos são postos em pares na ordem da pista (o 1º com o 2º, o 3º com o 4º), e cada par vira uma fala só, com o número da curva por extenso ("Seis: vire na zebra. Sete: freie na zebra."). No máximo dois avisos por fala; um aviso sozinho continua sem o número (16/11, item 2).
+     3. As falas do pedaço são postas de trás para a frente, cada uma o mais tarde possível que respeite a folga de todos os avisos dela e não encoste na fala seguinte.
+     4. Uma fala que não couber (o pedaço ficou cheio) manda os seus avisos para o segundo candidato, e o plano é refeito. Um aviso que não couber em nenhum dos dois fica só na janela e no bipe, com o motivo no registro.
+   - **A duração de cada fala** é a da voz do projeto, medida ao gerar o áudio. Até lá, entra uma estimativa: a soma das falas sozinhas mais 0,8 s num par. O plano é refeito quando a duração real chega.
+8. **O molde da fala é um parâmetro com três variantes** (`AT_ENGENHEIRO_MOLDE`: `a`, `b` ou `c`):
+   - **(a)** o molde curto de 16/11: "Freie 10 metros depois da placa de 100.";
+   - **(b)** o verbo, a distância e o marco, sem "metros" e sem "placa": "Freie 10 depois do 100." ("dez depois do cem");
+   - **(c)** o verbo e o marco, com a correção no fim: "Freie no 100, mais 10." ("no cem, mais dez").
+   - **Nas três:**
+     - só as placas perdem "placa de"; os outros marcos guardam o nome e o lado ("Vire 5 depois do começo da zebra à direita.");
+     - "Sem tirar o pé." e "no ponto marcado" não mudam;
+     - a velocidade da voz não muda.
+   - **O padrão é (a) até a escolha do Eduardo,** que ele faz ouvindo, antes do teste no jogo. A escolha entra neste ADR como a decisão de 20/11 sobre o molde.
+   - **A janela e o cartão** continuam escrevendo "Curva N: <frase>" no molde (a), que é o mais completo para ler.
+9. **O bipe (a opção G):**
+   - **O som:** um bipe curto (0,25 s), gerado pelo código (um tom só, de 2.000 Hz, diferente da vinheta e de qualquer som do rádio). Ele é instalado junto com o app do jogo (`bipe.wav`), e o app toca o bipe pelo `s` do carro num player próprio, que não corta a fala.
+   - **O ponto:** o ponto dito no aviso, o mesmo da marca na pista (a marca passa a ser desenhada no ponto dito). Ele é antecipado do tempo de reação: o bipe soa quando o tempo até o ponto, na velocidade do carro, fica menor ou igual ao tempo de reação.
+   - **O que o bipe marca:** o ponto dito, e não a ação de costume do piloto. É ele que corrige a ação.
+   - **O tempo de reação** é um parâmetro (`TEMPO_DE_REACAO_AO_BIPE_S`). **Não confirmado:**
+     - nenhuma fonte achada dá um valor para um sinal sonoro esperado ao volante;
+     - Green (2000, "How Long Does It Take to Stop?", *Transportation Human Factors* 2(3)) dá cerca de 0,70 a 0,75 s para uma frenagem totalmente esperada, mas só foi lido por resumos (o apêndice da FHWA, publicação 06-033), e para um sinal visual;
+     - um estudo antigo dá 0,51 s depois de uma buzina (citado num artigo da Indiana Academy of Science, sem a data e a amostra claras).
+     
+     Por isso, o valor inicial é 0 s: o bipe soa no ponto.
+   - **Quais avisos:** "freie", "vire" e "acelere". "Sem tirar o pé" não tem bipe, porque não há ação para marcar.
+   - **A chave:** `AT_ENGENHEIRO_BIPE=desligado` desliga o bipe, como o `AT_ENGENHEIRO`. O padrão é ligado.
+   - **O bipe é a única exceção ao "nunca dentro de uma curva"** (item 5): ele não é uma fala.
+10. **A janela mostra sempre os dois próximos avisos:**
+    - cada um aparece desde o fim da ação anterior a ele, que é o começo do pedaço livre logo antes da ação do piloto, e não mais desde o `s_fala`;
+    - o da vez fica em destaque e sai depois da ação: o mais tarde entre a ação do piloto e o ponto dito, mais 20 m;
+    - os textos continuam com "Curva N:".
+11. **O feedback continua como na decisão 1 de 16/11.** A reserva das retas longas é feita primeiro para os avisos, agora de todos os tipos: a reserva de um bloco começa no `s_fala` da primeira fala planejada à frente do carro dentro dele. O feedback usa o que sobrar, medido pelo tempo do perfil (item 3).
+
+**O app do jogo** sobe para a 0.8.0.

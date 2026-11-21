@@ -142,3 +142,85 @@ Li o relatório (`docs/handoff/2026-11-15_52_engenheiro-que-acompanha-a-volta_re
 6. **"Freada leve" e "marcha acima" ficam para uma versão futura.** O ideal é o coach ler a pressão aplicada no freio e a marcha usada na curva. Liste no backlog: a volta ao vivo guardar a marcha e a força do freio; e a força do freio comparada com a minha melhor passagem, nunca com o pedal da volta do modelo (ADR 0032, item 5).
 7. **Refaça a D.1** nas 4 sessões com as decisões 1 a 4 e traga a tabela de novo: os avisos pela voz e só na janela, a folga até a freada, o feedback com a causa na voz (sem e com o engenheiro) e as mensagens que mudaram de bloco. Depois, siga para a Parte E, o meu teste no jogo, como está acima.
 8. **A marca no asfalto** fica como está para o teste: eu digo no jogo se ela aparece a tempo.
+
+## Atualização de 20/11 — as minhas decisões depois do teste no jogo (a leitura E.3)
+
+Li a leitura da sessão de 20/11 no relatório (Parte E, E.3). Escolhi a opção H (juntar o aviso com o da curva anterior, com a fala curta) mais o bipe (G) e a janela com as duas próximas dicas, com uma folga mínima de 3,0 s. Aplique estas decisões antes de um novo teste no jogo. Registre cada uma no ADR 0033 numa seção "Decisões do Eduardo de 20/11" (como emenda, sem mudar o texto acima dela), commite o ADR e só depois mude o código. Os números da E.3 são o motivo das decisões: nenhuma regra abaixo muda depois de ver os números da D.1 nova.
+
+Tudo abaixo vale para qualquer pista e qualquer trecho. Interlagos e os trechos citados são só o exemplo desta sessão.
+
+### As correções (valem para todo aviso)
+
+1. **O aviso nunca espera na fila do app do jogo.** Hoje ele espera o cartão anterior (`CARTAO_MINIMO_S` e `FOLGA_DEPOIS_DA_VOZ_S`), como na C04, com 2,06 s de atraso. Com a mudança:
+   - o cartão que estiver na tela sai quando o aviso chega;
+   - uma fala de feedback em andamento é cortada, e o corte fica no registro do engenheiro;
+   - o feedback cortado não volta a tocar na mesma reta; ele segue a regra da decisão 1 de 16/11 na reta longa seguinte.
+2. **O aviso é disparado no próprio jogo, pelo `s` do carro, com o áudio já baixado** (a opção B). O backend manda ao app do jogo a lista dos avisos da volta com o áudio de cada um, antes de o carro chegar ao primeiro `s_fala`. O app do jogo toca cada aviso quando o carro passa o `s_fala`, sem esperar a rede. A latência de 0,1 s é uma estimativa: meça a real (do `s_fala` ao começo do som) na D.1, se der, e no teste no jogo.
+3. **A reserva de fala usa o tempo da minha volta até o ponto, e não a velocidade do momento.** O tempo que o carro leva de um `s` a outro vem do perfil de tempo da volta usada no item 5. Isso evita o "outra fala em andamento" do segundo aviso da C04.
+
+### As regras novas do aviso
+
+4. **Todo aviso pode ir para a voz:** "freie", "vire", "acelere" e "sem tirar o pé". A regra "a voz só onde a referência freia" sai. A janela e o cartão continuam para todos os avisos.
+5. **O aviso é calculado contra a minha ação, e não contra a da referência.**
+   - **A minha ação de cada trecho** segue a regra da E.3: para "freie", a minha frenagem; para "vire", a minha primeira frenagem ou o primeiro alívio (acelerador abaixo de 0,90); sem nenhum dos dois, e para "sem tirar o pé", a entrada da curva. Para "acelere", o ponto em que eu volto ao acelerador. Em todos, a busca começa na saída do trecho anterior (decisão 4 de 16/11).
+   - **De qual volta:** a última volta completa e sem rodada desta sessão. Antes de haver uma, vale a "Sua melhor volta" guardada da pista. Sem ela, vale a volta de referência.
+   - **Depois de cada volta** que valer, o backend refaz os `s_fala` e manda a lista nova ao app do jogo. O pedaço livre que atravessa a linha de chegada usa a volta anterior.
+6. **A folga mínima: 3,0 s.** A fala acaba pelo menos 3,0 s antes do mais cedo destes dois pontos: a minha ação esperada e o ponto dito no aviso. A conta inclui a latência do disparo no jogo (item 2). Essa é a regra que ficou faltando no ADR: quanto tempo antes da ação o aviso tem de terminar.
+7. **Onde a fala acontece (a opção H):**
+   - **O pedaço livre** é o da E.3.2: de quando a ação anterior acaba (acelerador em 0,90 ou mais e sem freio) até a ação seguinte, na volta do item 5.
+   - **A fala começa e acaba dentro de um pedaço livre,** nunca dentro de uma curva nem durante outra ação. Ela não passa por cima de outro aviso.
+   - **Cada aviso é dito no pedaço livre mais perto antes da ação dele em que a fala caiba com a folga do item 6.** Se não couber nesse, vai para o segundo mais perto. Nunca antes disso.
+   - **Se dois avisos caem no mesmo pedaço livre, eles vão juntos numa fala só,** cada um com o número da curva ("Seis: vire na zebra. Sete: freie na zebra."). No máximo dois avisos por fala. Um aviso sozinho continua sem o número (decisão 2 de 16/11).
+   - **O aviso que não couber em nenhum dos dois** fica só na janela e no bipe, com o motivo no registro.
+   - **Dentro do pedaço livre,** a fala começa o mais tarde possível que ainda respeite a folga do item 6 e não colida com outra fala. Assim o aviso fica perto da ação, sem chegar em cima dela.
+8. **A fala curta: eu escolho o molde ouvindo.** A fala curta sem "metros" não foi testada para ver se eu entendo. Implemente o molde como parâmetro, com três variantes:
+   - **(a)** o molde curto de 16/11, por exemplo "Freie 10 metros depois da placa de 100.";
+   - **(b)** o verbo, a distância e o marco, sem "metros" e sem "placa", por exemplo "Freie dez depois do cem.";
+   - **(c)** o verbo e o marco com a correção no fim, como na E.3.3, por exemplo "Freie no cem, mais dez.".
+
+   "Sem tirar o pé." é igual nas três. A velocidade da voz não muda. A escolha entra no ADR como a decisão de 20/11 sobre o molde, antes do teste no jogo.
+9. **O bipe (a opção G):**
+   - **Um bipe curto** (uns 0,25 s), tocado pelo app do jogo pelo `s` do carro, com o arquivo de som instalado junto com o app. Ele tem de ser diferente de qualquer som do rádio.
+   - **Ele soa no ponto em que o aviso manda agir** (o ponto dito, o mesmo da marca na pista), antecipado do tempo de reação. Ele marca o ponto dito, e não a minha ação de costume: é ele que corrige a minha ação.
+   - **O tempo de reação** é um parâmetro do ADR. O valor inicial vem de uma fonte citada no ADR. Se nenhuma fonte confirmar um valor para um sinal sonoro esperado ao volante, registre "não confirmado", use 0 s e me diga no relatório.
+   - **Vale para "freie", "vire" e "acelere".** Para "sem tirar o pé" não há bipe, porque não há ação para marcar.
+   - **Uma chave desliga o bipe,** no mesmo padrão de `AT_ENGENHEIRO`. O padrão é ligado.
+   - **O bipe é a única exceção** ao "nunca dentro de uma curva" do ADR 0033: ele não é uma fala.
+10. **A janela:** mostra sempre os dois próximos avisos, cada um desde o fim da ação anterior a ele (e não mais desde o `s_fala`). O da vez fica em destaque e sai depois da ação. Os textos da janela e do cartão continuam com "Curva N:".
+11. **O feedback continua como na decisão 1 de 16/11.** A reserva das retas longas é feita primeiro para os avisos (agora de todos os tipos), e o feedback usa o que sobrar.
+
+### A ordem
+
+12. **O ADR 0033 com as decisões de 20/11, commitado antes do código.** Depois:
+    - o código no backend e no app do jogo, cuja versão sobe para 0.8.0;
+    - **os testes,** com dados sintéticos:
+      - o pedaço livre;
+      - a minha ação e as três voltas de onde ela pode vir;
+      - a folga de 3,0 s contra o mais cedo dos dois pontos;
+      - o primeiro e o segundo pedaço livre, e o aviso que não cabe;
+      - a junção de no máximo dois avisos;
+      - a fala o mais tarde possível;
+      - o ponto do bipe e a ausência dele em "sem tirar o pé";
+      - o aviso que não espera o cartão e o corte do feedback;
+      - a reserva pelo tempo da volta;
+      - a lista refeita depois de cada volta;
+    - **a D.1 de novo,** nas 4 sessões de antes e na de 20/11 (`2026-11-20_19-06-14_vhe_interlagos`), com cada uma das três variantes do molde. Por sessão e por variante:
+      - os trechos com aviso que têm voz, por volta, e o motivo de cada um que não tem;
+      - a folga do fim da fala até a minha ação e até o ponto dito (mínimo, mediana e máximo);
+      - as falas com dois avisos;
+      - a distância e o tempo entre o bipe e a minha ação;
+      - o feedback que mudou de bloco ou foi cortado;
+    - **a D.2:** a prévia da janela com as duas próximas dicas. Também os arquivos de áudio de cada variante, com a voz do projeto, numa pasta "[teste]" fora da pasta do jogo: as falas sozinhas dos 15 trechos e as falas com dois avisos que a D.1 encontrou, cada uma com a duração;
+    - **as suítes,** o `tsc` e o `conferir_lua.py`.
+
+    **Pare antes do teste no jogo.** Eu escuto as três variantes e escolho o molde. Depois, rodo o `instalar.ps1` do app do jogo 0.8.0 com o meu "pode instalar".
+13. **O teste no jogo, de novo,** com o roteiro da Parte E, item 1 (pelo menos 10 voltas, até 45 minutos, na pista original). Se eu rodar, continuo a sessão.
+    - **Antes,** deixe no relatório um cartão curto para eu preencher depois da sessão: por trecho, "ouvi", "entendi" e "deu tempo".
+    - **A leitura** repete as tabelas da E.3.1 e da E.3.2 com o que mudou:
+      - por aviso, se foi para a voz, a latência medida, o fim da fala até a minha ação e até o ponto dito, e o bipe até a minha ação;
+      - se a minha ação se moveu na direção do ponto dito nas voltas seguintes (só relatado: o veredito é do protocolo de avaliação);
+      - o FPS;
+      - os logs do CSP;
+      - o meu cartão.
+14. **O merge em `develop` e o instalador 0.9.0** continuam parados até depois desse teste e da conferência, como na Parte F.
+15. **No relatório,** uma seção "Atualização de 20/11" com o commit do ADR, os testes, a D.1 por variante, a D.2, as suítes e o cartão. Depois do teste, a leitura.
