@@ -1012,3 +1012,80 @@ O bipe de hoje (ADR 0033, emenda de 20/11, item 9) toca no **ponto dito** de cad
 - **(Q3)** A Q1 e a Q2 juntas: um aviso de cada vez, perto da curva, e só nos trechos que mais perdem.
 
 Você disse que achou diversos problemas. Se houver mais itens, eu os registro aqui antes da leitura completa do item 13.
+
+## A "ficha da curva": o formato que você pediu (21/11, 18h51), com a proposta (parado: a decisão é sua)
+
+O seu pedido:
+
+> "Curva X, freie entre a placa de 50 e 100, mova o carro para a zebra do lado X e mantenha X velocidade. Curva X pode ser realizada com pé embaixo ou trail braking."
+
+Montei essa fala para as 14 curvas, com a volta de referência, os marcos da pista e a geometria. Mediu a duração de cada uma com a voz do projeto. **Nenhum código do app mudou:** é um script de conferência (`_ficha_2111.py` e `_ficha_2111.json`).
+
+### O que entra em cada ficha e de onde sai
+
+- **A frenagem:** o ponto de frenagem da referência, dito como o intervalo entre as duas placas que o cercam ("entre a placa de 100 e a de 50"). Sem placa no trecho, entra o marco mais perto, no molde (b).
+- **A técnica:**
+  - "de pé embaixo": sem frenagem, com o acelerador em 0,90 ou mais de 50 m antes da entrada até o ápice;
+  - "só um alívio": sem frenagem, com o acelerador abaixo de 0,90;
+  - "com trail braking": o freio ainda pisado 10 m ou mais depois da entrada;
+  - "frenagem em linha reta": o freio solto antes da entrada.
+- **O movimento do carro:**
+  - "entre pela X": o lado da pista em que a referência está na frenagem, quando passa da metade da meia largura;
+  - "tangencie a zebra da X": a zebra de dentro no ápice, quando a referência passa a 1,5 m ou menos da borda.
+- **A velocidade:** a mínima da referência, arredondada de 5 em 5 km/h. Nas curvas de pé embaixo, a velocidade no ápice ("passe a 190").
+- **A marcha** fica só na escrita (na janela). A marcha gravada vai de 0 a 6, e na reta oposta a referência está em sexta, mas não conferi se ela é a marcha real do carro.
+
+### As 14 fichas, com a duração da fala
+
+| curva | a fala (Daniel a 1,4x, sem a vinheta) | duração |
+|---|---|---:|
+| C01 | Curva um, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita e tangencie a zebra da esquerda. Mínima de 105. | 9,75 s |
+| C02 | Curva dois, à direita. Freie no começo da zebra à direita, com trail braking. Tangencie a zebra da direita. Mínima de 105. | 9,30 s |
+| C03 | Curva três, à esquerda. Só um alívio. Entre pela direita e tangencie a zebra da esquerda. Mínima de 115. | 8,17 s |
+| C04 | Curva quatro, à esquerda. Freie entre o 200 e o 100, com trail braking. Mínima de 135. | 7,17 s |
+| C05 | Curva cinco, à esquerda. De pé embaixo. Entre pela direita. Passe a 190. | 6,82 s |
+| C06 | Curva seis, à direita. Freie logo depois do 50, com trail braking. Mínima de 175. | 7,37 s |
+| C07 | Curva sete, à direita. Freie 35 antes do começo da zebra à direita, com trail braking. Entre pela esquerda e tangencie a zebra da direita. Mínima de 90. | 11,05 s |
+| C08 | Curva oito, à esquerda. Freie no começo da zebra à esquerda, com trail braking. Mínima de 95. | 7,20 s |
+| C09 | Curva nove, à direita. De pé embaixo. Passe a 175. | 5,48 s |
+| C10 | Curva dez, à direita. Freie 10 antes do começo da zebra à direita, com trail braking. Mínima de 85. | 7,65 s |
+| C11 | Curva onze, à esquerda. De pé embaixo. Passe a 175. | 5,47 s |
+| C12 | Curva doze, à esquerda. Freie entre o 100 e o 50, com trail braking. Entre pela direita. Mínima de 110. | 8,45 s |
+| C13 | Curva treze, à esquerda. De pé embaixo. Entre pela direita. Passe a 165. | 7,25 s |
+| C14 | Curva catorze, à esquerda. De pé embaixo. Passe a 220. | 5,40 s |
+
+**Os áudios, para você ouvir:** `data/radio/[teste] fichas das curvas 21-11/` (`C01.wav` a `C14.wav`), fora da pasta do jogo e fora do git.
+
+### Três cuidados para a ficha ser certa ("assertiva")
+
+1. **"Trail braking" aparece em todas as curvas com frenagem,** porque a IA que fez a volta de referência segura o freio depois da entrada em todas. O ADR 0032 (item 5) diz que os pedais da IA são desenhados, nunca julgados. Para dizer a técnica ao piloto, eu usaria a sua melhor passagem em cada curva, e não a IA. Também dá para dizer só "freie" e deixar a técnica de fora.
+2. **O acelerador da IA cai a zero por 2 a 4 m nas trocas de marcha.** Sem um filtro, a C05, a C09, a C11, a C13 e a C14 saíam como "só um alívio" (corrigi no script: só conta como alívio uma queda de 10 m ou mais). **A mesma queda pode afetar a regra "sem tirar o pé" do engenheiro de hoje,** que olha o mínimo do acelerador. Isso é para conferir no código, se você decidir.
+3. **A ficha é longa: de 5,4 a 11 s.** Só cabe inteira nas duas retas longas: a dos boxes, antes da C01, e a oposta, antes da C04. Falada curva por curva, ela repete o problema 2 ("muita informação").
+
+### A proposta: como entregar a ficha sem encher o rádio
+
+1. **Uma curva de foco por vez:** a curva em que você mais perde, contra o ruído do trecho. Ela continua o foco até a conferência mostrar que você aplicou, ou por 3 voltas; depois vem a seguinte.
+2. **A ficha inteira só para a curva de foco,** dita na reta longa antes dela. A janela mostra a ficha escrita da curva de foco a volta toda.
+3. **Na volta, perto da curva de foco, só o lembrete curto** ("Um: entre o 100 e o 50.", de 1,5 a 2,5 s), no pedaço livre logo antes.
+4. **O bipe só na frenagem da curva de foco:** três bipes em ritmo fixo, com o último no ponto de frenagem (a opção B2 da seção anterior). Curvas de pé embaixo não têm bipe.
+5. **Depois da curva, a conferência** que já existe ("Curva 1: freou 20 m cedo").
+
+As outras curvas ficam caladas até virarem o foco. Isso vem dos achados da pesquisa:
+- uma instrução de cada vez, com marcos que o piloto vê (placa, zebra);
+- falar só nas retas, quando a carga do piloto é menor;
+- uma só voz para o piloto.
+
+Fontes:
+- [Blayze, os 5 pontos de referência de cada curva](https://blayze.io/blog/car-racing/5-reference-points-for-every-corner-on-the-race-track)
+- [Driver61, a entrada da curva](https://driver61.com/uni/corner-entry/)
+- [Speed Secrets, notas de frenagem e entrada](https://speedsecrets.com/wp-content/uploads/2019/01/Braking-Entry-Notes-1-15-19.pdf)
+- [Red Bull Racing, o guia do rádio](https://www.redbullracing.com/int-en/bulls-guide-to-team-radio)
+- [Porsche Christophorus, "Off Camera"](https://newsroom.porsche.com/EN/Christophorus/Off-Camera.html)
+- [Autosport, os segredos do rádio na corrida](https://www.autosport.com/f1/news/the-secrets-of-in-race-radio-chat-5102490/5102490/)
+
+### O que precisa da sua decisão
+
+1. **O formato da ficha:** este texto, ou com mudanças, depois de ouvir os áudios.
+2. **A técnica:** sair da sua melhor passagem, ou ficar fora da fala.
+3. **A entrega:** a proposta acima (uma curva de foco, a ficha na reta longa, o lembrete curto e o bipe só na frenagem), ou outra.
+4. **Depois da decisão:** o ADR 0033 ganha a emenda antes do código, como nas outras vezes. Para isso, é melhor um pedido novo com as decisões.
