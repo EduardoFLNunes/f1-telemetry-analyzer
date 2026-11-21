@@ -960,3 +960,18 @@ Você pediu a leitura do novo teste no jogo, com o app do jogo 0.8.0 e o molde (
 1. **Confirmar se o teste foi feito.** Se você rodou o teste em outra máquina, ou com outra pasta de dados, me diga onde estão a gravação e o `.engenheiro.jsonl`.
 2. **Se o teste não foi feito:** eu abro o app do repositório de novo (o backend, o front e a janela). Depois, você faz o teste e preenche o cartão da seção "Atualização de 20/11".
 3. **A leitura,** depois do teste: as tabelas da E.3.1 e da E.3.2, com a voz, a latência, as folgas, o bipe e a sua ação nas voltas seguintes, mais o FPS, os logs do CSP e o seu cartão.
+
+## O teste de 21/11 (sessão `2026-11-21_18-10-46`): "o engenheiro não está falando e nem mostrando nada" (18h20)
+
+O engenheiro está ligado e ativo, com o molde (b), mas **a lista dele está vazia porque nenhuma volta contou até as 18h20.** É a regra do ADR 0033 (itens 1 e 8): a lista de avisos sai da comparação de uma volta que conta com a referência de cada trecho. Sem lista, não há fala, nem janela, nem marca. Nenhum código mudou.
+
+| volta | tempo | o que o rádio registrou |
+|---|---|---|
+| 1 | 2:54,441 | fora da análise: não começou na linha (saída dos boxes) |
+| 2 | 1:36,567 | incompleta: 1 microssetor sem medida (parada ou longe do traçado) |
+| 3 | 1:51,310 | rodada (perdeu 19,9 s na C13) |
+| 4 (em andamento) | | marcada como volta de saída dos boxes |
+
+- O backend não registrou nenhum erro nem aviso. O app do jogo busca a lista do engenheiro o tempo todo, e ela vem vazia.
+- O `.engenheiro.jsonl` desta sessão ainda não existe: a primeira linha dele é a da primeira volta que conta.
+- **Para o engenheiro começar:** uma volta inteira, começada na linha, sem rodada e sem sair do traçado. Os avisos aparecem a partir da volta seguinte a ela.
