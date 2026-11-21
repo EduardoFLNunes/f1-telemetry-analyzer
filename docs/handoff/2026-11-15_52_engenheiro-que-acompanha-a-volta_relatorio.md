@@ -975,3 +975,40 @@ O engenheiro está ligado e ativo, com o molde (b), mas **a lista dele está vaz
 - O backend não registrou nenhum erro nem aviso. O app do jogo busca a lista do engenheiro o tempo todo, e ela vem vazia.
 - O `.engenheiro.jsonl` desta sessão ainda não existe: a primeira linha dele é a da primeira volta que conta.
 - **Para o engenheiro começar:** uma volta inteira, começada na linha, sem rodada e sem sair do traçado. Os avisos aparecem a partir da volta seguinte a ela.
+
+## O teste de 21/11: os problemas que você apontou (18h47), com os números da sessão (parado: a decisão é sua)
+
+Fontes: o `.engenheiro.jsonl` da sessão `2026-11-21_18-10-46` e o log do CSP. Nenhum código mudou.
+
+**A parte técnica funcionou.**
+- Cada fala tocou de 0,06 a 0,08 s depois do disparo no jogo.
+- Cada bipe tocou a menos de 1 m do ponto dito.
+- O FPS ficou entre 63 e 68 de média.
+- Três voltas contaram para o plano: a 5, a 6 e a 9. Pela voz saíram 28 avisos, em falas de um ou dois avisos; outros 16 ficaram só na janela.
+
+### 1. "O engenheiro não passa a informação de maneira clara; por que não usamos o bipe para identificar onde frear?"
+
+O bipe de hoje (ADR 0033, emenda de 20/11, item 9) toca no **ponto dito** de cada aviso de "freie", "vire" e "acelere". É um som só para três ações diferentes. Na sessão:
+
+- **Nos avisos de "vire", o bipe veio de 91 a 95 m depois da sua ação** (C06 e C11; na C09, 68 m depois). A sua ação, nesses trechos, é o primeiro alívio ou a primeira frenagem; o ponto dito é a entrada na zebra. Quando o bipe toca, você já está na curva.
+- **Nos avisos de "freie"** (C04 e C12), o bipe veio de 23 a 57 m depois da sua frenagem de costume. Isso é a correção que o aviso pede ("freie mais tarde"), mas sem nada que avise que o bipe vem.
+- **Numa volta, tocaram até 8 bipes** (C01, C02, C04, C06, C08, C09, C11, C12 e C14 aparecem no log), e cada um marca uma coisa diferente.
+
+### 2. "O rádio dá muita informação, ele fala da curva 1 até a 11"
+
+- **Todos os tipos de aviso vão para a voz** (emenda de 20/11, item 4). Por volta foram 3 a 4 falas do engenheiro, com 5 a 6 avisos, mais o feedback do rádio (o resumo e o coach).
+- **As falas saem muito antes da curva:** de 400 a 2.000 m antes do ponto dito. Por exemplo, "Onze: … Doze: …" foi dita em s = 1.510, e os pontos estão em 2.849 e 3.123: de 1.340 a 1.610 m depois. Entre a fala e a curva, você passa pela C06 até a C10. Isso vem da regra do par e do segundo pedaço livre (emenda de 20/11, item 7), que eu tinha apontado na D.1 ("avisos muito longe da curva").
+
+### Opções para a sua decisão (não apliquei nenhuma)
+
+**O bipe:**
+- **(B1)** O bipe só para "freie", no ponto de frenagem dito. "Vire" e "acelere" ficam sem bipe.
+- **(B2)** A B1 com uma contagem curta: três bipes em ritmo fixo, e o último no ponto de frenagem. Você antecipa o ponto em vez de reagir ao bipe.
+- **(B3)** O bipe como marca de frenagem em toda curva com frenagem da referência, sem depender de aviso de voz.
+
+**A quantidade:**
+- **(Q1)** No máximo um ou dois avisos por volta: os trechos com a maior perda. O mesmo aviso se repete até ser aplicado.
+- **(Q2)** Só o aviso da próxima curva, no pedaço livre logo antes dela. Sai o segundo pedaço e saem os pares, e o aviso que não couber fica só na janela.
+- **(Q3)** A Q1 e a Q2 juntas: um aviso de cada vez, perto da curva, e só nos trechos que mais perdem.
+
+Você disse que achou diversos problemas. Se houver mais itens, eu os registro aqui antes da leitura completa do item 13.
