@@ -942,3 +942,21 @@ Você ouviu as três variantes e escolheu o **molde (b)**: "Freie 10 depois do 1
   `powershell -NoProfile -ExecutionPolicy Bypass -File tools\csp_app\instalar.ps1`
 - **A mensagem final do script** lista só as janelas "Rádio", "Minimapa" e "Mapa aproximado". A janela "Engenheiro" também é instalada e é ligada na mesma barra de apps. Não mudei o script.
 - **Depois da instalação:** o app do repositório (o backend na porta 8000, o front e a janela) antes do jogo, e o teste com o roteiro da Parte E e o cartão.
+
+## A leitura do item 13 (21/11, 10h43): parada, não achei o teste
+
+Você pediu a leitura do novo teste no jogo, com o app do jogo 0.8.0 e o molde (b). **Não achei sinal de sessão depois da instalação**, então não fiz a leitura, para não inventar resultado. Nenhum código mudou.
+
+- **O jogo:** o `log.txt` e o `custom_shaders_patch.log` (em `Documentos\Assetto Corsa\logs`) são de **20/11, 19h16**: a sessão do teste anterior, com o app do jogo 0.7.0. O jogo regrava esses arquivos a cada vez que abre, então ele não foi aberto depois disso.
+- **O app do jogo 0.8.0** foi instalado em 20/11, às 21h10, e a pasta dele não tem a subpasta `voz`, que ele cria quando baixa a primeira fala.
+- **As gravações e os registros:** a última gravação em `data/recordings` e o último `.engenheiro.jsonl` em `data/radio` são os de `2026-11-20_19-06-14`. Na pasta de dados do app instalado não há gravação nova.
+- **O app do repositório:**
+  - a janela do Electron que abri em 21/11, às 0h10, fechou às 2h17;
+  - o backend da porta 8000 também não está mais no ar.
+- **O cartão e as anotações** chegaram com o texto do modelo, entre colchetes, sem as respostas.
+
+### O que falta
+
+1. **Confirmar se o teste foi feito.** Se você rodou o teste em outra máquina, ou com outra pasta de dados, me diga onde estão a gravação e o `.engenheiro.jsonl`.
+2. **Se o teste não foi feito:** eu abro o app do repositório de novo (o backend, o front e a janela). Depois, você faz o teste e preenche o cartão da seção "Atualização de 20/11".
+3. **A leitura,** depois do teste: as tabelas da E.3.1 e da E.3.2, com a voz, a latência, as folgas, o bipe e a sua ação nas voltas seguintes, mais o FPS, os logs do CSP e o seu cartão.
