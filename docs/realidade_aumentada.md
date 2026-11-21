@@ -551,7 +551,7 @@ O marco de menor custo na janela da ação (para frear, até 150 m antes do pont
 - **Pela voz, só a C01, a C04 e a C06** têm aviso possível: nas outras, a referência não freia, não há bloco antes da freada ou a frase não cabe (a C12: 2,5 s de bloco e 3,6 s de frase).
 - **O feedback** (a frase do coach, o resumo e a análise) sai no começo de um bloco, antes da reserva dos avisos (decisão de 16/11, item 1): espera o bloco em que cabe a variante mais completa com a causa ("freou", "mínima", "passou", "saiu" ou "acelerou"); na prática, a reta dos boxes ou a reta oposta, as **retas longas** (os blocos de 8,8 s ou mais). Se ela não couber nem na primeira reta longa em que o carro entra depois de a mensagem nascer, sai nessa reta a variante mais completa que couber, e a mensagem não espera mais. Uma mensagem sem variante com a causa sai na mais completa que caiba, no primeiro bloco em que caiba. Com o engenheiro, todas as variantes que cabem no limite do tipo são geradas de antemão.
 
-### 9.5 A janela "Engenheiro" e a marca na pista (app do jogo 0.7.0)
+### 9.5 A janela "Engenheiro" e a marca na pista (app do jogo 0.7.0; a 0.8.0 está na seção 9.7)
 
 - **Na volta rápida:** a frase de cada trecho da lista, do `s_fala` até o ponto da ação, com a distância; depois da linha, por 8 s, o sinal da conferência ("C01 aplicada · C04 não") e a acurácia ("2 de 3 avisos aplicados").
 - **Na volta lenta** (5,0 s ou mais atrás da melhor da sessão naquele ponto, ou a volta de saída dos boxes; uma vez lenta, até a linha): a lista inteira, com a perda e a conferência com os valores.
@@ -561,3 +561,30 @@ O marco de menor custo na janela da ação (para frear, até 150 m antes do pont
 ### 9.6 O registro
 
 `<pasta de dados>/data/radio/<sessão>.engenheiro.jsonl`: uma linha por aviso (o trecho, a causa, a frase, o `s_fala`, se foi pela voz ou só pela janela e por quê, a folga até a freada), uma por conferência (aplicada ou não, com o valor) e uma por volta que conta (a perda em cada um dos 15 trechos e a lista). É a entrada do protocolo de avaliação e da tela Volta (pedido 53).
+
+### 9.7 Depois do teste de 20/11: a voz que sai a tempo (ADR 0033, emenda de 20/11; app do jogo 0.8.0)
+
+O teste no jogo de 20/11 mostrou dois problemas. Só 2 de 14 avisos foram pela voz, e os dois acabaram em cima da frenagem, um deles com 2,06 s de atraso pela fila do cartão. A emenda de 20/11 muda o caminho do aviso:
+- **Quem fala é o app do jogo, pelo `s` do carro.**
+  - O backend planeja as falas da volta e manda a lista com o áudio de cada uma (`GET /api/radio/engenheiro`, campo `falas`, e `GET /api/radio/engenheiro/audio/{chave}`).
+  - O app baixa os áudios antes e toca cada fala no quadro em que o carro passa o `s_fala`.
+  - O cartão que estiver na tela sai, e a fala de feedback em andamento é cortada. O corte vai para o registro (linha `corte`), e o feedback cortado volta numa reta longa seguinte.
+- **Todo aviso pode ir para a voz** (freie, vire, acelere e "sem tirar o pé"), calculado contra a **ação do piloto**, e não contra a da referência.
+  - A ação do piloto vem do **perfil**: a última volta da sessão que conta; antes dela, a "Sua melhor volta"; sem ela, a volta de referência.
+  - Depois de cada volta que conta, o plano é refeito.
+- **A folga mínima é de 3,0 s** antes do mais cedo entre a ação do piloto e o ponto dito. A conta inclui uma latência de 0,1 s, que é uma estimativa e é medida no teste pelo log do app.
+- **A fala acontece num pedaço livre** (acelerador em 0,90 ou mais e sem freio), no mais perto antes da ação em que caiba; senão, no segundo mais perto.
+  - Dois avisos no mesmo pedaço vão juntos, com o número da curva ("Seis: vire na zebra. Sete: freie na zebra."), e cada fala sai o mais tarde possível.
+  - O plano está em `core/engenheiro/plano.py`.
+- **O molde da fala é um parâmetro** (`AT_ENGENHEIRO_MOLDE`):
+  - (a) "Freie 10 metros depois da placa de 100.";
+  - (b) "Freie 10 depois do 100.";
+  - (c) "Freie no 100, mais 10.".
+
+  O Eduardo escolhe ouvindo, e até lá vale a (a). A janela e o cartão continuam com "Curva N:" no molde (a).
+- **O bipe:** um tom de 2.000 Hz e 0,25 s (`bipe.wav`, gerado por `tools/csp_app/gerar_bipe.py`), tocado pelo app no ponto dito.
+  - O tempo de reação ficou em 0 s: nenhuma fonte confirmou um valor para um sinal sonoro esperado.
+  - "Sem tirar o pé" não tem bipe.
+  - `AT_ENGENHEIRO_BIPE=desligado` desliga o bipe.
+- **A janela** mostra os dois próximos avisos, cada um desde o fim da ação anterior a ele, com o da vez em destaque. **A marca no asfalto** fica no ponto dito.
+- **A reserva do feedback** usa o tempo do perfil até a primeira fala planejada à frente, e não a velocidade do momento.

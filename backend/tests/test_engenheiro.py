@@ -227,26 +227,32 @@ def test_o_bloco_vai_da_retomada_anterior_a_1_s_antes_da_primeira_acao():
     assert R.dentro_do_bloco(sf, b, float(track.length)) and not R.dentro_do_bloco(340.0, b, float(track.length))
 
 
-def _engenheiro_sem_arquivos(blocos, lista, Lt=1000.0):
+def _engenheiro_sem_arquivos(blocos, lista, Lt=1000.0, falas=None):
     from core.engenheiro.servico import Engenheiro
 
     e = Engenheiro.__new__(Engenheiro)
     e.L, e.blocos, e.lista, e._lock, e.ativo = Lt, blocos, lista, threading.RLock(), True
     e._dadas, e._audios, e._s_anterior, e.versao = {}, {}, None, 0
     e.contagem = {"avisosPelaVoz": 0, "avisosSoNaJanela": 0}
-    e._registrar = lambda linha: None
+    e.linhas = []
+    e._registrar = e.linhas.append
+    e.relogio, e.perfil, e.pedacos, e.falas = None, None, [], list(falas or [])
+    e._medidas_no_plano, e._sozinhas_medidas, e._voz_liberada = set(), set(), True
+    e.retas_longas = []
     return e
 
 
-def test_a_reserva_do_bloco_comeca_no_primeiro_aviso_pela_voz():
+def test_a_reserva_do_bloco_comeca_na_primeira_fala_planejada():
+    """Emenda de 20/11, item 11: a reserva comeca no `s_fala` da primeira fala planejada a frente do carro no bloco
+    (de qualquer tipo de aviso)."""
     bloco = {"trecho": "C02", "inicio": 0.0, "fim": 330.0}
-    item = {"k": 1, "trecho": "C02", "voz": True, "bloco": [0.0, 330.0], "sFala": 180.0}
-    e = _engenheiro_sem_arquivos([bloco], {"C02": item})
+    e = _engenheiro_sem_arquivos([bloco], {}, falas=[{"sFala": 180.0, "texto": "Vire na zebra.", "duracaoS": 2.0,
+                                                       "trechos": ["C02"], "folgaS": {"C02": 3.0}}])
     assert e.reserva(50.0) == pytest.approx(180.0)        # o feedback tem de acabar antes do aviso
-    assert e.reserva(200.0) == pytest.approx(330.0)       # depois do aviso, ate o fim do bloco
+    assert e.reserva(200.0) == pytest.approx(330.0)       # depois da fala, ate o fim do bloco
     assert e.reserva(400.0) is None                       # fora do bloco: o feedback espera
-    item["voz"] = False
-    assert e.reserva(50.0) == pytest.approx(330.0)        # o aviso so na janela nao reserva
+    e.falas = []
+    assert e.reserva(50.0) == pytest.approx(330.0)        # sem fala planejada, o bloco inteiro
 
 
 # ── a conferencia ───────────────────────────────────────────────────────
@@ -268,47 +274,45 @@ def test_a_conferencia_da_dica():
 
 
 def test_a_dica_dada_antes_da_linha_espera_o_carro_passar_a_acao():
-    item = {"k": 0, "trecho": "C01", "frase": "freie na placa de 100", "fala": "Curva 1: freie na placa de 100.",
-            "voz": False, "porqueSoNaJanela": "teste", "sFala": 950.0, "sAcao": 50.0, "sDito": 50.0, "acao": "freie",
-            "causa": "frenagem cedo", "perdaS": 0.2, "duracaoS": 3.0, "refFreada": 50.0}
+    """A janela mostra a dica desde `sJanela` (emenda de 20/11, item 10): a dica foi dada; a de antes da linha (a
+    C01) so e conferida depois de o carro passar a acao."""
+    item = {"k": 0, "trecho": "C01", "frase": "freie na placa de 100", "fala": "Freie na placa de 100.",
+            "voz": False, "porqueSoNaJanela": "teste", "sJanela": 950.0, "sAcao": 50.0, "sDito": 50.0, "acao": "freie",
+            "causa": "frenagem cedo", "perdaS": 0.2}
     e = _engenheiro_sem_arquivos([], {"C01": item})
     for s in (900.0, 940.0, 960.0):
-        e.no_quadro(s, 200.0, True, False, False)
+        e.no_quadro(s, 200.0, True, False)
     assert "C01" in e._dadas and e._dadas["C01"]["acaoPassada"] is False
+    assert e.linhas[-1]["tipo"] == "aviso" and e.linhas[-1]["voz"] is False and e.linhas[-1]["porqueSoNaJanela"] == "teste"
     for s in (990.0, 10.0, 40.0):                  # a linha: a acao ainda nao passou
-        e.no_quadro(s, 200.0, True, False, False)
+        e.no_quadro(s, 200.0, True, False)
     assert e._dadas["C01"]["acaoPassada"] is False
-    e.no_quadro(60.0, 200.0, True, False, False)
+    e.no_quadro(60.0, 200.0, True, False)
     assert e._dadas["C01"]["acaoPassada"] is True  # agora a linha seguinte confere
 
 
-def test_o_aviso_pela_voz_tem_prioridade_e_nunca_fala_por_cima():
-    item = {"k": 0, "trecho": "C04", "frase": "freie na placa de 100", "fala": "Curva 4: freie na placa de 100.",
-            "voz": True, "sFala": 500.0, "sAcao": 700.0, "sDito": 700.0, "acao": "freie", "causa": "frenagem cedo",
-            "perdaS": 0.3, "duracaoS": 3.0, "refFreada": 700.0, "bloco": [0.0, 640.0]}
-
-    class _Pronto:
-        def done(self):
-            return True
-
-        def result(self):
-            return (Path("aviso.wav"), 3.0)
-
-    e = _engenheiro_sem_arquivos([], {"C04": item})
-    e._audios = {item["fala"]: _Pronto()}
-    e.no_quadro(480.0, 216.0, True, False, False)
-    aviso = e.no_quadro(505.0, 216.0, True, False, False)          # 60 m/s: 195 m ate a freada, 3,25 s >= 4 s? nao
-    assert aviso is None                                           # pouco tempo ate a freada: so na janela
-    e._dadas.clear()
+def test_a_fala_planejada_comeca_no_s_fala_e_nao_na_volta_de_saida():
+    """Emenda de 20/11, item 2: o backend nao entrega o aviso; ele devolve a fala que comecou (o app do jogo toca
+    pelo mesmo `s`) e registra cada aviso dela. Na volta de saida dos boxes e com a IA, a fala nao sai."""
+    fala = {"sFala": 500.0, "texto": "Quatro: freie no 100. Cinco: sem tirar o pé.", "duracaoS": 3.4,
+            "trechos": ["C04", "C05"], "folgaS": {"C04": 3.0, "C05": 6.0}, "chave": "x"}
+    lista = {"C04": {"k": 3, "trecho": "C04", "frase": "freie na placa de 100", "causa": "frenagem cedo", "voz": True,
+                     "sJanela": 400.0, "sAcao": 700.0},
+             "C05": {"k": 4, "trecho": "C05", "frase": "sem tirar o pé", "causa": "mínima baixa", "voz": True,
+                     "sJanela": 400.0, "sAcao": 760.0}}
+    e = _engenheiro_sem_arquivos([], lista, falas=[fala])
+    e.perfil = type("P", (), {"origem": "teste"})()
+    e.no_quadro(480.0, 216.0, True, False)
+    comecaram = e.no_quadro(505.0, 216.0, True, False)
+    assert comecaram == [fala]
+    avisos = [x for x in e.linhas if x["tipo"] == "aviso" and x.get("fala")]
+    assert [a["trecho"] for a in avisos] == ["C04", "C05"] and all(a["voz"] and a["falaJunta"] for a in avisos)
+    e.linhas.clear()
     e._s_anterior = 480.0
-    aviso = e.no_quadro(505.0, 144.0, True, False, False)          # 40 m/s: 4,9 s ate a freada
-    assert aviso is not None and aviso["origem"] == "aviso" and aviso["fala"] == item["fala"]
-    e._dadas.clear()
+    assert e.no_quadro(505.0, 216.0, False, False) == []           # a volta de saida dos boxes
+    assert {a["porqueSoNaJanela"] for a in e.linhas if a.get("fala")} == {"volta de saída dos boxes"}
     e._s_anterior = 480.0
-    assert e.no_quadro(505.0, 144.0, True, False, True) is None     # outra fala em andamento: nunca por cima
-    e._dadas.clear()
-    e._s_anterior = 480.0
-    assert e.no_quadro(505.0, 144.0, False, False, False) is None   # a volta de saida dos boxes
+    assert e.no_quadro(505.0, 216.0, True, True) == []             # a IA no volante
 
 
 # ── a referencia do trecho ──────────────────────────────────────────────
@@ -364,7 +368,7 @@ def test_os_arquivos_do_engenheiro_vao_no_instalador():
     assert '"*.marcos.json"' in pacote and '"*.ruido_por_trecho.json"' in pacote
     assert '"version": "0.9.0-engenheiro"' in pacote
     manifesto = (BACKEND.parent / "tools" / "csp_app" / "radio_engenheiro" / "manifest.ini").read_text(encoding="utf-8")
-    assert "VERSION = 0.7.0" in manifesto and "FUNCTION_MAIN = engenheiro" in manifesto
+    assert "VERSION = 0.8.0" in manifesto and "FUNCTION_MAIN = engenheiro" in manifesto
 
 
 # ── as decisoes do Eduardo de 16/11 (ADR 0033, emenda) ─────────────────
@@ -438,6 +442,12 @@ class _EngDosBlocos:
         b = self.bloco_em(s)
         return None if b is None else b["fim"]
 
+    def tempo_entre(self, s1, s2, v_kmh=None):
+        return ((s2 - s1) % 1000.0) / 50.0           # o perfil: 50 m/s
+
+    def _registrar(self, linha):
+        self.linhas = getattr(self, "linhas", []) + [linha]
+
 
 def _radio_com_variantes(tmp_path, s_ao_nascer):
     from core.radio.servico import RadioDoEngenheiro
@@ -504,3 +514,216 @@ def test_o_aviso_e_falado_sem_a_vinheta(tmp_path):
                               falar=falar, engenheiro=False)
     arquivo, dur = radio._falar_o_aviso("Freie na placa de 50.").result(timeout=10)
     assert chamadas == [("Freie na placa de 50.", False)] and dur == pytest.approx(2.4)
+
+
+# ── as decisoes do Eduardo de 20/11 (ADR 0033, emenda): o plano das falas ──
+
+def _pista_do_plano():
+    """A pista circular (L = 1256,6 m) a 50 m/s: um alivio na C01 (180 a 260 m) e a frenagem da C02 (380 a 420 m).
+    Os pedacos livres: 260 a 378 m e 470 a 178 m (atravessa a linha)."""
+    from core.engenheiro import plano as P
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    g = _volta_de_teste(track)
+    s = np.asarray(track.s, float)
+    g["acelerador"] = np.where((s >= 180) & (s < 260), 0.5, g["acelerador"])
+    total = float(track.length) / 50.0
+    perfil = P.Perfil(g, total, track, "teste")
+    return track, g, perfil, P.pedacos_livres(g, track), _trechos_de_teste(track)
+
+
+def test_os_pedacos_livres_formam_um_laco():
+    track, g, perfil, pedacos, _ = _pista_do_plano()
+    assert len(pedacos) == 2
+    a, b = sorted(pedacos, key=lambda p: p["sIni"])
+    assert a["sIni"] == pytest.approx(260.0, abs=2.5) and a["sFim"] == pytest.approx(378.0, abs=2.5)
+    assert b["sIni"] == pytest.approx(470.0, abs=2.5) and b["sFim"] == pytest.approx(178.0, abs=2.5)   # pela linha
+
+
+def test_a_acao_do_piloto_em_cada_tipo_de_aviso():
+    from core.engenheiro import plano as P
+
+    track, g, perfil, pedacos, trechos = _pista_do_plano()
+    assert P.acao_do_piloto(g, track, trechos, 1, "freie")[0] == pytest.approx(380.0, abs=2.5)
+    s, tipo = P.acao_do_piloto(g, track, trechos, 0, "vire")                   # o alivio em 180 m
+    assert s == pytest.approx(180.0, abs=2.5) and tipo == "alívio"
+    assert P.acao_do_piloto(g, track, trechos, 0, R.SEM_TIRAR_O_PE) == (200.0, "entrada")
+    s, tipo = P.acao_do_piloto(g, track, trechos, 1, "acelere")                # volta ao acelerador cheio em 470 m
+    assert s == pytest.approx(470.0, abs=2.5) and tipo == "retomada"
+    sem = dict(g, freio=np.zeros_like(g["freio"]), acelerador=np.ones_like(g["acelerador"]))
+    assert P.acao_do_piloto(sem, track, trechos, 1, "freie") == (430.0, "entrada")   # sem frenagem nem alivio
+
+
+def test_o_perfil_vem_da_ultima_volta_que_conta_da_sua_melhor_ou_da_referencia():
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    g = _volta_de_teste(track)
+    total = float(track.length) / 50.0
+    e = _engenheiro_sem_arquivos([], {})
+    e.track, e.L, e.trechos, e.melhores = track, float(track.length), _trechos_de_teste(track), {}
+    e.modelo = {"grade": g, "tempoS": total, "origem": "volta_do_modelo", "rotulo": "volta de referência"}
+    e.tempos_modelo = R.tempos_dos_trechos(g["elapsed"], total, track, e.trechos)
+    e.ultima_conferencia, e.pista, e.ruido_por_trecho, e.inicio_da_freada = None, None, {}, {}
+    Engenheiro.nova_sessao(e, "s1", None)
+    assert e.perfil.origem == "volta de referência"
+    Engenheiro.nova_sessao(e, "s1", {"grade": g, "tempoS": total})
+    assert e.perfil.origem == "sua melhor volta"
+    versao = e.versao
+    Engenheiro.na_linha(e, 5, g, total, conta=True)                 # a lista e o plano refeitos depois da volta
+    assert e.perfil.origem == "volta 5 da sessão" and e.versao > versao
+    assert any(x["tipo"] == "plano" and x["perfil"] == "volta 5 da sessão" for x in e.linhas)
+    Engenheiro.na_linha(e, 6, g, total, conta=False)                 # a volta que nao conta nao muda o perfil
+    assert e.perfil.origem == "volta 5 da sessão"
+
+
+def _aviso(trecho, numero, frase, s_acao, s_dito, ordem):
+    from core.engenheiro import plano as P
+    return P.Aviso(trecho=trecho, numero=numero, frase=frase, s_acao=s_acao, s_dito=s_dito, ordem=ordem)
+
+
+def test_a_folga_de_3_s_vale_contra_o_mais_cedo_entre_a_acao_e_o_ponto_dito():
+    from core.engenheiro import plano as P
+
+    track, g, perfil, pedacos, _ = _pista_do_plano()
+    assert P.ponto_limite(perfil, 380.0, 390.0) == 380.0         # a acao vem antes
+    assert P.ponto_limite(perfil, 380.0, 350.0) == 350.0         # o ponto dito vem antes
+    c = P.candidatos(perfil, pedacos, 350.0)[0]                    # o ponto dentro do pedaco 260-378: acaba nele
+    assert c["relFim"] == 0.0 and c["relIni"] == pytest.approx(-90.0 / 50.0, abs=0.06)
+    assert not P.cabe_sozinha(c, 0.5)                              # 1,8 s de pedaco < 3,0 + 0,1 + 0,5
+
+
+def test_o_primeiro_e_o_segundo_pedaco_e_o_aviso_que_nao_cabe():
+    from core.engenheiro import plano as P
+
+    track, g, perfil, pedacos, _ = _pista_do_plano()
+    dur = {"Freie no 100.": 2.0}.get
+    av = [_aviso("C02", 2, "freie no 100", 380.0, 390.0, 1)]
+    falas = P.planejar(av, perfil, pedacos, dur)
+    # o pedaco 260-378 (2,36 s) nao cabe 3 + 0,1 + 2; vai para o segundo (470-178), que acaba 4,04 s antes
+    assert av[0].escolha == 1 and falas[0]["candidato"] == 2 and falas[0]["folgaS"]["C02"] == pytest.approx(4.04, abs=0.06)
+    longa = [_aviso("C02", 2, "freie no 100", 380.0, 390.0, 1)]
+    assert P.planejar(longa, perfil, pedacos, {"Freie no 100.": 40.0}.get) == []
+    assert longa[0].motivo == "não cabe em nenhum dos dois pedaços livres antes da ação"
+
+
+def test_a_juncao_e_de_no_maximo_dois_avisos_e_a_fala_e_o_mais_tarde_possivel():
+    from core.engenheiro import plano as P
+
+    track, g, perfil, pedacos, _ = _pista_do_plano()
+    sozinha = 2.0
+
+    def dur(texto):
+        return sozinha if texto.count(":") == 0 else None
+
+    # C01 (acao em 180 m) e C02 (no segundo pedaco, como acima) caem no mesmo pedaco 470-178: uma fala so
+    av = [_aviso("C01", 1, "vire na zebra", 180.0, 200.0, 0), _aviso("C02", 2, "freie no 100", 380.0, 390.0, 1)]
+    falas = P.planejar(av, perfil, pedacos, dur)
+    assert len(falas) == 1 and falas[0]["trechos"] == ["C01", "C02"]
+    assert falas[0]["texto"] == "Um: vire na zebra. Dois: freie no 100."
+    # o par antes de a voz medir: 2 + 2 + 0,8 s; ele acaba 3,0 s antes da acao da C01 (o mais tarde possivel)
+    assert falas[0]["duracaoS"] == pytest.approx(4.8) and falas[0]["folgaS"]["C01"] == pytest.approx(3.0, abs=0.01)
+    fim = (180.0 - 3.0 * 50.0) % float(track.length)
+    assert falas[0]["sFala"] == pytest.approx((fim - (4.8 + P.LATENCIA_NO_JOGO_S) * 50.0) % float(track.length), abs=1.0)
+    # tres avisos no mesmo pedaco: um par e uma fala sozinha, sem se encostar
+    av = [_aviso("C14", 14, "vire na zebra", 900.0, 900.0, 13), _aviso("C01", 1, "vire na zebra", 180.0, 200.0, 0),
+          _aviso("C02", 2, "freie no 100", 380.0, 390.0, 1)]
+    falas = P.planejar(av, perfil, pedacos, dur)
+    assert sorted(len(f["trechos"]) for f in falas) == [1, 2]
+    a, b = sorted(falas, key=lambda f: perfil.dt(470.0, f["sFala"]))
+    fim_a = perfil.dt(470.0, a["sFala"]) + P.LATENCIA_NO_JOGO_S + a["duracaoS"]
+    assert fim_a + P.INTERVALO_ENTRE_FALAS_S <= perfil.dt(470.0, b["sFala"]) + 1e-6
+
+
+def test_os_tres_moldes_da_fala():
+    from core.engenheiro import plano as P
+
+    placa = {"tipo": "placa", "valor": 100, "nome": "placa de 100"}
+    zebra = {"tipo": "zebra", "nome": "começo da zebra à direita"}
+    a = "freie 10 metros depois da placa de 100"
+    assert P.frase_falada("freie", placa, 10.0, "a", a) == a
+    assert P.frase_falada("freie", placa, 10.0, "b", a) == "freie 10 depois do 100"
+    assert P.frase_falada("freie", placa, 10.0, "c", a) == "freie no 100, mais 10"
+    assert P.frase_falada("freie", placa, -12.0, "c", a) == "freie no 100, menos 10"
+    assert P.frase_falada("freie", placa, 2.0, "b", a) == "freie no 100"
+    assert P.frase_falada("vire", zebra, 5.0, "b", "x") == "vire 5 depois do começo da zebra à direita"
+    assert P.frase_falada("vire", zebra, 5.0, "c", "x") == "vire no começo da zebra à direita, mais 5"
+    assert P.frase_falada(R.SEM_TIRAR_O_PE, None, None, "c", "sem tirar o pé") == "sem tirar o pé"
+    assert P.fala_do_par([6, 7], ["vire na zebra", "freie na zebra"]) == "Seis: vire na zebra. Sete: freie na zebra."
+
+
+def test_o_bipe_fica_no_ponto_dito_e_nao_existe_em_sem_tirar_o_pe():
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    g = _volta_de_teste(track)
+    total = float(track.length) / 50.0
+    e = _engenheiro_sem_arquivos([], {})
+    e.track, e.L, e.trechos, e.pontos_dos_marcos = track, float(track.length), _trechos_de_teste(track), MARCOS
+    e.molde, e.bipe, e._falar = "a", True, lambda fala: None
+    medida = _medida(freada=-30.0)
+    ref = {"grade": g, "tempoS": total, "origem": "volta_do_modelo", "rotulo": "r"}
+    item = Engenheiro._item(e, 1, ref, medida, 0.3, 3)
+    assert item["acao"] == "freie" and item["bipe"] is True and item["sBipe"] == item["sDito"]
+    cheio = dict(g, freio=np.zeros_like(g["freio"]), acelerador=np.ones_like(g["acelerador"]))
+    mp = {"reta": 0.0, "freada": 0.0, "minima": 0.3, "saida": 0.0}
+    item = Engenheiro._item(e, 1, dict(ref, grade=cheio), _medida(minima=-12.0, partes=mp), 0.3, 3)
+    assert item["acao"] == R.SEM_TIRAR_O_PE and item["bipe"] is False and item["sBipe"] is None
+    e.bipe = False                                                     # a chave AT_ENGENHEIRO_BIPE=desligado
+    assert Engenheiro._item(e, 1, ref, medida, 0.3, 3)["sBipe"] is None
+
+
+def test_o_aviso_corta_o_feedback_e_ele_volta_numa_reta_longa_seguinte(tmp_path):
+    """Emenda de 20/11, item 1: a fala do aviso corta o feedback em andamento; o corte vai ao registro; o feedback
+    volta a fila e so sai numa reta longa seguinte. O backend nao entrega o aviso (quem toca e o app do jogo)."""
+    radio, eng, m, pos = _radio_com_variantes(tmp_path, 350.0)
+    variantes = list(m["_variantes"])
+    entregue = radio._pendentes.popleft()
+    entregue["_arquivoPronto"] = "a.wav"
+    entregue["fala"] = m["_variantes"][0][3]
+    radio._entregar(entregue, 10.0, {"s": 420.0})
+    assert radio._ultima_entregue is not None and radio._ocupado_ate > 10.0
+    fala = {"texto": "Quatro: freie no 100. Cinco: sem tirar o pé.", "duracaoS": 3.4, "trechos": ["C04", "C05"]}
+    entregues = len(radio._entregues)
+    radio._cortar_o_feedback(eng, fala, 11.0, 470.0)
+    assert eng.linhas[-1]["tipo"] == "corte" and eng.linhas[-1]["pelaFala"] == fala["texto"]
+    assert len(radio._entregues) == entregues                         # o aviso nao entra na fila do radio
+    refeita = radio._pendentes[0]
+    assert refeita["_soNaRetaLonga"] and refeita["origem"] == "coach"
+    refeita["_futuro"].result(timeout=10)
+    refeita["_futuro"] = None
+    refeita["_variantes"] = variantes
+    pos["s"] = 470.0
+    assert radio._escolher_a_variante(refeita, eng, 470.0, 1000.0, 12.0) is False   # na mesma reta: nao volta
+    for s in (950.0, 100.0, 350.0, 420.0):                                          # sai e entra numa reta longa
+        radio._acompanhar_as_retas_longas(eng, s)
+    assert radio._escolher_a_variante(refeita, eng, 420.0, 1000.0, 20.0) is True
+
+
+def test_a_reserva_usa_o_tempo_do_perfil_e_nao_a_velocidade_do_momento():
+    from core.engenheiro import plano as P
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    g = _volta_de_teste(track)
+    s = np.asarray(track.s, float)
+    g["elapsed"] = np.where(s < 600, s / 40.0, 600 / 40.0 + (s - 600) / 70.0)      # acelera de 40 para 70 m/s
+    total = float(g["elapsed"][-1] + track.step / 70.0)
+    e = _engenheiro_sem_arquivos([], {}, Lt=float(track.length))
+    e.perfil = P.Perfil(g, total, track, "teste")
+    assert e.tempo_entre(400.0, 800.0, 144.0) == pytest.approx(200 / 40.0 + 200 / 70.0, abs=0.05)
+    e.perfil = None
+    assert e.tempo_entre(400.0, 800.0, 144.0) == pytest.approx(400 / 40.0)          # sem perfil: a velocidade
+
+
+def test_o_app_do_jogo_toca_o_aviso_pelo_s_e_corta_o_cartao():
+    pasta = BACKEND.parent / "tools" / "csp_app" / "radio_engenheiro"
+    lua = (pasta / "radio_engenheiro.lua").read_text(encoding="utf-8")
+    assert "function tocarOAviso" in lua and "function acompanharOsAvisos" in lua
+    assert "setInterval(acompanharOsAvisos, 0)" in lua                 # a cada quadro, pelo s do carro
+    corpo = lua.split("function tocarOAviso", 1)[1].split("\nend", 1)[0]
+    assert "estado.atual = nil" in corpo                                # o cartao que estava na tela sai
+    assert "bipe.wav" in lua and (pasta / "bipe.wav").exists()

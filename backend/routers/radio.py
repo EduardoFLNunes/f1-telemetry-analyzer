@@ -121,6 +121,18 @@ async def get_engenheiro():
     return _json(await asyncio.to_thread(_radio().engenheiro))
 
 
+@router.get("/engenheiro/audio/{chave}")
+async def get_audio_do_engenheiro(chave: str):
+    """Pedido 52 (ADR 0033, emenda de 20/11, item 2): o audio de uma fala planejada, que o app do jogo baixa antes
+    e toca pelo `s` do carro."""
+    if not chave.isalnum() or len(chave) > 40:
+        raise HTTPException(status_code=400, detail="chave inválida")
+    arquivo = _radio().arquivo_da_fala_do_engenheiro(chave)
+    if arquivo is None or not arquivo.exists():
+        raise HTTPException(status_code=404, detail="fala sem áudio")
+    return FileResponse(str(arquivo), media_type="audio/wav", filename=f"engenheiro_{chave}.wav")
+
+
 @router.post("/teste")
 async def post_teste():
     return await asyncio.to_thread(_radio().teste)

@@ -20,7 +20,7 @@ O **Automobilista Telemetria** é um app de Windows (Electron e backend em Pytho
 | **Tela Evolução** | a tendência e a perda e a técnica por curva entre as sessões |
 | **Tela Coleta de dados** | a coleta, o store e a rodada do coach |
 | **Tela Sistema** | a mensagem de teste do rádio, a depuração e o guia visual |
-| **App do jogo** (`Rádio do engenheiro`) | 5 janelas no jogo: o rádio, o minimapa, o mapa aproximado, o replay e, desde o 0.7.0, o engenheiro, com a marca do ponto da ação no asfalto. Só lê o jogo e o backend, e só grava na própria pasta |
+| **App do jogo** (`Rádio do engenheiro`) | 5 janelas no jogo: o rádio, o minimapa, o mapa aproximado, o replay e, desde o 0.7.0, o engenheiro, com a marca do ponto dito no asfalto; desde o 0.8.0, a voz dos avisos e o bipe tocados pelo próprio app, pelo `s` do carro (ADR 0033, emenda de 20/11). Só lê o jogo e o backend, e só grava na própria pasta |
 
 **Fora do app, só em scripts:** o Modelo 2 (`backend/ml/modelo2/`) e a M1 (`backend/ml/modelo_carro/`). Nenhuma tela, rota ou serviço do app usa os dois em execução. A M1 não foi aprovada.
 
@@ -38,7 +38,7 @@ O **Automobilista Telemetria** é um app de Windows (Electron e backend em Pytho
 | A volta de referência do app é a volta do modelo; a volta da IA sai do app; "da referência" e "Melhor da sessão" (pedido 51, ADR 0032) | não | sim | sim |
 | O engenheiro: a lista, o aviso antes da curva pelo marco, os blocos de voz, a janela "Engenheiro" e a marca na pista (pedido 52, ADR 0033) | não | não | sim |
 | Número da versão do app do Windows | `0.7.0-radio-que-ensina` | `0.8.0-volta-do-modelo` | `0.9.0-engenheiro` |
-| App do jogo que acompanha | 0.5.0 | 0.6.0 | 0.7.0 |
+| App do jogo que acompanha | 0.5.0 | 0.6.0 | 0.8.0 (a 0.7.0 foi a do teste de 20/11) |
 
 **Em 15/11/2026, 17:23, a 0.8.0 (`46e8db8`) foi instalada por cima da 0.7.0** (pedido 51): a coluna da 0.7.0 fica como histórico.
 
@@ -54,7 +54,7 @@ O **Automobilista Telemetria** é um app de Windows (Electron e backend em Pytho
 ## 4. Riscos conhecidos
 
 - **O engenheiro precisa de três arquivos fora do git** (pedido 52): a volta do modelo, `vhe_interlagos.marcos.json` (gere com `python -m core.engenheiro.marcos <pasta da pista>`, só leitura) e `vhe_interlagos.ruido_por_trecho.json` (`python -m core.engenheiro.preparar ruido <resultado do 50>`). Sem um deles, o engenheiro fica calado e o rádio é o da 0.8.0. O instalador os leva pelos filtros do `extraResources`.
-- **O app do jogo 0.6.0 com o backend 0.9.0** funciona, sem a janela do engenheiro; os avisos pela voz chegam pelo rádio. O 0.7.0 com o backend 0.8.0 mostra "Engenheiro: lendo a lista" (a rota não existe).
+- **O app do jogo 0.8.0 é o par do backend 0.9.0** (emenda de 20/11): o backend não entrega mais o aviso pela fila do rádio, então um app do jogo anterior (0.6.0 ou 0.7.0) com este backend fica sem a voz dos avisos. O 0.7.0 com o backend 0.8.0 mostra "Engenheiro: lendo a lista" (a rota não existe).
 - **A volta do modelo é um arquivo fora do git** (`data/reference_models/vhe_interlagos.volta_do_modelo.json`). O instalador o leva da pasta do repositório; sem ele, o pacote sai sem a volta de referência, e o app oferece só "Sua melhor volta". Gere de novo com `python -m ml.scripts.volta_do_modelo` (pedido 51).
 
 - **O app do jogo 0.4.1 ou mais antigo com o backend novo dá erro na janela do replay** nas frases do coach, que vêm sem o traçado. Instale o 0.4.2 junto.

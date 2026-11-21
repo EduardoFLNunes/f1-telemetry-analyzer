@@ -19,9 +19,10 @@
 --     traçado e o tempo perdido. Na reta, junto com a fala; nos boxes, as voltas da sessão
 --     para estudar (pedido 45): a janela abre sozinha, com a lista das voltas, a grade e o botão
 --     "Abrir no app", que só faz um pedido ao backend local;
---   * o engenheiro (`engenheiro`, pedido 52, ADR 0033): a frase de cada trecho da lista antes da curva,
---     pelo marco da pista, a conferência depois da linha e, na volta lenta, a lista inteira; com ela
---     aberta, a marca do ponto da ação no asfalto (ou a contagem 3-2-1, se o CSP não tiver a API).
+--   * o engenheiro (`engenheiro`, pedido 52, ADR 0033): os dois próximos avisos da lista, pelo marco da pista,
+--     a conferência depois da linha e, na volta lenta, a lista inteira; com ela aberta, a marca do ponto dito
+--     no asfalto (ou a contagem 3-2-1, se o CSP não tiver a API). A voz dos avisos e o bipe tocam pelo `s`
+--     do carro, com a janela aberta ou não (app 0.8.0, ADR 0033, emenda de 20/11).
 --
 -- A voz tem três caminhos, um depois do outro (pedido 35, Parte B): a URL do backend;
 -- o arquivo que o backend grava em data/radio/audio/; e o áudio baixado para a
@@ -2307,23 +2308,30 @@ end
 
 -- ── o engenheiro (pedido 52, ADR 0033) ──────────────────────────────────
 --
--- A quinta janela: a frase de cada trecho da lista do engenheiro, do `sFala` até o ponto da ação (os
--- trechos com voz e os sem voz); depois da linha, o sinal da conferência por trecho e a acurácia; na volta
--- lenta, a lista inteira com os valores. A lista vem do backend (`/api/radio/engenheiro`), uma vez por
--- segundo, com a janela aberta. A posição do carro na volta é a do minimapa: o ponto da volta de
--- referência mais perto do carro.
+-- A quinta janela: os dois próximos avisos da lista do engenheiro, cada um desde o fim da ação anterior a ele
+-- até depois da ação (ADR 0033, emenda de 20/11, item 10); depois da linha, o sinal da conferência por trecho
+-- e a acurácia; na volta lenta, a lista inteira com os valores. A lista e as falas planejadas vêm do backend
+-- (`/api/radio/engenheiro`), uma vez por segundo. A posição do carro na volta é a do minimapa: o ponto da
+-- volta de referência mais perto do carro.
+--
+-- A voz do aviso (emenda de 20/11, itens 1 e 2): o app baixa antes o áudio de cada fala planejada e toca no
+-- quadro em que o carro passa o `sFala`, sem esperar a rede; o cartão que estiver na tela sai e a fala em
+-- andamento é cortada. O bipe (item 9): no ponto dito, num player próprio, com o `bipe.wav` da pasta do app.
 --
 -- A marca na pista (ADR 0033, item 7): onde o CSP tem `render.on`, `render.quad` e `physics.raycastTrack`,
--- uma faixa no asfalto, na cor do fantasma, no ponto da ação de cada trecho da lista, do `sFala` até o
+-- uma faixa no asfalto, na cor do fantasma, no ponto dito de cada aviso, desde o fim da ação anterior até o
 -- carro passar. Sem isso, a janela mostra a contagem 3-2-1 até o ponto (a distância pela velocidade).
 
 local ENG_PERIODO_S = 1
 local ENG_CONFERENCIA_S = 8         -- depois da linha, o sinal da conferência fica isto na janela
-local ENG_ABERTA_S = 2              -- a janela (ou a marca) desenhada há menos disto: pede a lista
+local ENG_ABERTA_S = 2              -- a janela (ou a marca) desenhada há menos disto
 local MARCA_COMPRIMENTO_M = 1.5
 local MARCA_LARGURA_M = 6
 local MARCA_ALTURA_M = 0.04         -- um pouco acima do asfalto, para não piscar com ele
 local MARCA_DEPOIS_M = 5            -- a marca some 5 m depois do ponto
+local ENG_SALTO_M = 200             -- o carro andou mais que isto num quadro (boxes, reinício): nada dispara
+local ENG_ESPERA_DO_SOM_S = 3       -- o disparo sem som depois disto vai para o log como falha
+local VOLUME_DO_BIPE = 1.0
 
 local FALTA_NA_MARCA = conferir({
   { render, 'render', 'on' }, { render, 'render', 'quad' }, { physics, 'physics', 'raycastTrack' },
@@ -2331,14 +2339,32 @@ local FALTA_NA_MARCA = conferir({
 local MARCA_3D = MINIMAPA and #FALTA_NA_MARCA == 0
 
 local eng = {
-  dados = nil, pedindo = false, ultimoQuadro = -100,
+  dados = nil, pedindo = false, ultimoQuadro = -100, versao = nil,
   voltaDaConferencia = nil, conferenciaEm = -100, alturas = {}, s = nil, iCarro = nil, avisouFalta = false,
+  sAnterior = nil, audios = {}, baixando = {}, disparo = nil, bipe = nil, avisouBipe = false,
 }
 
+-- O áudio de cada fala planejada é baixado antes (ADR 0033, emenda de 20/11, item 2), para a subpasta voz.
+local function baixarAsFalas(d)
+  if not PASTA_DA_VOZ or type(d.falas) ~= 'table' then return end
+  for _, f in ipairs(d.falas) do
+    local chave = tostring(f.chave or '')
+    if chave ~= '' and type(f.audio) == 'string' and not eng.audios[chave] and not eng.baixando[chave] then
+      eng.baixando[chave] = true
+      pedirAoBackend(BACKEND .. f.audio, function(err, r)
+        eng.baixando[chave] = nil
+        if err or not r or r.status ~= 200 or type(r.body) ~= 'string' then return end
+        local arquivo = PASTA_DA_VOZ .. '\\eng_' .. chave .. '.wav'
+        local ok, salvou = pcall(io.save, arquivo, r.body)
+        if ok and salvou then eng.audios[chave] = arquivo end
+      end)
+    end
+  end
+end
+
+-- A lista e as falas planejadas, uma vez por segundo, com a janela aberta ou não (a voz do aviso não depende dela).
 local function lerOEngenheiro()
   if CALADO or eng.pedindo then return end
-  local t = relogio()
-  if t - eng.ultimoQuadro > ENG_ABERTA_S then return end
   eng.pedindo = true
   pedirAoBackend(BACKEND .. '/api/radio/engenheiro', function(err, r)
     eng.pedindo = false
@@ -2351,6 +2377,10 @@ local function lerOEngenheiro()
       eng.conferenciaEm = relogio()
     end
     eng.dados = d
+    if d.versao ~= eng.versao then
+      eng.versao = d.versao
+      baixarAsFalas(d)
+    end
   end)
 end
 
@@ -2391,17 +2421,126 @@ local function aFrente(de, ate, L)
   return (ate - de) % L
 end
 
--- Os trechos da lista com o carro entre o sFala e o ponto da ação.
+local function escritaDoTrecho(trecho)
+  local d = eng.dados
+  for _, it in ipairs(type(d and d.lista) == 'table' and d.lista or {}) do
+    if it.trecho == trecho then return tostring(it.janela or it.frase or trecho) end
+  end
+  return tostring(trecho)
+end
+
+-- O aviso nunca espera (ADR 0033, emenda de 20/11, item 1): o cartão que estiver na tela sai, a fala em
+-- andamento é cortada, e o aviso toca do arquivo já baixado (ou, sem ele, pelo endereço).
+local function tocarOAviso(f, s)
+  local t = relogio()
+  if voz.tentativa then voz.tentativa = nil end
+  pcall(function() if estado.player then estado.player:pause() end end)
+  estado.atual = nil
+  local trechos = type(f.trechos) == 'table' and f.trechos or {}
+  local textos = {}
+  for _, tr in ipairs(trechos) do textos[#textos + 1] = escritaDoTrecho(tr) end
+  local m = { id = 'eng_' .. tostring(f.chave), origem = 'aviso', titulo = 'Engenheiro · ' .. table.concat(trechos, ' · '),
+              texto = table.concat(textos, ' · '), duracaoS = tonumber(f.duracaoS) or 3, recebidaEm = t }
+  estado.atual = m
+  estado.inicio = t
+  estado.ateQuando = t + math.max(CARTAO_MINIMO_S, m.duracaoS + FOLGA_DEPOIS_DA_VOZ_S)
+  local arquivo = eng.audios[tostring(f.chave)]
+  local fonte = arquivo or (type(f.audio) == 'string' and (BACKEND .. f.audio)) or nil
+  local ok, erro = false, 'sem áudio'
+  if fonte then ok, erro = tocarDe(fonte) end
+  eng.disparo = { t = t, s = s, chave = f.chave, trechos = table.concat(trechos, ','), arquivo = arquivo ~= nil }
+  log('engenheiro: aviso ' .. table.concat(trechos, ',') .. ' disparado em s=' .. decimal(s, 1)
+    .. (arquivo and ' (arquivo baixado)' or ' (pelo endereço)') .. (ok and '' or (': falhou: ' .. tostring(erro))))
+end
+
+local function tocarOBipe(it, s)
+  if not eng.bipe and PASTA then
+    local ok, player = pcall(ui.MediaPlayer, nil, { use3D = false, reverbResponse = false })
+    if ok and player then
+      pcall(function()
+        player:setSource(PASTA .. '\\bipe.wav')
+        player:setVolume(VOLUME_DO_BIPE)
+        player:setAutoPlay(false)
+      end)
+      eng.bipe = player
+    end
+  end
+  if not eng.bipe then
+    if not eng.avisouBipe then log('engenheiro: o bipe não tocou (o CSP não criou o player)') end
+    eng.avisouBipe = true
+    return
+  end
+  pcall(function()
+    eng.bipe:setCurrentTime(0)
+    eng.bipe:play()
+  end)
+  log('engenheiro: bipe ' .. tostring(it.trecho) .. ' em s=' .. decimal(s, 1) .. ' (ponto dito ' .. tostring(it.sBipe) .. ')')
+end
+
+-- A cada quadro (ADR 0033, emenda de 20/11, itens 2 e 9): o carro passou o `s_fala` de uma fala planejada, ou o
+-- ponto do bipe (o ponto dito, antecipado do tempo de reação)? Toca na hora, sem esperar a rede.
+local function acompanharOsAvisos()
+  local d = eng.dados
+  if not d or d.disponivel == false then return end
+  local okC, carro = pcall(ac.getCar, 0)
+  if not okC or not carro then return end
+  local L = tonumber(d.comprimentoM) or tonumber(mini.comprimento) or 0
+  local s = sDoCarro(carro)
+  if not s or L <= 0 then eng.sAnterior = nil return end
+  local antes = eng.sAnterior
+  eng.sAnterior = s
+  eng.s = s
+  -- o começo do som do último disparo: a latência real vai para o log
+  local dp = eng.disparo
+  if dp and not dp.tocou then
+    local okT, posicao = pcall(function() return estado.player:currentTime() end)
+    if okT and type(posicao) == 'number' and posicao > 0.02 then
+      dp.tocou = true
+      log('engenheiro: aviso ' .. dp.trechos .. ' tocou ' .. decimal(relogio() - dp.t, 2) .. ' s depois do disparo; s='
+        .. decimal(s, 1) .. ' (disparo em ' .. decimal(dp.s, 1) .. ')')
+    elseif relogio() - dp.t > ENG_ESPERA_DO_SOM_S then
+      dp.tocou = true
+      log('engenheiro: aviso ' .. dp.trechos .. ' sem som ' .. ENG_ESPERA_DO_SOM_S .. ' s depois do disparo')
+    end
+  end
+  if not antes then return end
+  local andou = aFrente(antes, s, L)
+  if andou <= 0 or andou > ENG_SALTO_M then return end
+  local function passou(alvo)
+    alvo = tonumber(alvo)
+    return alvo ~= nil and aFrente(antes, alvo, L) <= andou
+  end
+  if d.vozLiberada ~= false then
+    for _, f in ipairs(type(d.falas) == 'table' and d.falas or {}) do
+      if passou(f.sFala) then tocarOAviso(f, s) end
+    end
+  end
+  if d.bipe ~= false then
+    local v = (tonumber(carro.speedKmh) or 0) / 3.6
+    local reacao = tonumber(d.tempoDeReacaoAoBipeS) or 0
+    for _, it in ipairs(type(d.lista) == 'table' and d.lista or {}) do
+      local sb = tonumber(it.sBipe)
+      if it.bipe and sb and passou((sb - v * reacao) % L) then tocarOBipe(it, s) end
+    end
+  end
+end
+
+-- A janela (ADR 0033, emenda de 20/11, item 10): os dois próximos avisos, cada um desde o fim da ação anterior a
+-- ele (`sJanela`) até 20 m depois da ação (`sFimDaJanela`); o da vez em destaque.
 local function ativos(s, L)
   local out = {}
   local d = eng.dados
   if not d or type(d.lista) ~= 'table' or not s then return out end
   for _, it in ipairs(d.lista) do
-    local sf, sa = tonumber(it.sFala), tonumber(it.sAcao)
-    if sf and sa and it.frase then
-      if aFrente(sf, s, L) <= aFrente(sf, sa, L) then out[#out + 1] = it end
+    local sj, sf = tonumber(it.sJanela), tonumber(it.sFimDaJanela)
+    if sj and sf and it.frase and aFrente(sj, s, L) <= aFrente(sj, sf, L) then
+      out[#out + 1] = it
     end
   end
+  table.sort(out, function(a, b)
+    return aFrente(s, tonumber(a.sFimDaJanela), L) < aFrente(s, tonumber(b.sFimDaJanela), L)
+  end)
+  while #out > 2 do table.remove(out) end
   return out
 end
 
@@ -2417,7 +2556,7 @@ end
 local function contagem321(it, s, L, carro)
   local v = (tonumber(carro.speedKmh) or 0) / 3.6
   if v < 3 then return nil end
-  local t = aFrente(s, tonumber(it.sAcao), L) / v
+  local t = aFrente(s, tonumber(it.sDito), L) / v
   if t > 3 then return nil end
   return tostring(math.max(1, math.ceil(t)))
 end
@@ -2449,8 +2588,8 @@ desenharOEngenheiro = function(dt)
   end
   local L = tonumber(d.comprimentoM) or tonumber(mini.comprimento) or 0
   local okC, carro = pcall(ac.getCar, 0)
-  local s = okC and carro and sDoCarro(carro) or nil
-  eng.s = s
+  local s = eng.s
+  if not s and okC and carro then s = sDoCarro(carro) end
   local lenta, motivo = voltaLenta()
   local lista = type(d.lista) == 'table' and d.lista or {}
   local conf = d.ultimaConferencia
@@ -2483,7 +2622,7 @@ desenharOEngenheiro = function(dt)
     if #lista == 0 then ui.dwriteDrawText('nenhum trecho na lista', 13, vec2(20, y), CORES.fraco) end
     return
   end
-  -- A volta rápida: a frase de cada trecho entre o sFala e o ponto da ação.
+  -- A volta rápida: os dois próximos avisos; o da vez em destaque.
   local agora = ativos(s, L)
   if #agora == 0 then
     local n = #lista
@@ -2493,24 +2632,27 @@ desenharOEngenheiro = function(dt)
     return
   end
   local y = 30
-  for _, it in ipairs(agora) do
+  for k, it in ipairs(agora) do
+    local daVez = k == 1
     local texto = tostring(it.janela or it.frase)
-    caixa(texto, 20, vec2(20, y), vec2(W - 70, y + 52), CORES.texto)
-    local dist = aFrente(s, tonumber(it.sAcao), L)
-    ui.dwriteDrawText('a ' .. decimal(dist, 0) .. ' m' .. (it.voz and '' or ' · só na janela'), 12, vec2(20, y + 54), CORES.apoio)
-    -- "sem tirar o pé" (ADR 0033, emenda de 16/11, item 3): sem marca e sem contagem (o item nao traz x e z)
-    if not MARCA_3D and okC and carro and it.x then
+    if daVez then ui.drawRectFilled(vec2(14, y - 4), vec2(W - 10, y + 70), comAlfa(CORES.vermelho, 0.18), 6) end
+    caixa(texto, daVez and 20 or 15, vec2(20, y), vec2(W - 70, y + (daVez and 52 or 40)), daVez and CORES.texto or CORES.apoio)
+    local dist = aFrente(s, tonumber(it.sDito) or tonumber(it.sAcao) or s, L)
+    ui.dwriteDrawText('a ' .. decimal(dist, 0) .. ' m' .. (it.voz and '' or ' · só na janela'), 12,
+      vec2(20, y + (daVez and 54 or 42)), CORES.apoio)
+    -- "sem tirar o pé": sem marca, sem bipe e sem contagem (o item não traz x e z)
+    if daVez and not MARCA_3D and okC and carro and it.x then
       local n = contagem321(it, s, L, carro)
       if n then ui.dwriteDrawText(n, 44, vec2(W - 60, y), CORES.vermelho) end
     end
-    y = y + 76
-    if y > H - 40 then break end
+    y = y + (daVez and 76 or 60)
+    if y > H - 30 then break end
   end
 end
 
 -- A marca no asfalto, no ponto da ação (ADR 0033, item 7).
 local function alturaDoAsfalto(it, carro)
-  local chave = tostring(it.sAcao)
+  local chave = tostring(it.sDito)
   local h = eng.alturas[chave]
   if h then return h end
   local topo = (carro and carro.position.y or 0) + 30
@@ -2532,7 +2674,7 @@ local function desenharAMarca()
   local okC, carro = pcall(ac.getCar, 0)
   if not okC or not carro or L <= 0 then return end
   for _, it in ipairs(type(d.lista) == 'table' and d.lista or {}) do
-    local sf, sa = tonumber(it.sFala), tonumber(it.sAcao)
+    local sf, sa = tonumber(it.sJanela), tonumber(it.sDito)
     if it.frase and sf and sa and it.x and it.z and type(it.direcao) == 'table'
         and aFrente(sf, eng.s, L) <= aFrente(sf, sa, L) + MARCA_DEPOIS_M then
       local y = alturaDoAsfalto(it, carro)
@@ -2668,8 +2810,9 @@ else
     setInterval(gravarORastro, RASTRO_PERIODO_S)
     setInterval(amostrarOFps, FPS_AMOSTRA_S)
     setInterval(function() pcall(vigiarOsBoxes) end, 0.5)
-    -- Pedido 52: a lista do engenheiro (com a janela aberta) e a marca na pista.
+    -- Pedido 52: a lista do engenheiro, a voz dos avisos e o bipe pelo s do carro (a cada quadro) e a marca.
     setInterval(lerOEngenheiro, ENG_PERIODO_S)
+    setInterval(acompanharOsAvisos, 0)
     if MARCA_3D then
       local okR = pcall(render.on, 'main.track.transparent', function()
         local ok, erro = pcall(desenharAMarca)

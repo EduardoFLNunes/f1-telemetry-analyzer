@@ -10,6 +10,8 @@ modelo do repositorio. Os limites (7,3, 8,0 e 8,8 s) e a ordem do corte sao os d
 engenheiro (`<sessao>.engenheiro.jsonl`) vai junto na saida.
 
 Uso (na pasta backend): python <este arquivo> <pasta da sessao> <sem|com> <saida.json>
+Com o engenheiro, o molde da fala vem de `AT_ENGENHEIRO_MOLDE` (a, b ou c; a emenda de 20/11). A saida traz `t0`
+(o primeiro instante da gravacao): o relogio do radio e do registro e o da gravacao menos ele.
 """
 import json
 import os
@@ -146,7 +148,9 @@ reg = PASTA_DE_DADOS / "data" / "radio" / f"{SESSAO}.engenheiro.jsonl"
 if reg.exists():
     registro = [json.loads(x) for x in reg.read_text(encoding="utf-8").splitlines() if x.strip()]
 eng = radio._eng()
-resultado = {"sessao": SESSAO, "modo": MODO, "quadros": quadros,
+resultado = {"sessao": SESSAO, "modo": MODO, "quadros": quadros, "t0": t0,
+             "molde": os.environ.get("AT_ENGENHEIRO_MOLDE") if MODO == "com" else None,
+             "falasPlanejadas": eng.falas if eng is not None else None,
              "referencia": {"tipo": modelo.reference_kind, "volta": ref_id, "tempoS": tempo_ref},
              "suaMelhor": SUA_MELHOR and SUA_MELHOR["lapId"], "melhorDoStoreAntes": MELHOR_ANTES,
              "pendentesNoFim": saida["pendentes"], "contagem": radio.contagem,

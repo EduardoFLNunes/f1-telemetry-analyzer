@@ -101,7 +101,7 @@ def test_o_app_do_jogo_nao_diz_ia_para_a_referencia():
     for proibido in ("'freada da IA'", "or 'IA'", "'da IA'", "'para a volta da IA'", "'IA (referência)'"):
         assert proibido not in lua, proibido
     manifest = (BACKEND.parent / "tools" / "csp_app" / "radio_engenheiro" / "manifest.ini").read_text(encoding="utf-8")
-    assert "VERSION = 0.7.0" in manifest           # pedido 52: o app do jogo 0.7.0
+    assert "VERSION = 0.8.0" in manifest           # pedido 52: o app do jogo 0.8.0 (a emenda de 20/11)
 
 
 def test_os_tipos_do_app():

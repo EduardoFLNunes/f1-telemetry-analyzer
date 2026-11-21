@@ -3,18 +3,23 @@
 O radio (`core.radio.servico.RadioDoEngenheiro`) chama:
 
 * `na_linha(...)`, na linha, numa volta que conta: confere as dicas dadas na volta e refaz a lista;
-* `no_quadro(...)`, a cada quadro: marca as dicas dadas (o carro passou o `s_fala` com a dica na lista) e
-  devolve o aviso que a voz deve dizer agora, se houver;
-* `reserva(s)`: onde comeca a reserva dos avisos no bloco em que o carro esta (o feedback tem de acabar antes);
-* `estado_publico(...)`: a lista para a janela do app do jogo (`GET /api/radio/engenheiro`).
+* `no_quadro(...)`, a cada quadro: marca as dicas dadas (a janela mostrou) e devolve as falas planejadas que
+  comecaram agora (o app do jogo toca cada uma pelo mesmo `s`, com o audio ja baixado; ADR 0033, emenda de 20/11);
+* `reserva(s)` e `tempo_entre(...)`: onde comeca a reserva dos avisos no bloco em que o carro esta e o tempo ate
+  la pelo perfil (o feedback tem de acabar antes);
+* `estado_publico(...)`: a lista e as falas planejadas para o app do jogo (`GET /api/radio/engenheiro`).
+
+O plano das falas (o perfil, os pedacos livres, a acao do piloto, os pares e a folga de 3,0 s) esta em `plano.py`.
 
 Nada de modelo, store ou coach muda: so le a volta do modelo, os marcos, o ruido por trecho e as voltas
 que o radio ja mede.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
+import os
 import threading
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
@@ -22,20 +27,22 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 import numpy as np
 
 from . import marcos as M
+from . import plano as P
 from . import regras as R
 
 logger = logging.getLogger(__name__)
 
 PISTA = "vhe_interlagos"
-DURACAO_ESTIMADA_S = 4.0       # antes de a voz medir a frase (so para a janela)
 ESTADO_DA_DICA = ("na lista", "aplicada")
 
 
 class Engenheiro:
     def __init__(self, track, pista_do_radio, raizes: Callable[[], Sequence[Optional[Path]]],
-                 falar_em_segundo_plano: Callable[[str], Any], registrar: Callable[[Dict[str, Any]], None]):
+                 falar_em_segundo_plano: Callable[[str], Any], registrar: Callable[[Dict[str, Any]], None],
+                 relogio: Optional[Callable[[], float]] = None, molde: Optional[str] = None, bipe: Optional[bool] = None):
         """`pista_do_radio`: a `analise.Pista` do radio; `falar_em_segundo_plano(fala)`: um futuro que devolve
-        (arquivo, duracao); `registrar(linha)`: grava uma linha no `<sessao>.engenheiro.jsonl`."""
+        (arquivo, duracao); `registrar(linha)`: grava uma linha no `<sessao>.engenheiro.jsonl`. `molde` (a, b ou c)
+        e `bipe`: sem eles, `AT_ENGENHEIRO_MOLDE` (padrao a) e `AT_ENGENHEIRO_BIPE` (padrao ligado)."""
         from core.assisted_analysis import volta_do_modelo as VM
         from core.radio.analise import grade
 
@@ -45,7 +52,13 @@ class Engenheiro:
         self.trechos = R.trechos_da_pista(track)
         self._falar = falar_em_segundo_plano
         self._registrar = registrar
+        self.relogio = relogio
         self._lock = threading.RLock()
+        # ADR 0033, emenda de 20/11, itens 8 e 9
+        molde = (molde or os.environ.get("AT_ENGENHEIRO_MOLDE") or "a").strip().lower()
+        self.molde = molde if molde in P.MOLDES else "a"
+        self.bipe = bool(bipe) if bipe is not None else (
+            os.environ.get("AT_ENGENHEIRO_BIPE", "").strip().lower() not in ("desligado", "0", "nao", "não", "false"))
         raizes = list(raizes())
         self.marcos = M.encontrar(raizes, PISTA)
         from .preparar import encontrar_o_ruido
@@ -89,6 +102,15 @@ class Engenheiro:
         self.contagem = {"avisosPelaVoz": 0, "avisosSoNaJanela": 0}
         # trecho -> a dica como foi dada (a frase, o ponto dito, a voz), ate a conferencia (ADR 0033, item 8)
         self._dadas: Dict[str, Dict[str, Any]] = {}
+        # o plano das falas (ADR 0033, emenda de 20/11): o perfil, os pedacos livres e as falas
+        self.perfil: Optional[P.Perfil] = None
+        self.pedacos: List[Dict[str, float]] = []
+        self.falas: List[Dict[str, Any]] = []
+        self._medidas_no_plano: set = set()
+        self._sozinhas_medidas: set = set()
+        self._voz_liberada = True
+        if self.modelo is not None:
+            self._usar_o_perfil(self.modelo["grade"], self.modelo["tempoS"], "volta de referência")
 
     # ── a sessao ────────────────────────────────────────────────────────
 
@@ -99,9 +121,16 @@ class Engenheiro:
             self.lista, self.ultima_conferencia, self._dadas = {}, None, {}
             self.melhores = {}
             self._s_anterior = None
+            self.falas = []
             self.versao += 1
             if sua_melhor is not None:
                 self._considerar_passagens(sua_melhor["grade"], sua_melhor["tempoS"], "sua melhor volta")
+            # o perfil (ADR 0033, emenda de 20/11, item 5): antes da primeira volta que conta, a "Sua melhor volta";
+            # sem ela, a volta de referencia
+            if sua_melhor is not None:
+                self._usar_o_perfil(sua_melhor["grade"], sua_melhor["tempoS"], "sua melhor volta")
+            elif self.modelo is not None:
+                self._usar_o_perfil(self.modelo["grade"], self.modelo["tempoS"], "volta de referência")
 
     def _considerar_passagens(self, grade: Dict[str, np.ndarray], total: float, origem: str) -> None:
         tempos = R.tempos_dos_trechos(grade["elapsed"], total, self.track, self.trechos)
@@ -197,6 +226,15 @@ class Engenheiro:
                                        for i in self._ordenada()],
                              "aplicadas": aplicadas, "medidas": medidas})
             self._considerar_passagens(grade, total, f"volta {volta}")
+            # o perfil passa a ser esta volta, e o plano das falas e refeito (ADR 0033, emenda de 20/11, item 5)
+            self._usar_o_perfil(grade, total, f"volta {volta} da sessão")
+            self._replanejar()
+            self._registrar({"tipo": "plano", "volta": volta, "perfil": self.perfil.origem,
+                             "falas": [{"sFala": f["sFala"], "texto": f["texto"], "duracaoS": f["duracaoS"],
+                                        "trechos": f["trechos"], "folgaS": f["folgaS"], "candidato": f["candidato"]}
+                                       for f in self.falas],
+                             "soNaJanela": [{"trecho": i["trecho"], "motivo": i.get("porqueSoNaJanela")}
+                                            for i in self._ordenada() if i.get("frase") and not i.get("voz")]})
             self.versao += 1
             return self.ultima_conferencia
 
@@ -224,27 +262,33 @@ class Engenheiro:
             return item
         f = (R.frase_sem_tirar_o_pe(s_acao, self.L) if sem_tirar
              else R.frase_da_acao(acao, s_acao, self.pontos_dos_marcos, self.L))
-        fala = R.fala_do_aviso(t.nome, f["frase"])
+        # ADR 0033, emenda de 20/11, item 8: a voz no molde escolhido; a janela e o cartao no molde (a), com "Curva N:"
+        falada = P.frase_falada(acao, f["marco"], f["d"], self.molde, f["frase"])
         k_ponto = int(self.track.index_of(s_acao))
-        item.update(frase=f["frase"], fala=fala, escrita=R.escrita_do_aviso(t.nome, f["frase"]), comMarco=f["comMarco"],
+        item.update(frase=f["frase"], fraseFalada=falada, fala=P.fala_sozinha(falada),
+                    escrita=R.escrita_do_aviso(t.nome, f["frase"]), comMarco=f["comMarco"],
                     marco=f["marco"], d=f["d"], sDito=f["sDito"],
                     sAcao=round(float(s_acao), 1), refMinimaKmh=pts.get("minimaKmh"),
                     refFreada=pts.get("freada"), vFreadaKmh=pts.get("velocidadeNaFreadaKmh"),
                     vNoPontoKmh=float(np.asarray(ref["grade"]["velocidade"], float)[k_ponto]))
         if not sem_tirar:
-            # a marca no asfalto (ADR 0033, item 7); "sem tirar o pé" nao tem marca nem contagem
+            # a marca no asfalto e o bipe: no ponto dito (ADR 0033, emenda de 20/11, item 9)
+            k_dito = int(self.track.index_of(float(f["sDito"])))
             lateral = np.asarray(ref["grade"]["lateral"], float)
-            lat = float(lateral[k_ponto]) if np.isfinite(lateral).any() else 0.0
-            x, z = self.track.to_world([s_acao], [lat])[0]
+            lat = float(lateral[k_dito]) if np.isfinite(lateral).any() else 0.0
+            x, z = self.track.to_world([float(f["sDito"])], [lat])[0]
             item.update(x=round(float(x), 2), z=round(float(z), 2),
-                        direcao=[round(float(self.track.tangent[k_ponto][0]), 4), round(float(self.track.tangent[k_ponto][1]), 4)])
-        # a voz mede a frase; ate la, a estimativa (so para a janela)
-        self._pedir_a_voz(fala)
-        self._planejar(item)
+                        direcao=[round(float(self.track.tangent[k_dito][0]), 4), round(float(self.track.tangent[k_dito][1]), 4)],
+                        bipe=self.bipe, sBipe=round(float(f["sDito"]), 1) if self.bipe else None)
+        else:
+            item.update(bipe=False, sBipe=None)
+        self._pedir_a_voz(item["fala"])
         return item
 
-    def _pedir_a_voz(self, fala: str) -> None:
-        if fala not in self._audios:
+    # ── a voz ───────────────────────────────────────────────────────────
+
+    def _pedir_a_voz(self, fala: Optional[str]) -> None:
+        if fala and fala not in self._audios:
             try:
                 self._audios[fala] = self._falar(fala)
             except Exception as erro:
@@ -269,28 +313,75 @@ class Engenheiro:
         except Exception:
             return None
 
-    def _planejar(self, item: Dict[str, Any]) -> None:
-        """ADR 0033, item 5: o `s_fala` e se o aviso vai pela voz (a referencia freia, a frase tem marco e cabe no bloco)."""
-        dur = self.duracao(item.get("fala"))
-        t_frase = dur if dur is not None else DURACAO_ESTIMADA_S
-        item["duracaoS"] = round(dur, 2) if dur is not None else None
-        bloco = R.bloco_do_trecho(self.blocos, item["trecho"])
-        if item.get("acao") == R.SEM_TIRAR_O_PE:
-            item["sFala"] = round(R.s_fala(item["sAcao"], item.get("vNoPontoKmh") or 100.0, t_frase, self.L), 1)
-            item["voz"] = False
-            item["porqueSoNaJanela"] = "sem tirar o pé (a referência não freia nem alivia no trecho)"
-        elif item.get("refFreada") is not None and item.get("vFreadaKmh"):
-            sf = R.s_fala(item["refFreada"], item["vFreadaKmh"], t_frase, self.L)
-            item["sFala"] = round(sf, 1)
-            item["voz"] = bool(item.get("comMarco") and bloco and R.dentro_do_bloco(sf, bloco, self.L))
-            item["porqueSoNaJanela"] = None if item["voz"] else (
-                "sem marco na janela" if not item.get("comMarco") else
-                "sem bloco de voz antes da frenagem" if not bloco else "a frase não cabe no bloco")
-        else:
-            item["sFala"] = round(R.s_fala(item["sAcao"], item.get("vNoPontoKmh") or 100.0, t_frase, self.L), 1)
-            item["voz"] = False
-            item["porqueSoNaJanela"] = "a referência não freia no trecho"
-        item["bloco"] = [bloco["inicio"], bloco["fim"]] if bloco else None
+    @staticmethod
+    def chave(fala: str) -> str:
+        return hashlib.sha1(fala.encode("utf-8")).hexdigest()[:12]
+
+    def arquivo_da_fala(self, chave: str) -> Optional[Path]:
+        """O audio de uma fala planejada, pela chave (`GET /api/radio/engenheiro/audio/{chave}`)."""
+        with self._lock:
+            for fala in list(self._audios):
+                if self.chave(fala) == chave:
+                    r = self.audio(fala)
+                    return Path(r[0]) if r else None
+        return None
+
+    # ── o plano (ADR 0033, emenda de 20/11) ────────────────────────────
+
+    def _usar_o_perfil(self, grade: Dict[str, np.ndarray], total: float, origem: str) -> None:
+        self.perfil = P.Perfil(grade, total, self.track, origem)
+        self.pedacos = P.pedacos_livres(grade, self.track)
+
+    def _replanejar(self) -> None:
+        """Refaz o plano das falas com o perfil atual (depois de cada volta que conta, de uma lista nova ou de uma
+        duracao medida)."""
+        if self.perfil is None:
+            self.falas, self._medidas_no_plano = [], set()
+            return
+        avisos: List[P.Aviso] = []
+        for i in self._ordenada():
+            i.update(voz=False, sFala=None, falaChave=None, porqueSoNaJanela=None, sAcaoPiloto=None, tipoDaAcaoPiloto=None,
+                     sJanela=None, sFimDaJanela=None)
+            if i.get("frase") is None or i.get("sDito") is None:
+                continue
+            a = P.acao_do_piloto(self.perfil.grade, self.track, self.trechos, i["k"], i["acao"])
+            if a is None:
+                i["porqueSoNaJanela"] = "sem a volta ao acelerador no perfil"
+                continue
+            s_acao, tipo = a
+            fim = s_acao if self.perfil.dt(i["sDito"], s_acao) <= self.perfil.dt(s_acao, i["sDito"]) else i["sDito"]
+            i.update(sAcaoPiloto=round(s_acao, 1), tipoDaAcaoPiloto=tipo,
+                     sJanela=round(P.s_da_janela(self.perfil, self.pedacos, s_acao), 1),
+                     sFimDaJanela=round((float(fim) + P.DEPOIS_DA_ACAO_M) % self.L, 1))
+            avisos.append(P.Aviso(trecho=i["trecho"], numero=i.get("curva"), frase=i["fraseFalada"], s_acao=s_acao,
+                                  s_dito=float(i["sDito"]), ordem=i["k"]))
+        falas = P.planejar(avisos, self.perfil, self.pedacos, self.duracao)
+        por_trecho = {}
+        for f in falas:
+            f["chave"] = self.chave(f["texto"])
+            f["audio"] = f"/api/radio/engenheiro/audio/{f['chave']}"
+            self._pedir_a_voz(f["texto"])
+            for tr in f["trechos"]:
+                por_trecho[tr] = f
+        for a in avisos:
+            i = self.lista[a.trecho]
+            f = por_trecho.get(a.trecho)
+            if f is not None:
+                i.update(voz=True, sFala=f["sFala"], falaChave=f["chave"], folgaPlanejadaS=f["folgaS"].get(a.trecho),
+                         falaJunta=len(f["trechos"]) > 1)
+            else:
+                i.update(voz=False, porqueSoNaJanela=a.motivo or "não planejado")
+        self.falas = falas
+        self._medidas_no_plano = {f["texto"] for f in falas if f["duracaoMedida"]}
+        self.versao += 1
+
+    def _replanejar_se_mediu(self) -> None:
+        """A voz mediu uma fala do plano ou uma fala sozinha (usada na estimativa do par): refaz o plano."""
+        textos = {f["texto"] for f in self.falas} | {i["fala"] for i in self.lista.values() if i.get("fala")}
+        medidas = {x for x in textos if self.duracao(x) is not None}
+        if medidas - self._sozinhas_medidas:
+            self._sozinhas_medidas |= medidas
+            self._replanejar()
 
     def _ordenada(self) -> List[Dict[str, Any]]:
         return sorted(self.lista.values(), key=lambda i: i["k"])
@@ -298,84 +389,73 @@ class Engenheiro:
     # ── o quadro ────────────────────────────────────────────────────────
 
     def no_quadro(self, s: Optional[float], velocidade_kmh: Optional[float], desde_a_linha: bool, ia: bool,
-                  falando: bool) -> Optional[Dict[str, Any]]:
-        """Marca as dicas dadas e devolve o aviso pela voz que comeca agora (ADR 0033, item 5), ou None."""
+                  falando: bool = False) -> List[Dict[str, Any]]:
+        """A cada quadro (ADR 0033, emenda de 20/11, item 2): o carro passou o `s_fala` de uma fala planejada? A fala
+        comeca no jogo (o app do jogo toca pelo mesmo `s`); o backend registra e devolve as falas que comecaram,
+        para a reserva e o corte do feedback. Marca tambem as dicas dadas (a janela mostrou) e a acao passada."""
         if not self.ativo or s is None:
-            return None
+            return []
         with self._lock:
+            self._voz_liberada = bool(desde_a_linha) and not ia
+            self._replanejar_se_mediu()
             anterior, self._s_anterior = self._s_anterior, float(s)
             if anterior is None:
-                return None
+                return []
             andou = (float(s) - anterior) % self.L
             if andou > self.L / 2 or andou <= 0:
-                return None
-            aviso = None
-            # o ponto da acao de cada dica dada: passado, a dica pode ser conferida na linha
+                return []
+
+            def passou(alvo: Optional[float]) -> bool:
+                return alvo is not None and (float(alvo) - anterior) % self.L <= andou
+
             for d in self._dadas.values():
-                if not d.get("acaoPassada") and (d["sAcao"] - anterior) % self.L <= andou:
+                if not d.get("acaoPassada") and passou(d.get("sAcao")):
                     d["acaoPassada"] = True
+            # a janela mostra o aviso desde o fim da acao anterior: a dica foi dada
             for item in self._ordenada():
-                if item.get("frase") is not None and item.get("duracaoS") is None and self.duracao(item.get("fala")) is not None:
-                    self._planejar(item)          # a voz mediu a frase: o s_fala fica o da duracao de verdade
-                if item.get("frase") is None or item.get("sFala") is None:
+                if item.get("frase") is None or item["trecho"] in self._dadas and not self._dadas[item["trecho"]].get("acaoPassada"):
                     continue
-                if (item["sFala"] - anterior) % self.L > andou:
+                if not passou(item.get("sJanela")):
                     continue
-                if item["trecho"] in self._dadas and not self._dadas[item["trecho"]].get("acaoPassada"):
-                    continue                      # ja dada, esperando o carro passar a acao
-                # o carro passou o s_fala: a dica foi dada (na janela, pelo menos)
-                if item.get("duracaoS") is None:
-                    self._planejar(item)
-                pela_voz = False
-                motivo = None
-                if not item.get("voz"):
-                    motivo = item.get("porqueSoNaJanela")
-                elif not desde_a_linha:
-                    motivo = "volta de saída dos boxes"
-                elif ia:
-                    motivo = "a IA no volante"
-                elif falando or aviso is not None:
-                    motivo = "outra fala em andamento"
-                elif self.audio(item["fala"]) is None:
-                    motivo = "a voz ainda não estava pronta"
-                else:
-                    v = float(velocidade_kmh or 0.0) / 3.6
-                    ate = (float(item["refFreada"]) - float(s)) % self.L
-                    precisa = float(item["duracaoS"]) + R.FOLGA_ANTES_DA_FREADA_S
-                    if v <= 1.0 or ate / v < precisa:
-                        motivo = f"pouco tempo até a frenagem ({ate / v:.1f} s)" if v > 1.0 else "carro parado"
-                if motivo is None:
-                    pela_voz = True
-                    arquivo, dur = self.audio(item["fala"])
-                    aviso = {"origem": "aviso", "titulo": f"Engenheiro · {item['trecho']}",
-                             "texto": item.get("escrita") or item["frase"],
-                             "detalhe": f"{item['causa']}; perdeu {item['perdaS']:.2f} s no trecho".replace(".", ","),
-                             "fala": item["fala"], "falas": [item["fala"]], "falaMaxS": 99.0, "curva": item["trecho"],
-                             "s": item["sFala"], "perdaS": item["perdaS"], "duracaoS": round(dur, 2),
-                             "_arquivoPronto": str(arquivo), "causa": {"trecho": item["acao"], "medida": item["causa"]}}
-                    self.contagem["avisosPelaVoz"] += 1
-                else:
-                    self.contagem["avisosSoNaJanela"] += 1
                 self._dadas[item["trecho"]] = {k: item.get(k) for k in ("k", "trecho", "acao", "causa", "frase", "sFala", "sAcao",
                                                                         "sDito", "marco", "refMinimaKmh")}
-                self._dadas[item["trecho"]].update(pelaVoz=pela_voz, acaoPassada=False)
-                item["pelaVoz"] = pela_voz
-                self._registrar({"tipo": "aviso", "trecho": item["trecho"], "causa": item["causa"], "frase": item["frase"],
-                                 "sFala": item["sFala"], "sCarro": round(float(s), 1),
-                                 "velocidadeKmh": round(float(velocidade_kmh), 1) if velocidade_kmh is not None else None,
-                                 "voz": pela_voz, "porqueSoNaJanela": motivo,
-                                 "folgaAteAFreadaS": self._folga(item, s, velocidade_kmh)})
-            if aviso is not None:
-                self.versao += 1
-            return aviso
+                self._dadas[item["trecho"]].update(pelaVoz=bool(item.get("voz")) and self._voz_liberada, acaoPassada=False)
+                item["pelaVoz"] = self._dadas[item["trecho"]]["pelaVoz"]
+                if not item.get("voz"):
+                    self.contagem["avisosSoNaJanela"] += 1
+                    self._registrar({"tipo": "aviso", "trecho": item["trecho"], "causa": item["causa"], "frase": item["frase"],
+                                     "sJanela": item.get("sJanela"), "sCarro": round(float(s), 1), "t": self._relogio(),
+                                     "velocidadeKmh": None if velocidade_kmh is None else round(float(velocidade_kmh), 1),
+                                     "voz": False, "porqueSoNaJanela": item.get("porqueSoNaJanela"),
+                                     "sAcaoPiloto": item.get("sAcaoPiloto"), "sDito": item.get("sDito"),
+                                     "bipe": item.get("sBipe")})
+            # as falas planejadas
+            comecaram = []
+            for f in self.falas:
+                if not passou(f["sFala"]):
+                    continue
+                motivo = None if self._voz_liberada else ("volta de saída dos boxes" if not desde_a_linha else "a IA no volante")
+                for tr in f["trechos"]:
+                    i = self.lista.get(tr) or {}
+                    self._registrar({"tipo": "aviso", "trecho": tr, "causa": i.get("causa"), "frase": i.get("frase"),
+                                     "fala": f["texto"], "falaJunta": len(f["trechos"]) > 1, "sFala": f["sFala"],
+                                     "sCarro": round(float(s), 1), "t": self._relogio(),
+                                     "velocidadeKmh": None if velocidade_kmh is None else round(float(velocidade_kmh), 1),
+                                     "voz": motivo is None, "porqueSoNaJanela": motivo, "duracaoS": f["duracaoS"],
+                                     "folgaPlanejadaS": f["folgaS"].get(tr), "sAcaoPiloto": i.get("sAcaoPiloto"),
+                                     "sDito": i.get("sDito"), "bipe": i.get("sBipe"), "perfil": self.perfil.origem})
+                    self.contagem["avisosPelaVoz" if motivo is None else "avisosSoNaJanela"] += 1
+                if motivo is None:
+                    comecaram.append(f)
+            return comecaram
 
-    def _folga(self, item: Dict[str, Any], s: float, velocidade_kmh: Optional[float]) -> Optional[float]:
-        if item.get("refFreada") is None or not velocidade_kmh or item.get("duracaoS") is None:
+    def _relogio(self) -> Optional[float]:
+        try:
+            return round(float(self.relogio()), 3) if self.relogio else None
+        except Exception:
             return None
-        ate = (float(item["refFreada"]) - float(s)) % self.L
-        return round(ate / (float(velocidade_kmh) / 3.6) - float(item["duracaoS"]), 2)
 
-    # ── os blocos ───────────────────────────────────────────────────────
+    # ── os blocos e a reserva ──────────────────────────────────────────
 
     def bloco_em(self, s: float) -> Optional[Dict[str, Any]]:
         return next((b for b in self.blocos if b.get("fim") is not None and R.dentro_do_bloco(s, b, self.L)), None)
@@ -385,37 +465,49 @@ class Engenheiro:
         return bloco is not None and any(b is bloco for b in self.retas_longas)
 
     def reserva(self, s: float) -> Optional[float]:
-        """O `s` em que o feedback tem de acabar: o primeiro `s_fala` pela voz no bloco do carro, ou o fim do bloco.
-        None: o carro nao esta num bloco."""
+        """O `s` em que o feedback tem de acabar: o `s_fala` da primeira fala planejada a frente do carro no bloco
+        dele, ou o fim do bloco (ADR 0033, emenda de 20/11, item 11). None: o carro nao esta num bloco."""
         bloco = self.bloco_em(s)
         if bloco is None:
             return None
         fim = float(bloco["fim"])
         with self._lock:
-            for item in self.lista.values():
-                if item.get("voz") and item.get("bloco") and item["bloco"][0] == bloco["inicio"] and item.get("sFala") is not None:
-                    # so os s_fala ainda a frente do carro, dentro do bloco
-                    if R.dentro_do_bloco(item["sFala"], bloco, self.L) and (item["sFala"] - s) % self.L <= (fim - s) % self.L:
-                        if (item["sFala"] - s) % self.L < (fim - s) % self.L:
-                            fim = float(item["sFala"])
+            for f in self.falas:
+                sf = float(f["sFala"])
+                if R.dentro_do_bloco(sf, bloco, self.L) and 0 < (sf - s) % self.L < (fim - s) % self.L:
+                    fim = sf
         return fim
 
-    # ── a janela ────────────────────────────────────────────────────────
+    def tempo_entre(self, s1: float, s2: float, v_kmh: Optional[float] = None) -> float:
+        """O tempo de `s1` a `s2` pelo perfil (ADR 0033, emenda de 20/11, item 3); sem perfil, pela velocidade."""
+        if self.perfil is not None:
+            return self.perfil.dt(s1, s2)
+        v = float(v_kmh or 0.0) / 3.6
+        return ((float(s2) - float(s1)) % self.L) / v if v > 1.0 else 0.0
+
+    # ── a janela e o app do jogo ────────────────────────────────────────
 
     def estado_publico(self, lenta: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         with self._lock:
+            self._replanejar_se_mediu()
             itens = []
             for i in self._ordenada():
-                if i.get("frase") is not None and i.get("duracaoS") is None and self.duracao(i.get("fala")) is not None:
-                    self._planejar(i)
                 janela = (i.get("escrita") if i.get("frase") and i.get("escrita") else
                           (i.get("frase") or f"{i['trecho']}: perdeu {i['perdaS']:.2f} s, sem causa medida".replace(".", ",")))
                 itens.append({k: i.get(k) for k in ("trecho", "curva", "causa", "acao", "frase", "voz", "sFala", "sAcao",
                                                      "sDito", "x", "z", "direcao", "perdaS", "referencia", "comMarco",
-                                                     "porqueSoNaJanela", "duracaoS")}
+                                                     "porqueSoNaJanela", "falaChave", "falaJunta", "sJanela",
+                                                     "sFimDaJanela", "sAcaoPiloto", "tipoDaAcaoPiloto", "bipe", "sBipe",
+                                                     "folgaPlanejadaS")}
                              | {"janela": janela, "conferencia": (i.get("conferencia") or {}).get("texto"),
                                 "aplicada": (i.get("conferencia") or {}).get("aplicada")})
+            falas = [{k: f.get(k) for k in ("chave", "sFala", "texto", "duracaoS", "audio", "trechos", "folgaS",
+                                             "candidato", "pedaco")} for f in self.falas]
             return {"disponivel": self.ativo, "motivo": self.motivo, "versao": self.versao, "comprimentoM": self.L,
-                    "lista": itens, "ultimaConferencia": self.ultima_conferencia, "lenta": lenta,
+                    "lista": itens, "falas": falas, "vozLiberada": self._voz_liberada,
+                    "molde": self.molde, "bipe": self.bipe, "tempoDeReacaoAoBipeS": P.TEMPO_DE_REACAO_AO_BIPE_S,
+                    "latenciaNoJogoS": P.LATENCIA_NO_JOGO_S, "folgaMinimaS": P.FOLGA_MINIMA_S,
+                    "perfil": None if self.perfil is None else self.perfil.origem,
+                    "ultimaConferencia": self.ultima_conferencia, "lenta": lenta,
                     "blocos": [[b["inicio"], b["fim"]] for b in self.blocos if b.get("fim") is not None],
                     "voltaLentaS": R.VOLTA_LENTA_S, "contagem": dict(self.contagem)}
