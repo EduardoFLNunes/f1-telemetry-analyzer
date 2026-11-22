@@ -1334,3 +1334,13 @@ Uma linha por volta:
 5. **O envio:** nada foi enviado. Para enviar a branch:
    `git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer push origin etapa/engenheiro`
 6. **Para o backlog:** conferir se a marcha gravada é a marcha real do carro (item 6).
+
+#### O "pode instalar" do app do jogo 0.9.0 (21/11, 22h51)
+
+- **Você deu o "pode instalar".** Quem roda o `instalar.ps1` é você, como o script e o pedido dizem: ele pede confirmação na tela e grava na pasta do jogo, onde eu não escrevo.
+- **O que conferi antes:**
+  - o `acs.exe` está fechado;
+  - o pacote `tools/csp_app/radio_engenheiro/` está na 0.9.0 (`manifest.ini`) e tem o `bipe.wav` e o `bipe_agudo.wav` novo.
+- **O comando** (na pasta do repositório):
+  `powershell -NoProfile -ExecutionPolicy Bypass -File tools\csp_app\instalar.ps1`
+- **Depois da instalação:** eu abro o app do repositório (o backend na porta 8000, o front e a janela) antes do jogo; você faz o teste com o roteiro da Parte E e preenche o cartão.
