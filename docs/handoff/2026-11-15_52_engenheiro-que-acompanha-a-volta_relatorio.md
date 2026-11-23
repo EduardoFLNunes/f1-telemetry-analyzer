@@ -1411,3 +1411,72 @@ A C04 é a primeira curva depois da reta oposta: uma curva à esquerda, em desci
 **Dois cuidados:**
 - **A marcha** fica de fora: ainda não está conferido que a marcha gravada é a do carro.
 - **A dosagem do freio e do acelerador da IA** não é julgada (ADR 0032, item 5). Por isso, a explicação diz onde e quando agir, não com quanta força.
+
+## Decisões de 22/11: o engenheiro que ensina (em andamento: parado nas contas pesadas, com o jogo aberto)
+
+**Como foi decidido:** você pediu, às 22h47, os três níveis, a análise depois da curva, as chaves, o escopo e o treino. Às 22h51, mandou começar já. Por isso, as recomendações da proposta (`_proposta_2211.md`) viraram as decisões, registradas no ADR 0033 antes do código. Qualquer uma muda com uma decisão sua.
+
+**Commits:**
+- `e88f0324`: as decisões de 22/11 no ADR 0033;
+- `dc3bdd28`: uma correção no ADR antes do código. O "acelere cedo" passou a contar a partir da mínima, e não do ápice: com a conta pelo ápice, a própria referência ouviria "acelere depois do ápice";
+- `7a8f187c`: o código, o app do jogo 0.10.0, os testes e a documentação.
+
+### O que foi feito
+
+- **`core/engenheiro/explicacao.py`** (novo):
+  - as medidas de cada curva, fase por fase;
+  - os textos dos três níveis, pelos limites do ADR;
+  - a análise depois da curva, com as diferenças na ordem do tempo que cada fase custou;
+  - o relatório do treino, o volume e a orientação.
+- **`core/engenheiro/servico.py`:**
+  - as chaves (ligado, nível, escopo, curvas e treino), guardadas em `data/radio/engenheiro_config.json`;
+  - o texto do nível na ficha (amador e pro). No iniciante, a ficha não é dita na volta rápida;
+  - o escopo "algumas" e "inteira": o lembrete e a contagem de bipes de cada curva, sem uma fala encostar na outra;
+  - a análise 30 m depois de cada curva, pela volta em andamento;
+  - a explicação longa e as análises do iniciante na volta lenta;
+  - o treino: o começo na linha, as voltas que contam e o relatório com a orientação no fim.
+- **`core/radio/servico.py`:**
+  - as mensagens do engenheiro entram na fila do rádio, com a análise na frente;
+  - nos boxes, com o carro parado (abaixo de 5 km/h), o engenheiro fala sem esperar um bloco de voz.
+- **A rota** `GET` e `POST /api/radio/engenheiro/config`.
+- **O app do jogo 0.10.0:**
+  - as chaves no pé da janela: ligado, nível, escopo, treino e o número de voltas; em "algumas curvas", um botão por curva;
+  - as contagens de bipes de várias curvas;
+  - o texto do nível na janela;
+  - a janela padrão passou para 560 × 240.
+
+  O app passa no `conferir_lua.py`, com 186 variáveis locais no ponto mais cheio.
+- **Os testes:** 61 passando (os do engenheiro e os da referência). Os novos cobrem:
+  - os três níveis e a frase que se adapta quando a referência muda;
+  - a análise e o limite de duas diferenças;
+  - o relatório, o volume e a orientação do treino;
+  - as chaves: guardar, validar e desligar;
+  - o texto do nível na ficha e o iniciante só com o lembrete;
+  - os escopos "algumas" e "inteira";
+  - a análise depois da curva e a volta lenta do iniciante;
+  - o fluxo do treino;
+  - o app do jogo.
+
+### Os textos que saem da volta de referência (exemplo da C04)
+
+- **Iniciante:** "Curva quatro, à esquerda. Venha pelo meio da pista. Freie forte quase na placa de 100. Solte o freio e vire uns 15 metros antes do começo da zebra da esquerda. Deixe o carro rolar sem acelerar até uns 135 por hora, perto da borda de dentro. Acelere cedo e use a pista toda na saída, porque a cinco é de pé embaixo."
+- **Amador:** "Quatro: pelo meio, freie quase no 100, vire 15 antes da zebra, mínima de 135, acelere cedo e abra na saída."
+- **Pro:** "Quatro: frenagem a 10 do 100, de 270 para 150 em 110 metros. Entrada 15 antes da zebra, 1 segundo de rolagem, mínima 133 a dois metros da borda. Gás cheio 10 metros depois da mínima, saída na borda."
+
+### Dois efeitos das regras que fixei, para a sua decisão (não mudei nada)
+
+1. **O fim da frenagem inclui os toques curtos de freio da IA até o ápice** (a regra: o último ponto com o freio em 0,15 ou mais).
+   - Na C04, a frenagem fica com 110 m, de 270 para 150 km/h, e deixa de ser "reta", porque a IA toca o freio já virando. No mesmo tipo de conta, a C01 fica com 160 m e a C06 com 175 m.
+   - Isso vem dos pedais da IA, que o ADR 0032 manda não julgar.
+   - Uma alternativa: a frenagem termina no primeiro trecho de 10 m ou mais sem freio, como o filtro do alívio.
+2. **"Venha pelo meio" na C04:** a referência está 3 m à direita do meio, mas a pista alarga ali (a meia largura direita passa de 5 para 8 m). A regra da metade da meia largura dá "meio".
+
+### O que falta
+
+1. **Com o jogo fechado** (o `acs.exe` está aberto agora):
+   - a conferência fora do jogo numa sessão longa, com o nível amador, a volta inteira e um treino de 5 voltas;
+   - os áudios das 14 curvas nos três níveis;
+   - a suíte inteira, o `tsc` e o `conferir_lua.py`.
+2. **O backend que está aberto ainda é o de antes de 22/11.** Ele subiu às 11h51 e não recarrega sozinho. Para testar o 0.10.0, eu reinicio o backend, e você instala o app do jogo 0.10.0 com o seu "pode instalar".
+3. **O teste no jogo** das chaves, dos níveis, da análise e do treino.
+
