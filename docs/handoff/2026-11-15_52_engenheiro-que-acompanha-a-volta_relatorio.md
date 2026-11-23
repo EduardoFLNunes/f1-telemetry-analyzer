@@ -1371,3 +1371,5 @@ Uma linha por volta:
 2. **O seu "pode instalar" da 0.9.1.** Depois dele, você roda de novo o `instalar.ps1`: `powershell -NoProfile -ExecutionPolicy Bypass -File tools\csp_app\instalar.ps1`.
 3. **O teste no jogo,** com o cartão. O app do repositório continua aberto: o backend, o front e a janela.
 
+
+**O "pode instalar" da 0.9.1 (22/11, 22h00):** você deu. O `acs.exe` está fechado e o pacote está na 0.9.1. Quem roda o `instalar.ps1` é você; o backend, o front e a janela do app do repositório continuam abertos.
