@@ -1373,3 +1373,5 @@ Uma linha por volta:
 
 
 **O "pode instalar" da 0.9.1 (22/11, 22h00):** você deu. O `acs.exe` está fechado e o pacote está na 0.9.1. Quem roda o `instalar.ps1` é você; o backend, o front e a janela do app do repositório continuam abertos.
+
+**A sua pergunta durante o teste (22/11, 22h27): "o engenheiro só funciona na curva 04?"** Sim, por enquanto, e é a regra da curva de foco (emenda de 21/11, itens 3 a 5). A sessão `2026-11-22_22-16-02` começou com o foco da sessão anterior, a C04. Até as 22h27, nenhuma volta contou: as voltas 2 e 3 tiveram rodada, e a 3 perdeu 9,6 s na C01. Por isso o foco ainda tem 0 de 3 voltas, e só a C04 tem ficha, lembrete e bipes. O foco troca na linha de uma volta que conta: se você frear a até 10 m do ponto da referência (entre a placa de 200 e a de 100), ou depois de 3 voltas que contam sem isso. Aí vem a curva de maior perda dessa volta.
