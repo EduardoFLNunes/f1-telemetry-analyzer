@@ -73,7 +73,9 @@ logger = logging.getLogger(__name__)
 ESPERA_DO_RESUMO_S = 0.6       # as ultimas frases da volta chegam pelo barramento logo depois da linha
 FOLGA_ENTRE_MENSAGENS_S = 0.6
 # Pedido 52: o feedback (a fala que o aviso do engenheiro corta; ADR 0033, emenda de 20/11, item 1)
-FEEDBACK = ("coach", "resumo", "analise", "curva")
+FEEDBACK = ("coach", "resumo", "analise", "curva", "engenheiro")
+# ADR 0033, decisoes de 22/11, item 7: o carro parado nos boxes (abaixo disto, o engenheiro fala sem esperar o bloco)
+PARADO_KMH = 5.0
 NAO_REFAZ = ("id", "instancia", "entregueEm", "sCarro", "voltaDoCarro", "velocidadeKmh", "janela", "restaS", "audio",
              "audioArquivo", "duracaoS", "replay", "sessao", "criadaEm", "_futuro", "_variantes", "_arquivo",
              "_arquivoPronto", "_falaEscolhida", "_reservaEm", "_comACausa", "_saiuNaRegra", "_esperouOBloco",
@@ -196,6 +198,8 @@ class RadioDoEngenheiro:
                     from core.engenheiro.servico import Engenheiro
                     self._engenheiro = Engenheiro(self._geometria.track, self._geometria, self._raizes,
                                                   self._falar_o_aviso, self._registrar_o_engenheiro,
+                                                  volta_atual=self._volta_atual,
+                                                  config_path=self.pasta / "engenheiro_config.json",
                                                   relogio=self._relogio)
                     self._engenheiro_erro = self._engenheiro.motivo
                 except Exception as erro:  # sem o engenheiro, o radio continua o do pedido 51
@@ -359,12 +363,20 @@ class RadioDoEngenheiro:
                     self._acompanhar_as_retas_longas(eng, float(pos["s"]))
                     # ADR 0033, emenda de 20/11, itens 1 e 2: o aviso e tocado pelo app do jogo, pelo mesmo `s`;
                     # aqui ele corta o feedback em andamento e ocupa o radio pelo tempo da fala.
+                    lenta = bool(self._lenta.get("lenta")) or not bool(pos.get("desdeALinha", True))
                     for fala in eng.no_quadro(float(pos["s"]), self._velocidade_kmh, bool(pos.get("desdeALinha", True)),
-                                              self._ia_no_quadro, falando=agora < self._ocupado_ate):
+                                              self._ia_no_quadro, falando=agora < self._ocupado_ate, lenta=lenta):
                         self._cortar_o_feedback(eng, fala, agora, float(pos["s"]))
                         from core.engenheiro.plano import LATENCIA_NO_JOGO_S
                         self._ocupado_ate = max(self._ocupado_ate, agora + LATENCIA_NO_JOGO_S + float(fala["duracaoS"])
                                                 + FOLGA_ENTRE_MENSAGENS_S)
+                    # ADR 0033, decisoes de 22/11, itens 4, 7 e 8: as mensagens do engenheiro (a analise na frente)
+                    for m in eng.tirar_mensagens():
+                        nova = self._nova(m)
+                        if m.get("_frente"):
+                            self._pendentes.appendleft(nova)
+                        else:
+                            self._pendentes.append(nova)
             if not self._pendentes or agora < self._ocupado_ate:
                 return
             proxima = self._pendentes[0]
@@ -375,6 +387,10 @@ class RadioDoEngenheiro:
                 return
             L = float(self._comprimento or pos["comprimento"])
             s = float(pos["s"])
+            if eng is not None and proxima.get("origem") == "engenheiro" and float(self._velocidade_kmh or 0.0) < PARADO_KMH:
+                # ADR 0033, decisoes de 22/11, item 7: nos boxes, com o carro parado, o engenheiro fala sem esperar o bloco
+                self._entregar(self._pendentes.popleft(), agora, pos)
+                return
             if eng is not None:
                 # Pedido 52: o feedback no comeco de um bloco de voz, na variante mais completa que cabe antes da
                 # reserva dos avisos; se nenhuma couber, espera o bloco seguinte.
@@ -1117,6 +1133,24 @@ class RadioDoEngenheiro:
                                    "motivo": self._engenheiro_erro,
                                    "blocos": [[b["inicio"], b["fim"]] for b in (self._eng().blocos if self._eng() else [])
                                               if b.get("fim") is not None]}}
+
+    def config_do_engenheiro(self) -> Dict[str, Any]:
+        """ADR 0033, decisoes de 22/11, item 6: as chaves do engenheiro (`GET /api/radio/engenheiro/config`)."""
+        with self._lock:
+            self._pista()
+            eng = self._eng()
+        if eng is None:
+            return {"disponivel": False, "motivo": self._engenheiro_erro or "o engenheiro está desligado"}
+        return {"disponivel": True, **eng.config_publica()}
+
+    def mudar_config_do_engenheiro(self, novo: Dict[str, Any]) -> Dict[str, Any]:
+        """`POST /api/radio/engenheiro/config`: muda as chaves (os botoes da janela "Engenheiro" do jogo)."""
+        with self._lock:
+            self._pista()
+            eng = self._eng()
+        if eng is None:
+            return {"disponivel": False, "motivo": self._engenheiro_erro or "o engenheiro está desligado"}
+        return {"disponivel": True, **eng.mudar_config(novo)}
 
     def arquivo_da_fala_do_engenheiro(self, chave: str) -> Optional[Path]:
         """Pedido 52 (ADR 0033, emenda de 20/11, item 2): o audio de uma fala planejada, para o app do jogo baixar."""

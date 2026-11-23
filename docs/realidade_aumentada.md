@@ -605,3 +605,25 @@ O teste de 21/11 mostrou que a voz sai a tempo, mas o engenheiro falava de curva
 - **O alívio só conta com 10 m ou mais** de acelerador abaixo de 0,90 (a queda na troca de marcha não conta), também no "sem tirar o pé".
 - **O registro** ganha as linhas `foco`, `ficha`, `lembrete` e `plano` da ficha, e a `conferencia` só do foco; a linha `aviso` sai.
 - **O app do jogo 0.9.1:** a 0.9.0 não carregou no jogo ("main function has more than 200 local variables"). O Lua aceita no máximo 200 variáveis locais ativas na função principal do arquivo, e o app chegou a 201. As constantes do engenheiro, da lista das voltas e da grade foram para tabelas (186 no ponto mais cheio), e o `tools/csp_app/conferir_lua.py` passou a contar esse limite, pedindo folga até 190.
+
+### 9.9 O engenheiro que ensina (ADR 0033, decisões de 22/11; app do jogo 0.10.0)
+
+- **As medidas de cada curva** (`core/engenheiro/explicacao.py`): a chegada, a frenagem, o ponto de virar, a frenagem reta, o trecho sem pedal, a mínima, o ápice, o acelerador cheio, a saída e a curva seguinte, tiradas da volta de referência. As frases saem delas pelos limites do ADR, então uma volta de referência nova muda as frases sozinha.
+- **Os três níveis:**
+  - **iniciante:** a explicação longa vai para a volta lenta e para os boxes; na volta rápida ficam o lembrete e os bipes;
+  - **amador:** a frase resumida, dita como a ficha, na reta longa;
+  - **pro:** a frase técnica, no mesmo lugar.
+- **A análise depois da curva:** 30 m depois da saída de cada curva do escopo, a passagem da volta em andamento é comparada com a referência, fase por fase, na ordem do tempo que cada fase custou.
+  - No amador e no pro, no máximo duas diferenças vão para a frente da fila do rádio.
+  - No iniciante, a explicação inteira fica para a volta lenta.
+- **O escopo:** uma curva (a de foco), algumas curvas (a lista) ou a volta inteira.
+  - Fora a do foco, cada curva tem o lembrete e a contagem de bipes.
+  - Um lembrete que encostaria em outra fala fica de fora.
+- **As chaves** (ligado, nível, escopo e treino) ficam no pé da janela "Engenheiro" do jogo e no backend (`GET` e `POST /api/radio/engenheiro/config`, guardadas em `data/radio/engenheiro_config.json`).
+- **O treino:** X voltas (5 por padrão) com as análises guardadas. No fim, o relatório vira mensagens do rádio, com a orientação pelo volume da fala:
+  - até 60 s, uma volta lenta;
+  - até 180 s, N voltas lentas;
+  - mais que isso, volta lenta e boxes.
+
+  Nos boxes, com o carro parado, o engenheiro fala sem esperar um bloco de voz.
+

@@ -31,6 +31,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
+from . import explicacao as E
 from . import ficha as F
 from . import marcos as M
 from . import plano as P
@@ -86,7 +87,8 @@ def foco_do_registro(pasta: Optional[Path], sessao_atual: Optional[str], ruido: 
 class Engenheiro:
     def __init__(self, track, pista_do_radio, raizes: Callable[[], Sequence[Optional[Path]]],
                  falar_em_segundo_plano: Callable[[str], Any], registrar: Callable[[Dict[str, Any]], None],
-                 relogio: Optional[Callable[[], float]] = None, molde: Optional[str] = None, bipe: Optional[bool] = None):
+                 relogio: Optional[Callable[[], float]] = None, molde: Optional[str] = None, bipe: Optional[bool] = None,
+                 volta_atual: Optional[Callable[[], Optional[Dict[str, Any]]]] = None, config_path: Optional[Path] = None):
         """`pista_do_radio`: a `analise.Pista` do radio; `falar_em_segundo_plano(fala)`: um futuro que devolve
         (arquivo, duracao); `registrar(linha)`: grava uma linha no `<sessao>.engenheiro.jsonl`. `molde` (a, b ou c)
         e `bipe`: sem eles, `AT_ENGENHEIRO_MOLDE` (padrao b, a escolha de 20/11) e `AT_ENGENHEIRO_BIPE` (padrao ligado)."""
@@ -156,6 +158,23 @@ class Engenheiro:
         self.falas: List[Dict[str, Any]] = []
         self._medidas_no_plano: set = set()
         self._voz_liberada = True
+        # o engenheiro que ensina (ADR 0033, decisoes de 22/11)
+        self._volta_atual = volta_atual or (lambda: None)
+        self.config_path = config_path
+        self.config = self._ler_a_config()
+        self.lados = self._lados_das_curvas()
+        self.explicacoes: Dict[str, Dict[str, Any]] = {}
+        self.fichas_base: Dict[str, Dict[str, Any]] = {}
+        self.contagens: List[Dict[str, Any]] = []
+        self.lembretes: List[Dict[str, Any]] = []
+        self._mensagens: List[Dict[str, Any]] = []
+        self._analises_da_volta: Dict[str, List[Dict[str, Any]]] = {}
+        self.relatorio_lento: List[Dict[str, Any]] = []
+        self._lenta_vista = False
+        self.treino: Optional[Dict[str, Any]] = None
+        self.ultimo_treino: Optional[Dict[str, Any]] = None
+        if self.modelo is not None and self.ativo:
+            self._preparar_as_explicacoes()
         if self.modelo is not None:
             self._usar_o_perfil(self.modelo["grade"], self.modelo["tempoS"], "volta de referência")
 
@@ -181,7 +200,7 @@ class Engenheiro:
             elif self.modelo is not None:
                 self._usar_o_perfil(self.modelo["grade"], self.modelo["tempoS"], "volta de referência")
             k = self._k(foco_anterior.get("trecho")) if foco_anterior else None
-            if k is not None and self.trechos[k].tem_curva:
+            if k is not None and self.trechos[k].tem_curva and self._no_escopo_do_foco(self.trechos[k].nome):
                 self._novo_foco(k, None, f"sessão {foco_anterior.get('sessao')}", foco_anterior.get("motivo"))
             self._planejar_o_foco()
 
@@ -209,6 +228,8 @@ class Engenheiro:
     def descartar(self, volta: Optional[Any], motivo: Optional[str]) -> None:
         """ADR 0033, emenda de 21/11, item 5: a volta que nao conta; a janela mostra o motivo enquanto nao ha foco."""
         with self._lock:
+            self._na_linha_do_treino(volta, conta=False)
+            self._analises_da_volta = {}
             n = int(volta) if isinstance(volta, (int, float)) and float(volta).is_integer() else volta
             self.esperando = f"volta {n}: {motivo}" if motivo else (f"volta {n}: não contou" if n is not None else None)
             self.versao += 1
@@ -272,7 +293,8 @@ class Engenheiro:
                 self.foco = None
             if self.foco is None:
                 acima = [(perdas[t.nome], k) for k, t in enumerate(self.trechos)
-                         if t.tem_curva and t.nome in self.lista and (saiu is None or t.nome != saiu[0])]
+                         if t.tem_curva and t.nome in self.lista and (saiu is None or t.nome != saiu[0])
+                         and self._no_escopo_do_foco(t.nome)]
                 if acima:
                     perda, k = max(acima)
                     self._novo_foco(k, volta, f"volta {self._n(volta)} da sessão",
@@ -281,6 +303,9 @@ class Engenheiro:
                     self._registrar({"tipo": "foco", "volta": volta, "trecho": None,
                                      "motivo": "nenhuma curva acima do ruído nesta volta"})
             self.esperando = None if self.foco is not None else "nenhuma curva acima do ruído na última volta que contou"
+            # o treino (decisoes de 22/11, item 7) e as analises desta volta
+            self._na_linha_do_treino(volta, conta=True)
+            self._analises_da_volta = {}
             # a melhor passagem, o perfil e o plano das falas (emenda de 20/11, item 5; emenda de 21/11, itens 9 a 12)
             self._considerar_passagens(grade, total, f"volta {volta}")
             self._usar_o_perfil(grade, total, f"volta {self._n(volta)} da sessão")
@@ -391,8 +416,12 @@ class Engenheiro:
         """A ficha da curva de foco e o plano: a ficha na reta longa antes dela, o lembrete no pedaco livre logo
         antes, e os pontos da contagem de bipes. Refeito depois de cada volta que conta e quando a voz mede uma
         fala."""
-        self.falas, self.ficha = [], None
-        if self.foco is None or self.modelo is None or self.perfil is None:
+        self.falas, self.ficha, self.contagens, self.lembretes = [], None, [], []
+        if not self.config.get("ligado", True) or self.modelo is None or self.perfil is None:
+            self.versao += 1
+            return
+        if self.foco is None:
+            self._planejar_as_outras_curvas([])
             self.versao += 1
             return
         k = self.foco["k"]
@@ -405,6 +434,14 @@ class Engenheiro:
         a = P.acao_do_piloto(self.perfil.grade, self.track, self.trechos, k, ACAO_DA_FICHA[ficha["tipo"]])
         s_acao = float(a[0]) if a is not None else float(ficha["sPonto"])
         ponto = P.ponto_limite(self.perfil, s_acao, float(ficha["sPonto"]))
+        # decisoes de 22/11, item 3: a ficha dita na reta longa e o texto do nivel (amador ou pro); no iniciante, a
+        # explicacao longa vai para a volta lenta e para os boxes, e na volta rapida fica so o lembrete
+        nivel = self.config.get("nivel", E.NIVEL_PADRAO)
+        exp = self.explicacoes.get(ficha["trecho"])
+        if exp is not None:
+            ficha["escritaDoNivel"] = exp["textos"][nivel]
+            if nivel in ("amador", "pro"):
+                ficha["fala"] = exp["textos"][nivel]
         self._pedir_a_voz(ficha["fala"])
         self._pedir_a_voz(ficha["lembrete"])
         dur_ficha = self.duracao(ficha["fala"])
@@ -412,6 +449,8 @@ class Engenheiro:
         reta = P.reta_longa_antes(self.retas_longas, ponto, self.L)
         pf = P.planejar_a_ficha(self.perfil, self.pedacos, reta, ponto,
                                 dur_ficha if dur_ficha is not None else P.ESTIMATIVA_DA_FICHA_S)
+        if nivel == "iniciante":
+            pf = {"motivo": "nível iniciante: a explicação vai para a volta lenta e os boxes"}
         pl = P.planejar_o_lembrete(self.perfil, self.pedacos, ponto,
                                    dur_lembrete if dur_lembrete is not None else P.ESTIMATIVA_DA_FALA_S,
                                    pf.get("pedaco") if "sFala" in pf else None)
@@ -431,6 +470,9 @@ class Engenheiro:
                      motivoDoFoco=self.foco.get("motivo"), voltasEmFoco=self.foco["voltasEmFoco"],
                      desdeAVolta=self.foco["desdeAVolta"], perfil=self.perfil.origem)
         self.ficha, self.falas = ficha, falas
+        if bipes:
+            self.contagens = [{"trecho": ficha["trecho"], "sBipes": bipes}]
+        self._planejar_as_outras_curvas(falas)
         self._medidas_no_plano = {t for t in (ficha["fala"], ficha["lembrete"]) if self.duracao(t) is not None}
         self._registrar({"tipo": "plano", "trecho": ficha["trecho"], "perfil": self.perfil.origem,
                          "ficha": {k2: pf.get(k2) for k2 in ("sFala", "duracaoS", "folgaS", "folgaAoFimDoPedacoS", "motivo")},
@@ -440,11 +482,13 @@ class Engenheiro:
         self.versao += 1
 
     def _replanejar_se_mediu(self) -> None:
-        """A voz mediu a ficha ou o lembrete do foco: refaz o plano com a duracao real."""
-        if self.ficha is None:
-            return
-        medidas = {t for t in (self.ficha["fala"], self.ficha["lembrete"]) if self.duracao(t) is not None}
+        """A voz mediu a ficha ou um lembrete do plano: refaz o plano com a duracao real."""
+        textos = {l["texto"] for l in getattr(self, "lembretes", [])}
+        if self.ficha is not None:
+            textos |= {self.ficha["fala"], self.ficha["lembrete"]}
+        medidas = {t for t in textos if self.duracao(t) is not None}
         if medidas - self._medidas_no_plano:
+            self._medidas_no_plano |= medidas
             self._planejar_o_foco()
 
     def _ordenada(self) -> List[Dict[str, Any]]:
@@ -453,7 +497,7 @@ class Engenheiro:
     # ── o quadro ────────────────────────────────────────────────────────
 
     def no_quadro(self, s: Optional[float], velocidade_kmh: Optional[float], desde_a_linha: bool, ia: bool,
-                  falando: bool = False) -> List[Dict[str, Any]]:
+                  falando: bool = False, lenta: bool = False) -> List[Dict[str, Any]]:
         """A cada quadro (ADR 0033, emenda de 20/11, item 2): o carro passou o `s_fala` da ficha ou do lembrete? A
         fala comeca no jogo (o app do jogo toca pelo mesmo `s`); o backend registra e devolve as falas que
         comecaram, para a reserva e o corte do feedback."""
@@ -468,6 +512,23 @@ class Engenheiro:
             andou = (float(s) - anterior) % self.L
             if andou > self.L / 2 or andou <= 0:
                 return []
+            if not self.config.get("ligado", True):
+                return []
+            # decisoes de 22/11, item 8: a volta lenta (ou a de saida dos boxes), no nivel iniciante
+            if lenta and not self._lenta_vista:
+                self._lenta_vista = True
+                self._na_volta_lenta(float(s))
+            elif not lenta:
+                self._lenta_vista = False
+            # decisoes de 22/11, item 4: a analise de cada curva do escopo, 30 m depois da saida dela
+            if desde_a_linha and not ia:
+                for nome in self.escopo():
+                    k = self._k(nome)
+                    if k is None:
+                        continue
+                    alvo = (float(self.trechos[k].saida_s) + E.DEPOIS_DA_SAIDA_PARA_ANALISAR_M) % self.L
+                    if (alvo - anterior) % self.L <= andou:
+                        self._analisar(nome, k)
             comecaram = []
             for f in self.falas:
                 if not (float(f["sFala"]) - anterior) % self.L <= andou:
@@ -536,21 +597,28 @@ class Engenheiro:
                 itens.append({k: i.get(k) for k in ("trecho", "curva", "causa", "acao", "frase", "sDito", "sAcao",
                                                      "perdaS", "referencia")} | {"janela": janela})
             foco = None
-            if self.ficha is not None:
+            ligado = self.config.get("ligado", True)
+            if self.ficha is not None and ligado:
                 f = self.ficha
                 foco = {k: f.get(k) for k in ("trecho", "curva", "lado", "tipo", "tecnica", "tecnicaDe", "sFreada",
-                                              "sPonto", "sEntrada", "escrita", "fala", "lembrete", "marca", "sBipes",
-                                              "sAcaoPiloto", "origem", "motivoDoFoco", "voltasEmFoco", "desdeAVolta")}
+                                              "sPonto", "sEntrada", "escrita", "escritaDoNivel", "fala", "lembrete", "marca",
+                                              "sBipes", "sAcaoPiloto", "origem", "motivoDoFoco", "voltasEmFoco",
+                                              "desdeAVolta")}
                 foco["motivoSemFicha"] = (f.get("planoDaFicha") or {}).get("motivo")
                 foco["motivoSemLembrete"] = (f.get("planoDoLembrete") or {}).get("motivo")
                 foco["voltasSemAplicar"] = VOLTAS_SEM_APLICAR
             esperando = None
-            if foco is None:
+            if not ligado:
+                esperando = "Engenheiro desligado"
+            elif foco is None:
                 esperando = "Esperando uma volta que conte" + (f" ({self.esperando})" if self.esperando else "")
             falas = [{k: f.get(k) for k in ("tipo", "chave", "sFala", "texto", "duracaoS", "audio", "trechos", "folgaS")}
                      for f in self.falas]
             return {"disponivel": self.ativo, "motivo": self.motivo, "versao": self.versao, "comprimentoM": self.L,
-                    "foco": foco, "esperando": esperando, "ultimaDescartada": self.esperando,
+                    "foco": foco, "esperando": esperando, "ultimaDescartada": self.esperando, "desligado": not ligado,
+                    "config": self.config_publica(), "contagens": list(self.contagens) if ligado else [],
+                    "lembretes": [{k: l.get(k) for k in ("trecho", "sFala", "texto", "motivo")} for l in self.lembretes],
+                    "ultimoTreino": self.ultimo_treino,
                     "lista": itens, "falas": falas, "vozLiberada": self._voz_liberada,
                     "molde": self.molde, "bipe": self.bipe, "intervaloDaContagemS": P.INTERVALO_DA_CONTAGEM_S,
                     "latenciaNoJogoS": P.LATENCIA_NO_JOGO_S, "folgaMinimaS": P.FOLGA_MINIMA_S,
@@ -558,3 +626,254 @@ class Engenheiro:
                     "ultimaConferencia": self.ultima_conferencia, "lenta": lenta,
                     "blocos": [[b["inicio"], b["fim"]] for b in self.blocos if b.get("fim") is not None],
                     "voltaLentaS": R.VOLTA_LENTA_S, "contagem": dict(self.contagem)}
+
+    # ── o engenheiro que ensina (ADR 0033, decisoes de 22/11) ───────────
+
+    CONFIG_PADRAO = {"ligado": True, "nivel": E.NIVEL_PADRAO, "escopo": "uma", "curvas": [], "treinoVoltas": E.TREINO_PADRAO}
+
+    @classmethod
+    def _validar(cls, c: Dict[str, Any]) -> Dict[str, Any]:
+        out = dict(cls.CONFIG_PADRAO)
+        out["ligado"] = bool(c.get("ligado", True))
+        out["nivel"] = c.get("nivel") if c.get("nivel") in E.NIVEIS else E.NIVEL_PADRAO
+        out["escopo"] = c.get("escopo") if c.get("escopo") in E.ESCOPOS else "uma"
+        out["curvas"] = sorted({str(x) for x in (c.get("curvas") or []) if isinstance(x, str)})
+        try:
+            out["treinoVoltas"] = max(0, min(30, int(c.get("treinoVoltas", E.TREINO_PADRAO))))
+        except (TypeError, ValueError):
+            out["treinoVoltas"] = E.TREINO_PADRAO
+        return out
+
+    def _ler_a_config(self) -> Dict[str, Any]:
+        """Item 6: as chaves guardadas em `<pasta de dados>/data/radio/engenheiro_config.json`."""
+        c = dict(self.CONFIG_PADRAO)
+        if self.config_path and Path(self.config_path).is_file():
+            try:
+                c.update(json.loads(Path(self.config_path).read_text(encoding="utf-8")))
+            except (OSError, ValueError) as erro:
+                logger.warning("Engenheiro sem a configuracao guardada: %s", erro)
+        return self._validar(c)
+
+    def config_publica(self) -> Dict[str, Any]:
+        t = self.treino
+        return {**self.config, "niveis": list(E.NIVEIS), "escopos": list(E.ESCOPOS),
+                "curvasDaPista": [x.nome for x in self.trechos if x.tem_curva],
+                "treino": None if t is None else {"voltas": t["voltas"], "feitas": t["feitas"], "desdeAVolta": t["desdeAVolta"]}}
+
+    def mudar_config(self, novo: Dict[str, Any]) -> Dict[str, Any]:
+        """Item 6: muda as chaves (o app do jogo), guarda e refaz o plano. `iniciarTreino` comeca um treino na linha
+        seguinte; `pararTreino` o cancela."""
+        novo = dict(novo or {})
+        with self._lock:
+            c = dict(self.config)
+            c.update({k: v for k, v in novo.items() if k in self.CONFIG_PADRAO})
+            self.config = self._validar(c)
+            nomes = {x.nome for x in self.trechos if x.tem_curva}
+            self.config["curvas"] = [x for x in self.config["curvas"] if x in nomes]
+            if novo.get("pararTreino"):
+                self.treino = None
+                self._registrar({"tipo": "treino", "evento": "parado"})
+            if novo.get("iniciarTreino") and self.config["treinoVoltas"] > 0:
+                self.treino = {"voltas": self.config["treinoVoltas"], "desdeAVolta": None, "feitas": 0, "analises": {}}
+                self._registrar({"tipo": "treino", "evento": "começou", "voltas": self.config["treinoVoltas"]})
+            if self.config_path:
+                try:
+                    Path(self.config_path).parent.mkdir(parents=True, exist_ok=True)
+                    Path(self.config_path).write_text(json.dumps(self.config, ensure_ascii=False, indent=1), encoding="utf-8")
+                except OSError as erro:
+                    logger.warning("Engenheiro sem gravar a configuracao: %s", erro)
+            if self.foco is not None and not self._no_escopo_do_foco(self.foco["trecho"]):
+                self._registrar({"tipo": "foco", "trecho": None, "saiu": self.foco["trecho"], "motivo": "fora do escopo escolhido"})
+                self.foco = None
+            self._registrar({"tipo": "config", **self.config})
+            self._planejar_o_foco()
+            return self.config_publica()
+
+    def _no_escopo_do_foco(self, nome: str) -> bool:
+        return self.config.get("escopo") != "algumas" or nome in self.config.get("curvas", [])
+
+    def escopo(self) -> List[str]:
+        """Item 5: as curvas do escopo (uma: o foco; algumas: a lista; inteira: todas)."""
+        nomes = [x.nome for x in self.trechos if x.tem_curva]
+        e = self.config.get("escopo", "uma")
+        if e == "inteira":
+            return nomes
+        if e == "algumas":
+            return [n for n in nomes if n in self.config.get("curvas", [])]
+        return [self.foco["trecho"]] if self.foco else []
+
+    def _lados_das_curvas(self) -> Dict[str, Optional[str]]:
+        from ml.track.corners import detect_corners
+
+        try:
+            cs = detect_corners(self.track)
+        except Exception:
+            cs = []
+        out: Dict[str, Optional[str]] = {}
+        for x in self.trechos:
+            if x.tem_curva and x.apice_s is not None:
+                c = next((c for c in cs if abs(float(c.apex_s) - float(x.apice_s)) < 1.0), None)
+                out[x.nome] = None if c is None else ("esquerda" if c.direction > 0 else "direita")
+        return out
+
+    def _preparar_as_explicacoes(self) -> None:
+        """As medidas da volta de referencia, os textos dos tres niveis e a ficha de cada curva (itens 1 a 3)."""
+        marcos = (self.marcos or {}).get("marcos") or []
+        curvas = [k for k, x in enumerate(self.trechos) if x.tem_curva]
+        g = self.modelo["grade"]
+        for k in curvas:
+            x = self.trechos[k]
+            try:
+                m = E.medidas_da_curva(g, self.track, self.trechos, k, self.lados.get(x.nome), marcos)
+                if m is None:
+                    continue
+                tipo = E.tipo_da_curva(g, self.track, self.trechos, k)
+                kn = next((j for j in curvas if j > k), curvas[0])
+                seguinte = E._seguinte(E.tipo_da_curva(g, self.track, self.trechos, kn), R.numero_da_curva(self.trechos[kn].nome))
+                textos = E.textos_da_curva(m, R.numero_da_curva(x.nome), tipo, seguinte, self.L, self.pontos_dos_marcos)
+                self.explicacoes[x.nome] = {"k": k, "medidas": m, "tipo": tipo, "textos": textos}
+                f = F.ficha_da_curva(k, self.modelo, self.track, self.trechos, marcos, self.pontos_dos_marcos, None)
+                if f is not None:
+                    self.fichas_base[x.nome] = f
+            except Exception as erro:
+                logger.warning("Engenheiro sem a explicacao da %s: %s", x.nome, erro)
+
+    def _planejar_as_outras_curvas(self, falas_do_foco: List[Dict[str, Any]]) -> None:
+        """Item 5: em "algumas" e "inteira", o lembrete e a contagem de bipes de cada curva do escopo (a ficha e so a do
+        foco). Os lembretes sao planejados na ordem da pista; um que encostaria em outra fala fica de fora."""
+        if self.config.get("escopo") == "uma" or self.perfil is None:
+            return
+        foco = self.foco["trecho"] if self.foco else None
+        aceitas = [(self.perfil.t(f["sFala"]), float(f["duracaoS"])) for f in falas_do_foco]
+
+        def encosta(t0: float, d: float) -> bool:
+            for t1, d1 in aceitas:
+                a0, a1 = t0, t0 + P.LATENCIA_NO_JOGO_S + d
+                b0, b1 = t1, t1 + P.LATENCIA_NO_JOGO_S + d1
+                if a0 < b1 + 0.3 and b0 < a1 + 0.3:
+                    return True
+            return False
+
+        for nome in self.escopo():
+            if nome == foco or nome not in self.fichas_base:
+                continue
+            fb = self.fichas_base[nome]
+            k = self._k(nome)
+            a = P.acao_do_piloto(self.perfil.grade, self.track, self.trechos, k, ACAO_DA_FICHA[fb["tipo"]])
+            ponto = P.ponto_limite(self.perfil, float(a[0]) if a else float(fb["sPonto"]), float(fb["sPonto"]))
+            self._pedir_a_voz(fb["lembrete"])
+            dur = self.duracao(fb["lembrete"])
+            pl = P.planejar_o_lembrete(self.perfil, self.pedacos, ponto, dur if dur is not None else P.ESTIMATIVA_DA_FALA_S, None)
+            item = {"trecho": nome, "texto": fb["lembrete"], "sFala": pl.get("sFala"), "motivo": pl.get("motivo")}
+            if "sFala" in pl:
+                t0 = self.perfil.t(pl["sFala"])
+                if encosta(t0, pl["duracaoS"]):
+                    item.update(sFala=None, motivo="encostaria em outra fala")
+                else:
+                    aceitas.append((t0, pl["duracaoS"]))
+                    chave = self.chave(fb["lembrete"])
+                    self.falas.append({"tipo": "lembrete", "chave": chave, "audio": f"/api/radio/engenheiro/audio/{chave}",
+                                       "texto": fb["lembrete"], "sFala": pl["sFala"], "duracaoS": pl["duracaoS"],
+                                       "duracaoMedida": dur is not None, "trechos": [nome], "folgaS": {nome: pl["folgaS"]}})
+            self.lembretes.append(item)
+            if fb["tipo"] == F.FRENAGEM and self.bipe and fb.get("sFreada") is not None:
+                self.contagens.append({"trecho": nome, "sBipes": P.pontos_da_contagem(self.perfil, float(fb["sFreada"]))})
+        self.falas.sort(key=lambda f: f["sFala"])
+
+    def _mensagem(self, titulo: str, texto: str, maximo_s: float, frente: bool) -> Dict[str, Any]:
+        return {"origem": "engenheiro", "titulo": f"Engenheiro · {titulo}", "texto": texto, "fala": texto, "falas": [texto],
+                "falaMaxS": float(maximo_s), "_frente": bool(frente)}
+
+    def tirar_mensagens(self) -> List[Dict[str, Any]]:
+        """As mensagens novas do engenheiro para a fila do radio (a analise, a explicacao e o treino)."""
+        with self._lock:
+            out, self._mensagens = self._mensagens, []
+            return out
+
+    def _analisar(self, nome: str, k: int) -> None:
+        """Item 4: a passagem do piloto pela curva, na volta em andamento, contra a referencia."""
+        exp = self.explicacoes.get(nome)
+        if exp is None or self.modelo is None:
+            return
+        volta = self._volta_atual()
+        if not volta or not volta.get("linhas") or int(volta.get("pontosDaGrade") or 0) != int(self.track.size):
+            return
+        from core.radio.analise import grade as _grade
+        try:
+            g = _grade(volta["linhas"])
+            pm = E.medidas_da_curva(g, self.track, self.trechos, k, self.lados.get(nome), (self.marcos or {}).get("marcos") or [])
+        except Exception as erro:
+            logger.warning("Engenheiro sem a analise da %s: %s", nome, erro)
+            return
+        if pm is None:
+            self._registrar({"tipo": "analise", "trecho": nome, "volta": volta.get("volta"), "semMedida": True})
+            return
+        difs = E.diferencas(exp["medidas"], pm, self.modelo["grade"], g, self.track, self.trechos, k)
+        self._analises_da_volta[nome] = difs
+        nivel = self.config.get("nivel", E.NIVEL_PADRAO)
+        texto = E.texto_da_analise(difs, R.numero_da_curva(nome), nome, nivel, exp["medidas"], self.L, self.pontos_dos_marcos)
+        self._registrar({"tipo": "analise", "trecho": nome, "volta": volta.get("volta"), "nivel": nivel, "t": self._relogio(),
+                         "diferencas": difs, "texto": texto,
+                         "medidas": {c: pm.get(c) for c in ("freada", "virar", "minimaKmh", "apiceDaBordaM", "aceleradorCheio",
+                                                            "saidaDaBordaM")}})
+        if not texto:
+            return
+        if nivel == "iniciante":
+            self.relatorio_lento = (self.relatorio_lento + [{"trecho": nome, "texto": texto}])[-20:]
+        else:
+            self._mensagens.append(self._mensagem(f"análise · {nome}", texto, 8.0, frente=True))
+
+    def _na_volta_lenta(self, s: float) -> None:
+        """Item 8: no nivel iniciante, a explicacao longa de cada curva do escopo a frente do carro e as analises
+        guardadas, uma vez por volta lenta."""
+        if self.config.get("nivel") != "iniciante":
+            return
+        def frente(n: str) -> float:
+            fb = self.fichas_base.get(n)
+            return ((float(fb["sPonto"]) - s) % self.L) if fb else 1e9
+        for n in sorted(self.escopo(), key=frente):
+            exp = self.explicacoes.get(n)
+            if exp is not None:
+                self._mensagens.append(self._mensagem(f"explicação · {n}", exp["textos"]["iniciante"], 30.0, frente=False))
+        for item in self.relatorio_lento:
+            self._mensagens.append(self._mensagem(f"análise · {item['trecho']}", item["texto"], 30.0, frente=False))
+        self.relatorio_lento = []
+
+    def _na_linha_do_treino(self, volta: Optional[Any], conta: bool) -> None:
+        """Item 7: o treino comeca na linha seguinte ao botao; conta as voltas que contam, com as analises delas."""
+        t = self.treino
+        if t is None:
+            return
+        if t["desdeAVolta"] is None:
+            t["desdeAVolta"] = volta
+            self._registrar({"tipo": "treino", "evento": "primeira linha", "volta": volta, "voltas": t["voltas"]})
+            return
+        if not conta:
+            return
+        t["feitas"] += 1
+        for nome in self.escopo():
+            t["analises"].setdefault(nome, []).append(list(self._analises_da_volta.get(nome, [])))
+        if t["feitas"] >= t["voltas"]:
+            self._fim_do_treino(volta)
+
+    def _fim_do_treino(self, volta: Optional[Any]) -> None:
+        t, self.treino = self.treino, None
+        rel = E.relatorio_do_treino(t["analises"], t["voltas"])
+        nivel = self.config.get("nivel", E.NIVEL_PADRAO)
+        itens = []
+        for c in rel:
+            exp = self.explicacoes.get(c["trecho"]) or {}
+            texto = E.texto_da_analise(c["diferencas"], R.numero_da_curva(c["trecho"]), c["trecho"], nivel,
+                                       exp.get("medidas") or {}, self.L, self.pontos_dos_marcos)
+            if texto:
+                itens.append({"trecho": c["trecho"], "texto": texto, "custoS": c["custoS"]})
+        volume = sum(E.duracao_estimada(i["texto"]) for i in itens)
+        ori = E.orientacao(volume) if itens else {"tipo": "nada a corrigir", "voltasLentas": 0,
+                                                   "texto": "Fim do treino. Nenhuma curva passou dos limites."}
+        self.ultimo_treino = {"volta": volta, "voltas": t["voltas"], "itens": itens, "volumeS": round(volume, 1), "orientacao": ori}
+        self._registrar({"tipo": "treino", "evento": "fim", "volta": volta, "voltas": t["voltas"], "relatorio": rel,
+                         "itens": itens, "volumeS": round(volume, 1), "orientacao": ori})
+        self._mensagens.append(self._mensagem("treino", ori["texto"], 8.0, frente=True))
+        for i in itens:
+            self._mensagens.append(self._mensagem(f"treino · {i['trecho']}", i["texto"], 30.0, frente=False))
+

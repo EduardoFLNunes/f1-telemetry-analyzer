@@ -239,6 +239,11 @@ def _engenheiro_sem_arquivos(blocos, lista, Lt=1000.0, falas=None):
     e.relogio, e.perfil, e.pedacos, e.falas = None, None, [], list(falas or [])
     e._medidas_no_plano, e._voz_liberada = set(), True
     e.retas_longas, e.foco, e.ficha, e.esperando = [], None, None, None
+    # decisoes de 22/11: as chaves, as explicacoes, o escopo e o treino
+    e.config, e.config_path, e._volta_atual = dict(Engenheiro.CONFIG_PADRAO), None, (lambda: None)
+    e.lados, e.explicacoes, e.fichas_base, e.contagens, e.lembretes = {}, {}, {}, [], []
+    e._mensagens, e._analises_da_volta, e.relatorio_lento, e._lenta_vista = [], {}, [], False
+    e.treino, e.ultimo_treino = None, None
     return e
 
 
@@ -326,7 +331,7 @@ def test_os_arquivos_do_engenheiro_vao_no_instalador():
     assert '"*.marcos.json"' in pacote and '"*.ruido_por_trecho.json"' in pacote
     assert '"version": "0.9.0-engenheiro"' in pacote
     manifesto = (BACKEND.parent / "tools" / "csp_app" / "radio_engenheiro" / "manifest.ini").read_text(encoding="utf-8")
-    assert "VERSION = 0.9.1" in manifesto and "FUNCTION_MAIN = engenheiro" in manifesto
+    assert "VERSION = 0.10.0" in manifesto and "FUNCTION_MAIN = engenheiro" in manifesto
 
 
 # ── as decisoes do Eduardo de 16/11 (ADR 0033, emenda) ─────────────────
@@ -915,3 +920,253 @@ def test_o_app_do_jogo_cabe_no_limite_de_200_variaveis_locais_do_lua():
     assert r.returncode == 0, r.stdout
     m = re.search(r"(\d+) no ponto mais cheio", r.stdout)
     assert m and int(m.group(1)) <= 190
+
+
+# ── as decisoes do Eduardo de 22/11 (ADR 0033, emenda): o engenheiro que ensina ──
+
+PLACA_E_ZEBRA = [{"id": "P9", "tipo": "placa", "s": 390.0, "valor": 100, "lado": "direita"},
+                 {"id": "Z9", "tipo": "zebra", "s": 425.0, "sFim": 470.0, "lado": "esquerda"}]
+
+
+def _volta_da_c02(track, freada=380.0, minima=110.0, s_minima=455.0, cheio=466.0, lat_ini=420.0):
+    """A C02 da pista de teste (uma curva a esquerda: entrada 430, apice 450, saida 500): chega pela direita (-3 m),
+    freia reto de `freada` a 420 m, vira em `lat_ini` (a zebra da esquerda comeca em 425), rola sem pedal ate a
+    minima, passa a 1,5 m da borda de dentro, acelera cheio em `cheio` e sai a 1,0 m da borda de fora."""
+    g = _volta_de_teste(track)
+    s = np.asarray(track.s, float)
+    g["freio"] = np.where((s >= freada) & (s < 420.0), 0.8, 0.0)
+    g["acelerador"] = np.where((s >= freada) & (s < cheio), 0.0, 1.0)
+    v = np.full(s.size, 180.0)
+    caindo = (s >= freada) & (s < s_minima)
+    v[caindo] = 180.0 - (s[caindo] - freada) / (s_minima - freada) * (180.0 - minima)
+    subindo = (s >= s_minima) & (s < 520.0)
+    v[subindo] = minima + (s[subindo] - s_minima) / (520.0 - s_minima) * (180.0 - minima)
+    g["velocidade"] = v
+    lat = np.full(s.size, -3.0)
+    a = (s >= lat_ini) & (s < 455.0)
+    lat[a] = -3.0 + (s[a] - lat_ini) / (455.0 - lat_ini) * 7.5
+    b = (s >= 455.0) & (s < 500.0)
+    lat[b] = 4.5 - (s[b] - 455.0) / 45.0 * 9.5
+    lat[(s >= 500.0) & (s < 600.0)] = -5.0
+    g["lateral"] = lat
+    g["elapsed"] = np.cumsum(np.r_[0.0, np.diff(s) / (v[:-1] / 3.6)])
+    return g
+
+
+def test_os_textos_dos_tres_niveis_saem_das_medidas_e_se_adaptam():
+    """Itens 1 a 3: as medidas da curva e as frases dos tres niveis pelos limites do item 2; com a frenagem da
+    referencia em outro ponto, a frase muda sozinha."""
+    from core.engenheiro import explicacao as E
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    trechos = _trechos_de_teste(track)
+    L = float(track.length)
+    g = _volta_da_c02(track)
+    m = E.medidas_da_curva(g, track, trechos, 1, "esquerda", PLACA_E_ZEBRA)
+    assert m["chegada"] == "direita" and m["reta"] is True and m["freada"] == pytest.approx(380.0, abs=2.0)
+    assert m["semPedalM"] >= E.ROLAR_M and m["minimaKmh"] == pytest.approx(110.0, abs=1.0)
+    assert m["apiceDaBordaM"] == pytest.approx(1.5, abs=0.3) and m["saidaDaBordaM"] == pytest.approx(1.0, abs=0.3)
+    seguinte = E._seguinte(E.tipo_da_curva(g, track, trechos, 0), 1)
+    t = E.textos_da_curva(m, 2, E.tipo_da_curva(g, track, trechos, 1), seguinte, L)
+    assert t["iniciante"] == ("Curva dois, à esquerda. Venha pelo lado direito. Freie forte e reto quase na placa de 100. "
+                              "Solte o freio e vire no começo da zebra da esquerda. Deixe o carro rolar sem acelerar até uns "
+                              "110 por hora, perto da borda de dentro. Acelere cedo e use a pista toda na saída, porque a um é "
+                              "de pé embaixo.")
+    assert t["amador"] == ("Dois: pela direita, freie forte quase no 100, vire no começo da zebra, mínima de 110, acelere "
+                           "cedo e abra na saída.")
+    assert t["pro"].startswith("Dois: frenagem a 10 do 100, reta, de 180 para ") and "mínima 11" in t["pro"]
+    # a referencia nova freia 50 m antes e acelera 30 m depois da minima: a frase muda sozinha
+    g2 = _volta_da_c02(track, freada=340.0, cheio=485.0)
+    t2 = E.textos_da_curva(E.medidas_da_curva(g2, track, trechos, 1, "esquerda", PLACA_E_ZEBRA), 2, "frenagem", seguinte, L)
+    assert "Freie forte e reto 50 metros antes da placa de 100." in t2["iniciante"]
+    assert "Acelere depois da mínima" in t2["iniciante"] and "acelere depois da mínima" in t2["amador"]
+
+
+def test_a_analise_depois_da_curva_diz_o_que_o_piloto_fez_diferente():
+    """Item 4: as diferencas acima dos limites, na ordem do tempo que cada fase custou; no maximo duas no amador e
+    no pro; a explicacao inteira no iniciante; sem diferenca, nada."""
+    from core.engenheiro import explicacao as E
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    trechos = _trechos_de_teste(track)
+    L = float(track.length)
+    ref = _volta_da_c02(track)
+    m_ref = E.medidas_da_curva(ref, track, trechos, 1, "esquerda", PLACA_E_ZEBRA)
+    pas = _volta_da_c02(track, freada=335.0, minima=95.0, cheio=490.0)
+    m_pas = E.medidas_da_curva(pas, track, trechos, 1, "esquerda", PLACA_E_ZEBRA)
+    difs = E.diferencas(m_ref, m_pas, ref, pas, track, trechos, 1)
+    fases = {x["fase"] for x in difs}
+    assert {"frenagem", "minima", "acelerador"} <= fases
+    assert all(x["custoS"] is not None for x in difs)
+    custos = [x["custoS"] for x in difs]
+    assert custos == sorted(custos, reverse=True)
+    amador = E.texto_da_analise(difs, 2, "C02", "amador", m_ref, L)
+    assert amador.startswith("Dois: ") and amador.count(",") == 1                  # duas diferencas
+    assert "freou 45 metros cedo" in E.texto_da_analise(difs, 2, "C02", "iniciante", m_ref, L)
+    import re
+    assert re.search(r"mínima 9[56] contra 11[01]", " ".join(E._frase_da_diferenca(x, "amador") for x in difs))
+    assert E.texto_da_analise(E.diferencas(m_ref, m_ref, ref, ref, track, trechos, 1), 2, "C02", "amador", m_ref, L) is None
+
+
+def test_o_treino_relatorio_volume_e_orientacao():
+    """Item 7: entram as curvas com diferenca em metade ou mais das voltas, com a mediana; o volume decide entre uma
+    volta lenta, N voltas lentas e volta lenta e boxes."""
+    from core.engenheiro import explicacao as E
+
+    d = lambda v, c: [{"fase": "frenagem", "trechoDaFase": "entrada", "valor": v, "custoS": c}]   # noqa: E731
+    analises = {"C04": [d(-40, 0.3), d(-50, 0.4), d(-30, 0.2), [], []],                 # 3 de 5 voltas
+                "C12": [d(-20, 0.1), [], [], d(-25, 0.2), []]}                          # 2 de 5: fica fora
+    rel = E.relatorio_do_treino(analises, 5)
+    assert [c["trecho"] for c in rel] == ["C04"]
+    assert rel[0]["diferencas"][0]["valor"] == pytest.approx(-40.0) and rel[0]["voltasComDiferenca"] == 3
+    assert E.orientacao(40.0)["tipo"] == "uma volta lenta"
+    o = E.orientacao(100.0)
+    assert o["tipo"] == "voltas lentas" and o["voltasLentas"] == 2 and o["texto"] == "Fim do treino. Dê duas voltas lentas."
+    assert E.orientacao(200.0)["texto"] == "Fim do treino. Dê uma volta lenta e entre nos boxes."
+    assert E.duracao_estimada("um dois três quatro cinco") == pytest.approx(2.0)
+
+
+def _engenheiro_que_ensina(track, tmp_path=None, **config):
+    """O engenheiro de teste com as explicacoes da volta da C02 e as chaves de 22/11."""
+    from core.engenheiro import explicacao as E
+    from core.engenheiro import ficha as F
+    from core.engenheiro.servico import Engenheiro
+
+    e = _engenheiro_de_teste(track)
+    g = _volta_da_c02(track)
+    total = float(g["elapsed"][-1]) + 1.0
+    e.modelo = {"grade": g, "tempoS": total, "origem": "volta_do_modelo", "rotulo": "volta de referência"}
+    e.tempos_modelo = R.tempos_dos_trechos(g["elapsed"], total, track, e.trechos)
+    e.marcos = {"marcos": PLACA_E_ZEBRA}
+    e.pontos_dos_marcos = M.pontos_de_referencia(PLACA_E_ZEBRA)
+    e.lados = {"C01": "esquerda", "C02": "esquerda"}
+    e.config_path = None if tmp_path is None else tmp_path / "engenheiro_config.json"
+    e.config = Engenheiro._validar({**Engenheiro.CONFIG_PADRAO, **config})
+    Engenheiro._usar_o_perfil(e, g, total, "volta de referência")
+    Engenheiro._preparar_as_explicacoes(e)
+    assert set(e.explicacoes) == {"C01", "C02"} and isinstance(F.FRENAGEM, str) and E.NIVEL_PADRAO == "amador"
+    return e, g, total
+
+
+def test_as_chaves_guardam_desligam_e_validam(tmp_path):
+    """Item 6: as chaves vao para o arquivo e voltam; valores errados viram o padrao; desligado, nada de fala, bipe
+    nem marca, e a janela diz por que."""
+    import json
+
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    e, g, total = _engenheiro_que_ensina(track, tmp_path)
+    Engenheiro._novo_foco(e, 1, None, "teste", None)
+    Engenheiro._planejar_o_foco(e)
+    assert e.falas and e.contagens
+    pub = Engenheiro.mudar_config(e, {"nivel": "pro", "escopo": "inteira", "treinoVoltas": 99, "lixo": 1})
+    assert pub["nivel"] == "pro" and pub["escopo"] == "inteira" and pub["treinoVoltas"] == 30 and "lixo" not in pub
+    assert json.loads((tmp_path / "engenheiro_config.json").read_text(encoding="utf-8"))["nivel"] == "pro"
+    assert Engenheiro._ler_a_config(e)["escopo"] == "inteira"
+    assert Engenheiro.mudar_config(e, {"nivel": "mestre"})["nivel"] == "amador"
+    Engenheiro.mudar_config(e, {"ligado": False})
+    estado = Engenheiro.estado_publico(e)
+    assert e.falas == [] and estado["contagens"] == [] and estado["foco"] is None and estado["desligado"] is True
+    assert estado["esperando"] == "Engenheiro desligado"
+    assert Engenheiro.no_quadro(e, 10.0, 180.0, True, False) == [] and Engenheiro.no_quadro(e, 30.0, 180.0, True, False) == []
+
+
+def test_o_texto_do_nivel_vai_para_a_ficha_e_o_iniciante_fica_so_com_o_lembrete():
+    """Item 3: amador e pro, a ficha dita e o texto do nivel; iniciante, sem ficha na volta rapida."""
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    for nivel in ("amador", "pro", "iniciante"):
+        e, g, total = _engenheiro_que_ensina(track, nivel=nivel)
+        Engenheiro._novo_foco(e, 1, None, "teste", None)
+        Engenheiro._planejar_o_foco(e)
+        assert e.ficha["escritaDoNivel"] == e.explicacoes["C02"]["textos"][nivel]
+        fichas = [f for f in e.falas if f["tipo"] == "ficha"]
+        if nivel == "iniciante":
+            assert fichas == [] and e.ficha["planoDaFicha"]["motivo"].startswith("nível iniciante")
+        else:
+            assert e.ficha["fala"] == e.explicacoes["C02"]["textos"][nivel]
+
+
+def test_o_escopo_algumas_curvas_e_volta_inteira():
+    """Item 5: o foco so dentro da lista; na volta inteira, o lembrete e a contagem de cada curva do escopo."""
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    e, g, total = _engenheiro_que_ensina(track, escopo="algumas", curvas=["C01"])
+    assert Engenheiro.escopo(e) == ["C01"]
+    assert Engenheiro._no_escopo_do_foco(e, "C02") is False
+    e2, g2, total2 = _engenheiro_que_ensina(track, escopo="inteira")
+    Engenheiro._novo_foco(e2, 0, None, "teste", None)                     # a C01 (de pe embaixo) em foco
+    Engenheiro._planejar_o_foco(e2)
+    assert Engenheiro.escopo(e2) == ["C01", "C02"]
+    assert [c["trecho"] for c in e2.contagens] == ["C02"]                  # a C02 freia: tem a contagem
+    assert [x["trecho"] for x in e2.lembretes] == ["C02"]
+    falas = sorted(e2.falas, key=lambda f: e2.perfil.t(f["sFala"]))
+    for a, b in zip(falas, falas[1:]):                                     # nenhuma fala encosta na outra
+        assert e2.perfil.t(a["sFala"]) + 0.1 + a["duracaoS"] + 0.3 <= e2.perfil.t(b["sFala"]) + 1e-6
+
+
+def test_a_analise_sai_depois_da_curva_e_o_iniciante_guarda_para_a_volta_lenta():
+    """Itens 4 e 8: 30 m depois da saida da curva, a passagem da volta em andamento e comparada; amador: a mensagem
+    vai para a frente da fila; iniciante: fica para a volta lenta, junto com a explicacao longa."""
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    pas = _volta_da_c02(track, freada=335.0, minima=95.0, cheio=490.0)
+    linhas = {k: [float(x) for x in pas[k]] for k in ("elapsed", "velocidade", "acelerador", "freio", "lateral")}
+    for nivel in ("amador", "iniciante"):
+        e, g, total = _engenheiro_que_ensina(track, nivel=nivel, escopo="algumas", curvas=["C02"])
+        e._volta_atual = lambda: {"volta": 3, "pontosDaGrade": int(track.size), "linhas": linhas}
+        for s in (400.0, 520.0, 535.0):                                    # 530 = a saida (500) + 30 m
+            Engenheiro.no_quadro(e, s, 180.0, True, False)
+        assert [x["fase"] for x in e._analises_da_volta["C02"]]
+        assert any(x["tipo"] == "analise" and x["trecho"] == "C02" for x in e.linhas)
+        msgs = Engenheiro.tirar_mensagens(e)
+        if nivel == "amador":
+            assert len(msgs) == 1 and msgs[0]["_frente"] and msgs[0]["origem"] == "engenheiro"
+            assert msgs[0]["fala"].startswith("Dois: ")
+        else:
+            assert msgs == [] and e.relatorio_lento and e.relatorio_lento[0]["texto"].startswith("Na dois, você ")
+            Engenheiro.no_quadro(e, 600.0, 100.0, False, False, lenta=True)    # a volta lenta
+            msgs = Engenheiro.tirar_mensagens(e)
+            assert [m["titulo"] for m in msgs] == ["Engenheiro · explicação · C02", "Engenheiro · análise · C02"]
+            assert msgs[0]["fala"] == e.explicacoes["C02"]["textos"]["iniciante"] and e.relatorio_lento == []
+
+
+def test_o_treino_comeca_na_linha_conta_as_voltas_e_orienta_no_fim():
+    """Item 7: o botao comeca o treino na linha seguinte; cada volta que conta guarda as analises; no fim, a
+    orientacao vai para a frente da fila e os itens do relatorio atras dela."""
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    e, g, total = _engenheiro_que_ensina(track, escopo="inteira", treinoVoltas=3)
+    Engenheiro.mudar_config(e, {"iniciarTreino": True})
+    assert e.treino["voltas"] == 3 and e.treino["desdeAVolta"] is None
+    difs = [{"fase": "frenagem", "trechoDaFase": "entrada", "valor": -45.0, "custoS": 0.4}]
+    Engenheiro.na_linha(e, 1, None, None, conta=False, motivo="saída dos boxes")   # a primeira linha
+    assert e.treino["desdeAVolta"] == 1 and e.treino["feitas"] == 0
+    for volta in (2, 3, 4):
+        e._analises_da_volta = {"C02": list(difs)}
+        Engenheiro._na_linha_do_treino(e, volta, conta=True)
+    assert e.treino is None and e.ultimo_treino["orientacao"]["tipo"] == "uma volta lenta"
+    msgs = Engenheiro.tirar_mensagens(e)
+    assert msgs[0]["fala"] == "Fim do treino. Dê uma volta lenta." and msgs[0]["_frente"]
+    assert msgs[1]["titulo"] == "Engenheiro · treino · C02" and "45 metros cedo" in msgs[1]["fala"]
+    assert any(x["tipo"] == "treino" and x.get("evento") == "fim" for x in e.linhas)
+
+
+def test_o_app_do_jogo_tem_as_chaves_e_as_contagens_de_varias_curvas():
+    pasta = BACKEND.parent / "tools" / "csp_app" / "radio_engenheiro"
+    lua = (pasta / "radio_engenheiro.lua").read_text(encoding="utf-8")
+    assert "eng.desenharAsChaves = function(W, H)" in lua and "/api/radio/engenheiro/config" in lua
+    assert '{"iniciarTreino":true}' in lua and '{"pararTreino":true}' in lua
+    assert "d.contagens" in lua and "foco.escritaDoNivel" in lua and "'Engenheiro desligado'" in lua

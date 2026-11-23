@@ -19,11 +19,11 @@
 --     traçado e o tempo perdido. Na reta, junto com a fala; nos boxes, as voltas da sessão
 --     para estudar (pedido 45): a janela abre sozinha, com a lista das voltas, a grade e o botão
 --     "Abrir no app", que só faz um pedido ao backend local;
---   * o engenheiro (`engenheiro`, pedido 52, ADR 0033): a ficha da curva de foco, a conferência do foco depois
---     da linha, "Esperando uma volta que conte" sem foco e, na volta lenta, a lista inteira; com ela aberta, a
---     marca do ponto de frenagem do foco no asfalto (ou a contagem 3-2-1, se o CSP não tiver a API). A ficha, o
---     lembrete e a contagem de três bipes tocam pelo `s` do carro, com a janela aberta ou não (app 0.9.0, ADR
---     0033, emenda de 21/11).
+--   * o engenheiro (`engenheiro`, pedido 52, ADR 0033): a ficha da curva de foco no texto do nível escolhido, a
+--     conferência do foco depois da linha, "Esperando uma volta que conte" sem foco e, na volta lenta, a lista
+--     inteira; no pé, as chaves (ligado, nível, escopo e treino; app 0.10.0, decisões de 22/11); com ela aberta,
+--     a marca do ponto de frenagem do foco no asfalto (ou a contagem 3-2-1, se o CSP não tiver a API). A ficha, os
+--     lembretes e as contagens de três bipes tocam pelo `s` do carro, com a janela aberta ou não.
 --
 -- A voz tem três caminhos, um depois do outro (pedido 35, Parte B): a URL do backend;
 -- o arquivo que o backend grava em data/radio/audio/; e o áudio baixado para a
@@ -2535,11 +2535,18 @@ local function acompanharOsAvisos()
       if passou(f.sFala) then tocarOAviso(f, s) end
     end
   end
+  -- a contagem de bipes de cada curva do escopo (decisões de 22/11, item 5); um backend antigo só manda a do foco
   local foco = oFoco()
-  if d.bipe ~= false and foco and type(foco.sBipes) == 'table' then
-    local n = #foco.sBipes
-    for j, sb in ipairs(foco.sBipes) do
-      if passou(sb) then tocarOBipe(foco, j, n, s) end
+  local contagens = type(d.contagens) == 'table' and d.contagens
+    or ((foco and type(foco.sBipes) == 'table') and { { trecho = foco.trecho, sBipes = foco.sBipes } } or {})
+  if d.bipe ~= false and not d.desligado then
+    for _, c in ipairs(contagens) do
+      if type(c.sBipes) == 'table' then
+        local n = #c.sBipes
+        for j, sb in ipairs(c.sBipes) do
+          if passou(sb) then tocarOBipe(c, j, n, s) end
+        end
+      end
     end
   end
 end
@@ -2569,6 +2576,76 @@ function engenheiro(dt)
   naJanelaInteira(tamanho.x, tamanho.y, desenharOEngenheiro, dt)
 end
 
+-- As chaves do engenheiro (ADR 0033, decisões de 22/11, item 6): botões no pé da janela, que mudam a configuração
+-- no backend (`POST /api/radio/engenheiro/config`). Ficam na tabela `eng` (e não como variáveis locais) por causa do
+-- limite de 200 variáveis locais do Lua na função principal do arquivo.
+eng.botao = function(x, y, texto, aceso)
+  local w = larguraDoRotulo(texto) + 12
+  local m = ui.mouseLocalPos()
+  local em = ui.windowHovered() and m.x >= x and m.x <= x + w and m.y >= y and m.y <= y + 16
+  ui.drawRectFilled(vec2(x, y), vec2(x + w, y + 16), (em or aceso) and CORES.vermelho or CORES.fundoDoMapa, 3)
+  ui.dwriteDrawText(texto, 11, vec2(x + 6, y + 1), CORES.texto)
+  return em and ui.mouseClicked(ui.MouseButton.Left), x + w + 6
+end
+
+eng.mudar = function(corpo)
+  pedirAoBackend(BACKEND .. '/api/radio/engenheiro/config', function(err, r)
+    if err or not r or r.status ~= 200 then
+      log('engenheiro: o backend não aceitou a mudança das chaves')
+      return
+    end
+    log('engenheiro: chaves mudadas: ' .. corpo)
+  end, corpo)
+end
+
+eng.PROXIMO_NIVEL = { iniciante = 'amador', amador = 'pro', pro = 'iniciante' }
+eng.PROXIMO_ESCOPO = { uma = 'algumas', algumas = 'inteira', inteira = 'uma' }
+eng.NOME_DO_ESCOPO = { uma = 'uma curva', algumas = 'algumas curvas', inteira = 'volta inteira' }
+eng.PROXIMO_TREINO = { [3] = 5, [5] = 8, [8] = 10, [10] = 3 }
+
+-- Devolve a altura usada pelas chaves no pé da janela.
+eng.desenharAsChaves = function(W, H)
+  local d = eng.dados
+  local c = d and d.config
+  if type(c) ~= 'table' then return 0 end
+  local y = H - 22
+  local x = 20
+  local clicou
+  clicou, x = eng.botao(x, y, c.ligado == false and 'desligado' or 'ligado', c.ligado ~= false)
+  if clicou then eng.mudar('{"ligado":' .. (c.ligado == false and 'true' or 'false') .. '}') end
+  clicou, x = eng.botao(x, y, 'nível: ' .. tostring(c.nivel), false)
+  if clicou then eng.mudar('{"nivel":"' .. (eng.PROXIMO_NIVEL[c.nivel] or 'amador') .. '"}') end
+  clicou, x = eng.botao(x, y, eng.NOME_DO_ESCOPO[c.escopo] or tostring(c.escopo), false)
+  if clicou then eng.mudar('{"escopo":"' .. (eng.PROXIMO_ESCOPO[c.escopo] or 'uma') .. '"}') end
+  local tr = c.treino
+  local rotulo = type(tr) == 'table' and ('treino ' .. tostring(tr.feitas) .. ' de ' .. tostring(tr.voltas) .. ' · parar')
+    or ('treinar ' .. tostring(c.treinoVoltas) .. ' voltas')
+  clicou, x = eng.botao(x, y, rotulo, type(tr) == 'table')
+  if clicou then eng.mudar(type(tr) == 'table' and '{"pararTreino":true}' or '{"iniciarTreino":true}') end
+  if type(tr) ~= 'table' then
+    clicou, x = eng.botao(x, y, '±', false)
+    if clicou then eng.mudar('{"treinoVoltas":' .. tostring(eng.PROXIMO_TREINO[tonumber(c.treinoVoltas)] or 5) .. '}') end
+  end
+  if c.escopo ~= 'algumas' or type(c.curvasDaPista) ~= 'table' then return 26 end
+  -- "algumas curvas": um botão por curva, aceso nas escolhidas
+  local escolhidas = {}
+  for _, n in ipairs(type(c.curvas) == 'table' and c.curvas or {}) do escolhidas[n] = true end
+  local x2 = 20
+  for _, n in ipairs(c.curvasDaPista) do
+    local cl
+    cl, x2 = eng.botao(x2, H - 42, tostring(n):sub(2, 3), escolhidas[n] == true)
+    if cl then
+      escolhidas[n] = not escolhidas[n]
+      local lista = {}
+      for _, m in ipairs(c.curvasDaPista) do
+        if escolhidas[m] then lista[#lista + 1] = '"' .. m .. '"' end
+      end
+      eng.mudar('{"curvas":[' .. table.concat(lista, ',') .. ']}')
+    end
+  end
+  return 46
+end
+
 desenharOEngenheiro = function(dt)
   local t = relogio()
   eng.ultimoQuadro = t
@@ -2586,6 +2663,8 @@ desenharOEngenheiro = function(dt)
     caixa('Engenheiro: ' .. tostring(d.motivo or 'indisponível'), 13, vec2(20, 30), vec2(W - 10, H - 10), CORES.fraco)
     return
   end
+  local pe = eng.desenharAsChaves(W, H)
+  local fundo = H - pe - 4
   local L = tonumber(d.comprimentoM) or tonumber(mini.comprimento) or 0
   local okC, carro = pcall(ac.getCar, 0)
   local s = eng.s
@@ -2594,14 +2673,22 @@ desenharOEngenheiro = function(dt)
   local lista = type(d.lista) == 'table' and d.lista or {}
   local conf = d.ultimaConferencia
   local foco = oFoco()
+  if d.desligado then
+    caixa('Engenheiro desligado', 18, vec2(20, 30), vec2(W - 10, fundo), CORES.fraco)
+    return
+  end
+  local tr = d.config and d.config.treino
+  if type(tr) == 'table' then
+    ui.dwriteDrawText('treino: ' .. tostring(tr.feitas) .. ' de ' .. tostring(tr.voltas) .. ' voltas', 12, vec2(W - 150, 10), CORES.apoio)
+  end
   -- Depois da linha: a conferência do foco.
   if not lenta and type(conf) == 'table' and t - eng.conferenciaEm < ENGC.CONFERENCIA_S and conf.texto then
     local c = type(conf.conferidas) == 'table' and conf.conferidas[1] or {}
-    caixa(tostring(conf.texto), 20, vec2(20, 30), vec2(W - 10, H - 40),
+    caixa(tostring(conf.texto), 20, vec2(20, 30), vec2(W - 10, fundo - 20),
       c.aplicada == true and CORES.ganho or (c.aplicada == false and CORES.perda or CORES.texto))
     if foco then
       ui.dwriteDrawText('foco: ' .. tostring(foco.trecho) .. ' · ' .. tostring(foco.voltasEmFoco or 0) .. ' de '
-        .. tostring(foco.voltasSemAplicar or 3) .. ' voltas', 12, vec2(20, H - 26), CORES.apoio)
+        .. tostring(foco.voltasSemAplicar or 3) .. ' voltas', 12, vec2(20, fundo - 16), CORES.apoio)
     end
     return
   end
@@ -2610,7 +2697,7 @@ desenharOEngenheiro = function(dt)
     ui.dwriteDrawText('volta lenta: ' .. tostring(motivo or ''), 12, vec2(120, 10), CORES.apoio)
     local y = 30
     for _, it in ipairs(lista) do
-      if y > H - 18 then break end
+      if y > fundo - 16 then break end
       local perda = it.perdaS and ('−' .. decimal(math.abs(tonumber(it.perdaS)), 2) .. ' s') or ''
       local linha = tostring(it.janela or it.trecho) .. '  ' .. perda
       ui.dwriteDrawText(corte(linha, 80), 13, vec2(20, y), CORES.texto)
@@ -2621,25 +2708,25 @@ desenharOEngenheiro = function(dt)
   end
   -- Sem foco: a janela nunca fica vazia sem explicação (emenda de 21/11, item 5).
   if not foco then
-    caixa(tostring(d.esperando or 'Esperando uma volta que conte'), 18, vec2(20, 30), vec2(W - 10, H - 10), CORES.apoio)
+    caixa(tostring(d.esperando or 'Esperando uma volta que conte'), 18, vec2(20, 30), vec2(W - 10, fundo), CORES.apoio)
     return
   end
-  -- A ficha da curva de foco, a volta toda (emenda de 21/11, item 10).
+  -- A ficha da curva de foco, a volta toda, no texto do nível escolhido (decisões de 22/11, item 3).
   ui.dwriteDrawText('foco: ' .. tostring(foco.trecho) .. ' · ' .. tostring(foco.origem or ''), 12, vec2(120, 10), CORES.apoio)
-  ui.drawRectFilled(vec2(14, 26), vec2(W - 10, H - 30), comAlfa(CORES.vermelho, 0.18), 6)
-  caixa(tostring(foco.escrita or foco.trecho), 18, vec2(20, 30), vec2(W - 70, H - 34), CORES.texto)
+  ui.drawRectFilled(vec2(14, 26), vec2(W - 10, fundo - 20), comAlfa(CORES.vermelho, 0.18), 6)
+  caixa(tostring(foco.escritaDoNivel or foco.escrita or foco.trecho), 16, vec2(20, 30), vec2(W - 70, fundo - 24), CORES.texto)
   if s and L > 0 then
     local alvo = tonumber(foco.sFreada) or tonumber(foco.sPonto)
     if alvo then
       ui.dwriteDrawText('a ' .. decimal(aFrente(s, alvo, L), 0) .. ' m do ponto'
-        .. (d.vozLiberada == false and ' · voz calada nesta volta' or ''), 12, vec2(20, H - 26), CORES.apoio)
+        .. (d.vozLiberada == false and ' · voz calada nesta volta' or ''), 12, vec2(20, fundo - 16), CORES.apoio)
     end
     if not MARCA_3D and okC and carro then
       local n = contagem321(foco, s, L, carro)
       if n then ui.dwriteDrawText(n, 44, vec2(W - 60, 30), CORES.vermelho) end
     end
   elseif not s then
-    ui.dwriteDrawText('sem a posição do carro (o minimapa ainda não baixou a referência)', 12, vec2(20, H - 26), CORES.fraco)
+    ui.dwriteDrawText('sem a posição do carro (o minimapa ainda não baixou a referência)', 12, vec2(20, fundo - 16), CORES.fraco)
   end
 end
 
