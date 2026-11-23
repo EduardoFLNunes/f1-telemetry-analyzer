@@ -1344,3 +1344,30 @@ Uma linha por volta:
 - **O comando** (na pasta do repositório):
   `powershell -NoProfile -ExecutionPolicy Bypass -File tools\csp_app\instalar.ps1`
 - **Depois da instalação:** eu abro o app do repositório (o backend na porta 8000, o front e a janela) antes do jogo; você faz o teste com o roteiro da Parte E e preenche o cartão.
+
+#### O app do jogo 0.9.0 não carregou no jogo (22/11, 21h55); a 0.9.1 corrige
+
+**O que você viu:** depois do `instalar.ps1`, nenhuma das janelas do app abria no jogo.
+- **O instalador está certo.** A pasta do jogo tem os mesmos arquivos do repositório: a 0.9.0, instalada às 21h30, com o `bipe_agudo.wav`.
+- **A causa, no log do CSP de 22/11:** "Failed to parse: radio_engenheiro.lua:2798: main function has more than 200 local variables". Em seguida, "Lua: <App: Rádio do engenheiro> failed to load". O app inteiro não carregou, então as cinco janelas ficaram vazias.
+- **Por quê:**
+  - O Lua aceita no máximo 200 variáveis locais ativas ao mesmo tempo na função principal do arquivo.
+  - A 0.8.0 já estava no limite, com 200. As mudanças de 21/11 levaram a 0.9.0 a 201: entraram 3 locais novas e saíram 2.
+  - A linha 2798 é o `local okR` dentro do `if MARCA_3D` do começo do app: é ela que conta a 201ª.
+- **O erro foi meu:** o `conferir_lua.py` não conferia esse limite, e eu disse que o app "passava na conferência".
+
+**A correção (o app do jogo 0.9.1):**
+- As constantes ficaram em tabelas: as 11 do engenheiro em `ENGC`, as 4 da lista das voltas em `LISTAC` e as 3 da grade em `GRADEC`.
+- O app ficou com 185 variáveis locais no nível de cima e 186 no ponto mais cheio. Nenhum comportamento mudou.
+- O `conferir_lua.py` agora conta as variáveis locais ativas na função principal: as do nível de cima e, no ponto mais cheio, as de dentro de `if`, `do`, `while` e `for` fora de funções (o `for` com as três escondidas do Lua). Acima de 190, ele acusa um problema. A conta bate com o que o jogo mostrou:
+  - a 0.8.0: 200, e carregou;
+  - a 0.9.0: 201, e não carregou;
+  - a 0.9.1: 186.
+- Um teste novo (`test_o_app_do_jogo_cabe_no_limite_de_200_variaveis_locais_do_lua`) roda o `conferir_lua.py`. Os testes do engenheiro e da referência passam: 52. A saída do conferidor está em `_conferir_lua_2211.txt`.
+- A documentação (`docs/realidade_aumentada.md`, seção 9.8, e `docs/app_para_producao.md`) diz 0.9.1.
+
+**O que falta:**
+1. **Fechar o jogo** (o `acs.exe` está aberto).
+2. **O seu "pode instalar" da 0.9.1.** Depois dele, você roda de novo o `instalar.ps1`: `powershell -NoProfile -ExecutionPolicy Bypass -File tools\csp_app\instalar.ps1`.
+3. **O teste no jogo,** com o cartão. O app do repositório continua aberto: o backend, o front e a janela.
+

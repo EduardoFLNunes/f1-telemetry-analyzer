@@ -589,7 +589,7 @@ O teste no jogo de 20/11 mostrou dois problemas. Só 2 de 14 avisos foram pela v
 - **A janela** mostra os dois próximos avisos, cada um desde o fim da ação anterior a ele, com o da vez em destaque. **A marca no asfalto** fica no ponto dito.
 - **A reserva do feedback** usa o tempo do perfil até a primeira fala planejada à frente, e não a velocidade do momento.
 
-### 9.8 Depois do teste de 21/11: a curva de foco (ADR 0033, emenda de 21/11; app do jogo 0.9.0)
+### 9.8 Depois do teste de 21/11: a curva de foco (ADR 0033, emenda de 21/11; app do jogo 0.9.1)
 
 O teste de 21/11 mostrou que a voz sai a tempo, mas o engenheiro falava de curvas demais, cedo demais, e o bipe marcava coisas diferentes. A emenda de 21/11 troca a entrega:
 - **Uma curva de foco por vez:** a de maior perda acima do ruído, na linha de cada volta que conta. O engenheiro só fala dela.
@@ -604,3 +604,4 @@ O teste de 21/11 mostrou que a voz sai a tempo, mas o engenheiro falava de curva
 - **A marca no asfalto** fica só na curva de foco, no ponto de frenagem.
 - **O alívio só conta com 10 m ou mais** de acelerador abaixo de 0,90 (a queda na troca de marcha não conta), também no "sem tirar o pé".
 - **O registro** ganha as linhas `foco`, `ficha`, `lembrete` e `plano` da ficha, e a `conferencia` só do foco; a linha `aviso` sai.
+- **O app do jogo 0.9.1:** a 0.9.0 não carregou no jogo ("main function has more than 200 local variables"). O Lua aceita no máximo 200 variáveis locais ativas na função principal do arquivo, e o app chegou a 201. As constantes do engenheiro, da lista das voltas e da grade foram para tabelas (186 no ponto mais cheio), e o `tools/csp_app/conferir_lua.py` passou a contar esse limite, pedindo folga até 190.

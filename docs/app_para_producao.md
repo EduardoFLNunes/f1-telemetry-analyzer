@@ -38,7 +38,7 @@ O **Automobilista Telemetria** é um app de Windows (Electron e backend em Pytho
 | A volta de referência do app é a volta do modelo; a volta da IA sai do app; "da referência" e "Melhor da sessão" (pedido 51, ADR 0032) | não | sim | sim |
 | O engenheiro: a lista, o aviso antes da curva pelo marco, os blocos de voz, a janela "Engenheiro" e a marca na pista (pedido 52, ADR 0033) | não | não | sim |
 | Número da versão do app do Windows | `0.7.0-radio-que-ensina` | `0.8.0-volta-do-modelo` | `0.9.0-engenheiro` |
-| App do jogo que acompanha | 0.5.0 | 0.6.0 | 0.9.0 (a 0.7.0 foi a do teste de 20/11; a 0.8.0, a do teste de 21/11) |
+| App do jogo que acompanha | 0.5.0 | 0.6.0 | 0.9.1 (a 0.7.0 foi a do teste de 20/11; a 0.8.0, a do teste de 21/11; a 0.9.0 não carregou no jogo: passou de 200 variáveis locais do Lua) |
 
 **Em 15/11/2026, 17:23, a 0.8.0 (`46e8db8`) foi instalada por cima da 0.7.0** (pedido 51): a coluna da 0.7.0 fica como histórico.
 
@@ -54,7 +54,7 @@ O **Automobilista Telemetria** é um app de Windows (Electron e backend em Pytho
 ## 4. Riscos conhecidos
 
 - **O engenheiro precisa de três arquivos fora do git** (pedido 52): a volta do modelo, `vhe_interlagos.marcos.json` (gere com `python -m core.engenheiro.marcos <pasta da pista>`, só leitura) e `vhe_interlagos.ruido_por_trecho.json` (`python -m core.engenheiro.preparar ruido <resultado do 50>`). Sem um deles, o engenheiro fica calado e o rádio é o da 0.8.0. O instalador os leva pelos filtros do `extraResources`.
-- **O app do jogo 0.9.0 é o par do backend 0.9.0** (emenda de 21/11). O 0.8.0 com este backend fica sem a ficha escrita, a contagem de bipes e a marca do foco (ele lê a lista e os bipes da emenda de 20/11, que não existem mais), mas ainda toca a ficha e o lembrete pela lista `falas`. Antes (emenda de 20/11): o backend não entrega mais o aviso pela fila do rádio, então um app do jogo anterior (0.6.0 ou 0.7.0) com este backend fica sem a voz dos avisos. O 0.7.0 com o backend 0.8.0 mostra "Engenheiro: lendo a lista" (a rota não existe).
+- **O app do jogo 0.9.1 é o par do backend 0.9.0** (emenda de 21/11; a 0.9.0 não carregou no jogo porque passou do limite de 200 variáveis locais do Lua na função principal, e o `conferir_lua.py` agora confere esse limite). O 0.8.0 com este backend fica sem a ficha escrita, a contagem de bipes e a marca do foco (ele lê a lista e os bipes da emenda de 20/11, que não existem mais), mas ainda toca a ficha e o lembrete pela lista `falas`. Antes (emenda de 20/11): o backend não entrega mais o aviso pela fila do rádio, então um app do jogo anterior (0.6.0 ou 0.7.0) com este backend fica sem a voz dos avisos. O 0.7.0 com o backend 0.8.0 mostra "Engenheiro: lendo a lista" (a rota não existe).
 - **A volta do modelo é um arquivo fora do git** (`data/reference_models/vhe_interlagos.volta_do_modelo.json`). O instalador o leva da pasta do repositório; sem ele, o pacote sai sem a volta de referência, e o app oferece só "Sua melhor volta". Gere de novo com `python -m ml.scripts.volta_do_modelo` (pedido 51).
 
 - **O app do jogo 0.4.1 ou mais antigo com o backend novo dá erro na janela do replay** nas frases do coach, que vêm sem o traçado. Instale o 0.4.2 junto.

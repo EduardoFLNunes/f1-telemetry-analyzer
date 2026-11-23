@@ -326,7 +326,7 @@ def test_os_arquivos_do_engenheiro_vao_no_instalador():
     assert '"*.marcos.json"' in pacote and '"*.ruido_por_trecho.json"' in pacote
     assert '"version": "0.9.0-engenheiro"' in pacote
     manifesto = (BACKEND.parent / "tools" / "csp_app" / "radio_engenheiro" / "manifest.ini").read_text(encoding="utf-8")
-    assert "VERSION = 0.9.0" in manifesto and "FUNCTION_MAIN = engenheiro" in manifesto
+    assert "VERSION = 0.9.1" in manifesto and "FUNCTION_MAIN = engenheiro" in manifesto
 
 
 # ── as decisoes do Eduardo de 16/11 (ADR 0033, emenda) ─────────────────
@@ -900,3 +900,18 @@ def test_o_app_do_jogo_toca_a_ficha_e_a_contagem_pelo_s_e_mostra_o_foco():
     marca = lua.split("local function desenharAMarca", 1)[1].split("\nend", 1)[0]
     assert "foco.marca" in marca and "d.lista" not in marca            # a marca so na curva de foco
     assert "Esperando uma volta que conte" in lua
+
+
+def test_o_app_do_jogo_cabe_no_limite_de_200_variaveis_locais_do_lua():
+    """Pedido 52 (22/11): o app 0.9.0 passou de 200 variaveis locais ativas na funcao principal e o CSP nao o
+    carregou ("main function has more than 200 local variables"). O `conferir_lua.py` conta e pede folga ate 190."""
+    import re
+    import subprocess
+
+    raiz = BACKEND.parent
+    r = subprocess.run([sys.executable, str(raiz / "tools" / "csp_app" / "conferir_lua.py"),
+                        str(raiz / "tools" / "csp_app" / "radio_engenheiro" / "radio_engenheiro.lua")],
+                       capture_output=True, text=True, encoding="utf-8")
+    assert r.returncode == 0, r.stdout
+    m = re.search(r"(\d+) no ponto mais cheio", r.stdout)
+    assert m and int(m.group(1)) <= 190

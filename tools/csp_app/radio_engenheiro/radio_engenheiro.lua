@@ -1271,9 +1271,12 @@ local REPLAY_MARGEM = 18
 local ALTURA_DO_PEDAL, ALTURA_DA_DIFERENCA, ALTURA_DA_VELOCIDADE = 30, 60, 74
 local REPLAY_MINIMO = 150
 local COLUNA_DOS_NOMES = 34
-local GRADE_VOLTAS = 8                 -- nos boxes, as últimas 8 voltas válidas
-local GRADE_LEITURA_S = 5
-local GRADE_PERDA_FORTE_S = 1.0
+-- (numa tabela, como as do engenheiro: o limite de 200 variáveis locais do Lua; pedido 52, 22/11)
+local GRADEC = {
+  VOLTAS = 8,                  -- nos boxes, as últimas 8 voltas válidas
+  LEITURA_S = 5,
+  PERDA_FORTE_S = 1.0,
+}
 local COR_DO_TRECHO = rgbm(1, 1, 1, 0.16)            -- o trecho da fala nos visuais
 local COR_DO_TRECHO_NA_PISTA = rgbm(1, 1, 1, 0.32)   -- e sobre a pista, mais forte
 
@@ -1861,7 +1864,7 @@ end
 -- ── a grade da sessão (pedido 43, C.4), nos boxes ───────────────────────
 
 local function lerAGrade(t)
-  if rp.gradeSemRota or t - rp.gradeLidaEm < GRADE_LEITURA_S then return end
+  if rp.gradeSemRota or t - rp.gradeLidaEm < GRADEC.LEITURA_S then return end
   rp.gradeLidaEm = t
   pedirAoBackend(BACKEND .. '/api/radio/grade', function(err, r)
     if err or not r then return end
@@ -1884,7 +1887,7 @@ local function alturaDaGrade()
   local g = rp.grade
   if not g or #g.voltas == 0 then return 0 end
   local fora = type(g.fora) == 'table' and math.min(#g.fora, 2) or 0
-  return 18 + 15 + 15 * math.min(#g.voltas, GRADE_VOLTAS) + 13 * fora + 6
+  return 18 + 15 + 15 * math.min(#g.voltas, GRADEC.VOLTAS) + 13 * fora + 6
 end
 
 local function desenharAGrade(x0, y0, W, H)
@@ -1904,7 +1907,7 @@ local function desenharAGrade(x0, y0, W, H)
   for _, c in ipairs(type(g.citadas) == 'table' and g.citadas or {}) do
     citadas[tostring(c.volta) .. ':' .. tostring(c.curva)] = true
   end
-  local primeira = math.max(1, #g.voltas - GRADE_VOLTAS + 1)
+  local primeira = math.max(1, #g.voltas - GRADEC.VOLTAS + 1)
   for i = primeira, #g.voltas do
     local v = g.voltas[i]
     ui.dwriteDrawText('volta ' .. tostring(v.volta), fonte, vec2(x0 + 4, y + 1), CORES.texto)
@@ -1913,7 +1916,7 @@ local function desenharAGrade(x0, y0, W, H)
       local a = vec2(x0 + 40 + (k - 1) * cw + 1, y)
       local b = vec2(x0 + 40 + k * cw - 1, y + 13)
       if p then
-        local forca = 0.15 + 0.75 * math.min(1, math.abs(p) / GRADE_PERDA_FORTE_S)
+        local forca = 0.15 + 0.75 * math.min(1, math.abs(p) / GRADEC.PERDA_FORTE_S)
         ui.drawRectFilled(a, b, comAlfa(p >= 0 and CORES.perda or CORES.ganho, forca), 2)
         local texto = (p < 0 and '−' or '') .. decimal(math.abs(p), 2) .. ' s'
         ui.dwriteDrawText(texto, fonte, vec2(a.x + 2, y + 1), math.abs(p) > 0.6 and CORES.fundo or CORES.texto)
@@ -2000,14 +2003,16 @@ end
 
 -- ── as voltas da sessão, nos boxes (pedido 45, Parte E) ─────────────────
 
-local LISTA_LINHA = 16
-local LISTA_CABECALHO = 34
-local LISTA_RODAPE = 18
-local LISTA_COLUNAS = 172        -- o número, o tempo e a diferença
+local LISTAC = {                 -- numa tabela: o limite de 200 variáveis locais do Lua (pedido 52, 22/11)
+  LINHA = 16,
+  CABECALHO = 34,
+  RODAPE = 18,
+  COLUNAS = 172,                 -- o número, o tempo e a diferença
+}
 local ESTADOS_DA_VOLTA = { valida = 'válida', invalida = 'inválida', rodada = 'rodada', ia = 'IA', incompleta = 'incompleta' }
 
 local function lerAsVoltas(t)
-  if bx.semRota or t - bx.lidaEm < GRADE_LEITURA_S then return end
+  if bx.semRota or t - bx.lidaEm < GRADEC.LEITURA_S then return end
   bx.lidaEm = t
   pedirAoBackend(BACKEND .. '/api/radio/voltas', function(err, r)
     if err or not r then return end
@@ -2101,30 +2106,30 @@ local function desenharAsVoltas(t, x0, y0, W, H, acesa)
 
   -- O cabeçalho das curvas.
   local nc = #g.curvas
-  local cw = (W - LISTA_COLUNAS - 8) / math.max(nc, 1)
+  local cw = (W - LISTAC.COLUNAS - 8) / math.max(nc, 1)
   local fonte = math.min(10, cw / 3.6)
-  local colunaDasCelulas = x0 + LISTA_COLUNAS
+  local colunaDasCelulas = x0 + LISTAC.COLUNAS
   for k, nome in ipairs(g.curvas) do
     ui.dwriteDrawText(tostring(nome), fonte, vec2(colunaDasCelulas + (k - 1) * cw + 2, y0 + 19), CORES.fraco)
   end
-  local topoDasLinhas, altura = y0 + LISTA_CABECALHO, H - LISTA_CABECALHO - LISTA_RODAPE
-  local conteudo = LISTA_LINHA * #g.voltas
+  local topoDasLinhas, altura = y0 + LISTAC.CABECALHO, H - LISTAC.CABECALHO - LISTAC.RODAPE
+  local conteudo = LISTAC.LINHA * #g.voltas
   local maximo = math.max(0, conteudo - altura)
   if dentro then
     local roda = tonumber(ui.mouseWheel()) or 0
-    if roda ~= 0 then bx.rolagem = bx.rolagem - roda * LISTA_LINHA * 2 end
+    if roda ~= 0 then bx.rolagem = bx.rolagem - roda * LISTAC.LINHA * 2 end
   end
   bx.rolagem = math.max(0, math.min(maximo, bx.rolagem))
   local recorte = ui.pushClipRect ~= nil and ui.popClipRect ~= nil
   if recorte then ui.pushClipRect(vec2(x0, topoDasLinhas), vec2(x0 + W, topoDasLinhas + altura), true) end
   local sobre = nil
   for i, v in ipairs(g.voltas) do
-    local y = topoDasLinhas + (i - 1) * LISTA_LINHA - bx.rolagem
-    if y + LISTA_LINHA >= topoDasLinhas and y <= topoDasLinhas + altura then
-      local naLinha = dentro and mouse.y >= y and mouse.y < y + LISTA_LINHA and mouse.y >= topoDasLinhas and mouse.y < topoDasLinhas + altura
+    local y = topoDasLinhas + (i - 1) * LISTAC.LINHA - bx.rolagem
+    if y + LISTAC.LINHA >= topoDasLinhas and y <= topoDasLinhas + altura then
+      local naLinha = dentro and mouse.y >= y and mouse.y < y + LISTAC.LINHA and mouse.y >= topoDasLinhas and mouse.y < topoDasLinhas + altura
       local selecionada = bx.volta == v.volta
       if selecionada or naLinha then
-        ui.drawRectFilled(vec2(x0, y), vec2(x0 + W, y + LISTA_LINHA), comAlfa(CORES.branco, selecionada and 0.14 or 0.07), 0)
+        ui.drawRectFilled(vec2(x0, y), vec2(x0 + W, y + LISTAC.LINHA), comAlfa(CORES.branco, selecionada and 0.14 or 0.07), 0)
       end
       if naLinha then sobre = v end
       local temReplay = v.temReplay == true
@@ -2147,8 +2152,8 @@ local function desenharAsVoltas(t, x0, y0, W, H, acesa)
         if p then
           temCelulas = true
           local a = vec2(colunaDasCelulas + (k - 1) * cw + 1, y + 1)
-          local b = vec2(colunaDasCelulas + k * cw - 1, y + LISTA_LINHA - 1)
-          local forca = 0.15 + 0.75 * math.min(1, math.abs(p) / GRADE_PERDA_FORTE_S)
+          local b = vec2(colunaDasCelulas + k * cw - 1, y + LISTAC.LINHA - 1)
+          local forca = 0.15 + 0.75 * math.min(1, math.abs(p) / GRADEC.PERDA_FORTE_S)
           ui.drawRectFilled(a, b, comAlfa(p >= 0 and CORES.perda or CORES.ganho, forca), 2)
           ui.dwriteDrawText((p < 0 and '−' or '') .. decimal(math.abs(p), 2), fonte, vec2(a.x + 2, y + 2),
             math.abs(p) > 0.6 and CORES.fundo or CORES.texto)
@@ -2187,7 +2192,7 @@ local function desenharAsVoltas(t, x0, y0, W, H, acesa)
   if recorte then ui.popClipRect() end
   local rodape = sobre and ('volta ' .. tostring(sobre.volta) .. ': ' .. tostring(sobre.motivo))
     or bx.motivo or (bx.carregando and 'lendo o replay...' or 'clique na volta para a volta inteira; numa célula, para a curva')
-  ui.dwriteDrawText(corte(rodape, 110), 10, vec2(x0 + 6, y0 + H - LISTA_RODAPE + 3), CORES.fraco)
+  ui.dwriteDrawText(corte(rodape, 110), 10, vec2(x0 + 6, y0 + H - LISTAC.RODAPE + 3), CORES.fraco)
 end
 
 local desenharOReplay
@@ -2223,7 +2228,7 @@ desenharOReplay = function(dt)
     lerAsVoltas(t)
     if bx.lista and not bx.semRota then
       comAsVoltas = true
-      altVoltas = math.min((y1 - y0) * 0.5, LISTA_CABECALHO + LISTA_RODAPE + LISTA_LINHA * math.max(#bx.lista.voltas, 3))
+      altVoltas = math.min((y1 - y0) * 0.5, LISTAC.CABECALHO + LISTAC.RODAPE + LISTAC.LINHA * math.max(#bx.lista.voltas, 3))
     end
   end
   local curvas, inicio, repetir, disponivel = nil, 0, false, nil
@@ -2324,17 +2329,21 @@ end
 -- `physics.raycastTrack`, uma faixa no asfalto, na cor do fantasma, no ponto de frenagem da curva de foco, a
 -- partir de 400 m antes dele até o carro passar. Sem isso, a janela mostra a contagem 3-2-1 até o ponto.
 
-local ENG_PERIODO_S = 1
-local ENG_CONFERENCIA_S = 8         -- depois da linha, o sinal da conferência fica isto na janela
-local ENG_ABERTA_S = 2              -- a janela (ou a marca) desenhada há menos disto
-local MARCA_COMPRIMENTO_M = 1.5
-local MARCA_LARGURA_M = 6
-local MARCA_ALTURA_M = 0.04         -- um pouco acima do asfalto, para não piscar com ele
-local MARCA_ANTES_M = 400           -- a marca aparece 400 m antes do ponto...
-local MARCA_DEPOIS_M = 5            -- ...e some 5 m depois dele
-local ENG_SALTO_M = 200             -- o carro andou mais que isto num quadro (boxes, reinício): nada dispara
-local ENG_ESPERA_DO_SOM_S = 3       -- o disparo sem som depois disto vai para o log como falha
-local VOLUME_DO_BIPE = 1.0
+-- As constantes do engenheiro numa tabela só: o Lua aceita no máximo 200 variáveis locais no nível de cima do
+-- arquivo, e o app chegou a 201 na 0.9.0 ("main function has more than 200 local variables"; o CSP não carregou).
+local ENGC = {
+  PERIODO_S = 1,
+  CONFERENCIA_S = 8,          -- depois da linha, o sinal da conferência fica isto na janela
+  ABERTA_S = 2,               -- a janela (ou a marca) desenhada há menos disto
+  MARCA_COMPRIMENTO_M = 1.5,
+  MARCA_LARGURA_M = 6,
+  MARCA_ALTURA_M = 0.04,      -- um pouco acima do asfalto, para não piscar com ele
+  MARCA_ANTES_M = 400,        -- a marca aparece 400 m antes do ponto...
+  MARCA_DEPOIS_M = 5,         -- ...e some 5 m depois dele
+  SALTO_M = 200,              -- o carro andou mais que isto num quadro (boxes, reinício): nada dispara
+  ESPERA_DO_SOM_S = 3,        -- o disparo sem som depois disto vai para o log como falha
+  VOLUME_DO_BIPE = 1.0,
+}
 
 local FALTA_NA_MARCA = conferir({
   { render, 'render', 'on' }, { render, 'render', 'quad' }, { physics, 'physics', 'raycastTrack' },
@@ -2464,7 +2473,7 @@ local function playerDoBipe(arquivo)
   if ok and player then
     pcall(function()
       player:setSource(PASTA .. '\\' .. arquivo)
-      player:setVolume(VOLUME_DO_BIPE)
+      player:setVolume(ENGC.VOLUME_DO_BIPE)
       player:setAutoPlay(false)
     end)
     eng.bipes[arquivo] = player
@@ -2509,14 +2518,14 @@ local function acompanharOsAvisos()
       dp.tocou = true
       log('engenheiro: ' .. dp.trechos .. ' tocou ' .. decimal(relogio() - dp.t, 2) .. ' s depois do disparo; s='
         .. decimal(s, 1) .. ' (disparo em ' .. decimal(dp.s, 1) .. ')')
-    elseif relogio() - dp.t > ENG_ESPERA_DO_SOM_S then
+    elseif relogio() - dp.t > ENGC.ESPERA_DO_SOM_S then
       dp.tocou = true
-      log('engenheiro: ' .. dp.trechos .. ' sem som ' .. ENG_ESPERA_DO_SOM_S .. ' s depois do disparo')
+      log('engenheiro: ' .. dp.trechos .. ' sem som ' .. ENGC.ESPERA_DO_SOM_S .. ' s depois do disparo')
     end
   end
   if not antes then return end
   local andou = aFrente(antes, s, L)
-  if andou <= 0 or andou > ENG_SALTO_M then return end
+  if andou <= 0 or andou > ENGC.SALTO_M then return end
   local function passou(alvo)
     alvo = tonumber(alvo)
     return alvo ~= nil and aFrente(antes, alvo, L) <= andou
@@ -2586,7 +2595,7 @@ desenharOEngenheiro = function(dt)
   local conf = d.ultimaConferencia
   local foco = oFoco()
   -- Depois da linha: a conferência do foco.
-  if not lenta and type(conf) == 'table' and t - eng.conferenciaEm < ENG_CONFERENCIA_S and conf.texto then
+  if not lenta and type(conf) == 'table' and t - eng.conferenciaEm < ENGC.CONFERENCIA_S and conf.texto then
     local c = type(conf.conferidas) == 'table' and conf.conferidas[1] or {}
     caixa(tostring(conf.texto), 20, vec2(20, 30), vec2(W - 10, H - 40),
       c.aplicada == true and CORES.ganho or (c.aplicada == false and CORES.perda or CORES.texto))
@@ -2651,7 +2660,7 @@ end
 
 local function desenharAMarca()
   -- A marca acompanha a janela do engenheiro: desligada a janela na barra de apps, a marca some.
-  if relogio() - eng.ultimoQuadro > ENG_ABERTA_S then return end
+  if relogio() - eng.ultimoQuadro > ENGC.ABERTA_S then return end
   local d = eng.dados
   local foco = oFoco()
   if not d or d.disponivel == false or not eng.s or not foco then return end
@@ -2660,13 +2669,13 @@ local function desenharAMarca()
   local L = tonumber(d.comprimentoM) or 0
   local okC, carro = pcall(ac.getCar, 0)
   if not okC or not carro or L <= 0 then return end
-  if aFrente(eng.s, sp, L) > MARCA_ANTES_M and aFrente(sp, eng.s, L) > MARCA_DEPOIS_M then return end
+  if aFrente(eng.s, sp, L) > ENGC.MARCA_ANTES_M and aFrente(sp, eng.s, L) > ENGC.MARCA_DEPOIS_M then return end
   local y = alturaDoAsfalto(marca, carro)
   if not y then return end
   local dx, dz = tonumber(marca.direcao[1]) or 0, tonumber(marca.direcao[2]) or 0
   local nx, nz = -dz, dx
-  local a, b = MARCA_COMPRIMENTO_M / 2, MARCA_LARGURA_M / 2
-  local yy = y + MARCA_ALTURA_M
+  local a, b = ENGC.MARCA_COMPRIMENTO_M / 2, ENGC.MARCA_LARGURA_M / 2
+  local yy = y + ENGC.MARCA_ALTURA_M
   render.quad(vec3(marca.x - dx * a - nx * b, yy, marca.z - dz * a - nz * b),
     vec3(marca.x - dx * a + nx * b, yy, marca.z - dz * a + nz * b),
     vec3(marca.x + dx * a + nx * b, yy, marca.z + dz * a + nz * b),
@@ -2792,7 +2801,7 @@ else
     setInterval(amostrarOFps, FPS_AMOSTRA_S)
     setInterval(function() pcall(vigiarOsBoxes) end, 0.5)
     -- Pedido 52: a lista do engenheiro, a voz dos avisos e o bipe pelo s do carro (a cada quadro) e a marca.
-    setInterval(lerOEngenheiro, ENG_PERIODO_S)
+    setInterval(lerOEngenheiro, ENGC.PERIODO_S)
     setInterval(acompanharOsAvisos, 0)
     if MARCA_3D then
       local okR = pcall(render.on, 'main.track.transparent', function()
