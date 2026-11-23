@@ -398,12 +398,13 @@ Esta seção é uma emenda: o texto acima dela não muda, salvo onde ela diz. Tu
    | "deixe rolar" | o trecho sem pedal de 15 m ou mais |
    | "perto da borda de dentro" | o ápice a até 3,0 m da borda |
    | "em cima da zebra" | o ápice a menos de 0 m da borda |
-   | "acelere cedo" | o acelerador cheio até 15 m depois do ápice |
-   | "acelere depois do ápice" | o acelerador cheio mais de 15 m depois do ápice |
+   | "acelere cedo" | o acelerador cheio até 15 m depois da mínima |
+   | "acelere depois da mínima" | o acelerador cheio mais de 15 m depois da mínima |
    | "use a pista toda na saída" | a saída a até 1,5 m da borda de fora |
 
    - A dosagem dos pedais da IA continua fora (ADR 0032, item 5): as frases dizem onde e quando, nunca com quanta força.
    - A marcha continua fora (emenda de 21/11, item 6).
+   - **Corrigido antes do código (22/11):** o "acelere cedo" conta a partir da mínima, e não do ápice. O ápice deste item é o ponto mais perto da borda de dentro, que na C04 vem 26 m antes da mínima. Contado do ápice, a própria referência ouviria "acelere depois do ápice", o contrário da tabela da proposta (o acelerador cheio 10 m depois da mínima).
 
 ### Os três níveis
 
