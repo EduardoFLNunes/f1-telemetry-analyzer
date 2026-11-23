@@ -1375,3 +1375,39 @@ Uma linha por volta:
 **O "pode instalar" da 0.9.1 (22/11, 22h00):** você deu. O `acs.exe` está fechado e o pacote está na 0.9.1. Quem roda o `instalar.ps1` é você; o backend, o front e a janela do app do repositório continuam abertos.
 
 **A sua pergunta durante o teste (22/11, 22h27): "o engenheiro só funciona na curva 04?"** Sim, por enquanto, e é a regra da curva de foco (emenda de 21/11, itens 3 a 5). A sessão `2026-11-22_22-16-02` começou com o foco da sessão anterior, a C04. Até as 22h27, nenhuma volta contou: as voltas 2 e 3 tiveram rodada, e a 3 perdeu 9,6 s na C01. Por isso o foco ainda tem 0 de 3 voltas, e só a C04 tem ficha, lembrete e bipes. O foco troca na linha de uma volta que conta: se você frear a até 10 m do ponto da referência (entre a placa de 200 e a de 100), ou depois de 3 voltas que contam sem isso. Aí vem a curva de maior perda dessa volta.
+
+
+#### A sua pergunta (22/11, 22h30): como explicar a C04 a quem está aprendendo, pelo que a volta de referência faz
+
+A C04 é a primeira curva depois da reta oposta: uma curva à esquerda, em descida, que emenda na C05, também à esquerda. Os números saem da volta de referência (a IA do jogo na linha do projeto, 1:24,552), a cada 6 m.
+
+**1. A chegada (a reta oposta):** pé embaixo, a 265–270 km/h. Antes da frenagem, o carro já está do lado direito da pista, uns 3 m à direita do meio. É o lado de fora da curva, para abrir o ângulo de entrada.
+
+**2. A frenagem:** comece a frear quase na placa de 100, uns 10 m antes dela. A placa de 200 já ficou para trás.
+- Freie forte e reto, sem virar, mantendo o carro do lado direito.
+- Em 70 m (uns 1,2 s), a velocidade cai de 270 para uns 180 km/h.
+- Solte o freio pouco antes de virar, perto da placa de 50.
+
+**3. A entrada (o ponto de virar):** vire no começo da zebra da esquerda, uns 1.310 m da volta, a uns 175 km/h.
+- O carro sai do lado direito em direção à esquerda.
+- A referência ainda toca o freio de leve enquanto começa a virar. Não copie esse detalhe: os pedais da IA não servem de exemplo de dosagem. Na sua melhor passagem pela C04, você freou em linha reta, e é isso que a ficha diz.
+
+**4. O meio da curva até o ápice:** sem freio e sem acelerador, uns 30 m (cerca de 1 s). O carro rola e perde velocidade aos poucos, de 145 para 135 km/h.
+- O ponto mais perto da borda de dentro fica a uns 2,5–3 m da borda esquerda, ao lado da zebra curta de dentro. A referência não sobe na zebra.
+- A mínima é de 133 km/h, logo depois desse ponto.
+
+**5. A saída:** volte ao acelerador logo depois da mínima, aos poucos, e chegue ao pé embaixo uns 10 m depois.
+- Deixe o carro abrir para a direita, até uns 1,7 m da borda direita, ao lado da zebra de fora.
+- Daí até o fim da C05, o acelerador fica cheio.
+
+**6. A emenda com a C05:** de pé embaixo, o carro volta para a esquerda e passa a uns 1,8 m da borda esquerda, ao lado da zebra, a 190 km/h no ápice.
+
+**O tempo de tudo:** da frenagem ao acelerador cheio, uns 3,6 s. São 1,2 s de frenagem, uns 2 s entre virar e rolar até o ápice, e menos de 0,5 s até o pé embaixo.
+
+**Em uma frase:** "pelo lado direito, freie forte e reto quase na placa de 100, solte o freio e vire no começo da zebra da esquerda, deixe o carro rolar até 135 km/h perto da borda de dentro, acelere cedo e use a pista toda na saída, que a C05 é de pé embaixo."
+
+**O que você faz hoje, comparado com isso:** na D.1, você freou de 22 a 64 m antes do ponto da referência. A sua mínima e a sua saída ficam presas a essa frenagem mais cedo.
+
+**Dois cuidados:**
+- **A marcha** fica de fora: ainda não está conferido que a marcha gravada é a do carro.
+- **A dosagem do freio e do acelerador da IA** não é julgada (ADR 0032, item 5). Por isso, a explicação diz onde e quando agir, não com quanta força.
