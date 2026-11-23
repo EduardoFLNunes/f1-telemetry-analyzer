@@ -359,3 +359,126 @@ Esta seção é uma emenda: o texto acima dela não muda, e cada item diz o que 
     A linha `aviso` deixa de existir.
 
 **O app do jogo** sobe para a 0.9.0.
+
+## Decisões do Eduardo de 22/11: o engenheiro que ensina
+
+No chat de 22/11, às 22h30 e às 22h47, o Eduardo pediu cinco coisas:
+- três níveis de explicação (iniciante, amador e pro);
+- a análise de cada curva logo depois dela, dizendo onde o piloto errou, comparado com o que foi dito;
+- uma chave para o engenheiro e outra para o escopo (uma curva, algumas curvas ou a volta inteira);
+- o treino: X voltas analisadas e, no fim, a orientação de volta lenta, voltas lentas ou volta lenta e boxes, pelo volume do relatório;
+- a frase que se adapta quando a volta de referência muda.
+
+A proposta está em `docs/handoff/2026-11-15_52_engenheiro-que-acompanha-a-volta_proposta_2211.md`. Às 22h51, o Eduardo mandou começar já. **As recomendações da proposta valem como decisões.** Os limites abaixo são os da proposta, e qualquer um muda com uma decisão dele.
+
+Esta seção é uma emenda: o texto acima dela não muda, salvo onde ela diz. Tudo vale para qualquer pista e qualquer trecho. Nenhuma regra muda depois de ver os números da conferência.
+
+### As medidas de cada curva (a base dos três níveis e da análise)
+
+1. **As fases da curva:** cada curva é descrita por estas medidas, tiradas de uma passagem (a da volta de referência, ou a do piloto):
+   - **a chegada:** o lado da pista 20 m antes da frenagem (ou 50 m antes da entrada, sem frenagem). Ele conta quando a distância ao meio passa da metade da meia largura;
+   - **a frenagem:** o ponto, pela regra do item 9 de 16/11, e a velocidade nele. A frenagem termina no último ponto, até o ápice, com o freio em 0,15 ou mais;
+   - **o ponto de virar:** o primeiro ponto, depois da frenagem (ou depois de 50 m antes da entrada), em que o carro se move 1 m ou mais para o lado de dentro da curva, contado a partir da posição na chegada;
+   - **a frenagem reta:** quando o carro se move menos de 1 m para o lado durante a frenagem;
+   - **o trecho sem pedal:** o maior trecho seguido, entre a frenagem e a mínima, com o freio abaixo de 0,15 e o acelerador abaixo de 0,10;
+   - **a mínima:** a menor velocidade de 50 m antes da entrada até a saída, com o ponto dela;
+   - **o ápice:** o ponto mais perto da borda de dentro, entre a entrada e a saída, com a distância até ela. Se a distância for menor que 0, o carro está em cima da zebra;
+   - **o acelerador cheio:** o primeiro ponto depois da mínima com o acelerador em 0,90 ou mais;
+   - **a saída:** o ponto mais perto da borda de fora entre a mínima e 100 m depois da saída da curva, com a distância até ela;
+   - **a curva seguinte:** de pé embaixo, com frenagem ou com alívio (a regra da ficha de 21/11).
+2. **Os limites das palavras.** São os que fazem a frase se adaptar sozinha quando a volta de referência muda:
+
+   | a palavra | o limite |
+   |---|---|
+   | "quase na placa de X" | o ponto até 15 m antes da placa |
+   | "entre a placa de X e a de Y" | o ponto entre duas placas, a mais de 15 m da seguinte |
+   | "logo depois da placa de X" | o ponto até 40 m depois da placa |
+   | "forte e reto" | a frenagem reta |
+   | "vire no começo da zebra" | o ponto de virar a até 10 m do começo de uma zebra do lado de dentro |
+   | "deixe rolar" | o trecho sem pedal de 15 m ou mais |
+   | "perto da borda de dentro" | o ápice a até 3,0 m da borda |
+   | "em cima da zebra" | o ápice a menos de 0 m da borda |
+   | "acelere cedo" | o acelerador cheio até 15 m depois do ápice |
+   | "acelere depois do ápice" | o acelerador cheio mais de 15 m depois do ápice |
+   | "use a pista toda na saída" | a saída a até 1,5 m da borda de fora |
+
+   - A dosagem dos pedais da IA continua fora (ADR 0032, item 5): as frases dizem onde e quando, nunca com quanta força.
+   - A marcha continua fora (emenda de 21/11, item 6).
+
+### Os três níveis
+
+3. **O piloto escolhe o nível:** iniciante, amador ou pro. O padrão é **amador**.
+   - **Iniciante:** a explicação longa, fase por fase.
+     - Na volta rápida, só o lembrete e a contagem de bipes.
+     - A explicação longa vai para a volta lenta e para os boxes.
+   - **Amador:** a frase resumida ("Quatro: pela direita, freie forte quase no 100, vire no começo da zebra, mínima de 135, acelere cedo e abra na saída."), no lugar da ficha de 21/11. Vale a mesma regra do item 9 de 21/11: uma vez por volta, na reta longa antes da curva.
+   - **Pro:** a frase técnica, com os números ("Quatro: frenagem a 10 do 100, reta, de 270 para 180 em 70 metros. …"), no mesmo lugar da do amador.
+   - O lembrete e a contagem de bipes são os de 21/11, nos três níveis.
+
+### A análise depois da curva
+
+4. **Depois de cada curva do escopo,** o engenheiro mede a passagem do piloto com as mesmas medidas, na volta em andamento.
+   - **Quando:** 30 m depois da saída da curva.
+   - **A comparação:** com a referência. Entram só as diferenças acima destes limites:
+     - a frenagem 10 m ou mais (`APLICADA_FREADA_M`);
+     - o ponto de virar 10 m ou mais;
+     - a mínima 5 km/h ou mais (`APLICADA_MINIMA_KMH`);
+     - o ápice 1,0 m ou mais da borda;
+     - o acelerador cheio 10 m ou mais;
+     - a saída 1,0 m ou mais da borda.
+   - **A ordem:** a maior primeiro, pelo tempo que cada fase custou contra a referência. Essa é a comparação por fase do Modelo 2 (ADR 0023): o tempo da passagem menos o da referência, em três trechos:
+     - da busca da frenagem ao ponto de virar;
+     - do ponto de virar à mínima;
+     - da mínima à saída.
+   - **Amador e pro:** no máximo duas diferenças, numa frase curta ("Quatro: freou 45 metros cedo, mínima 111 contra 135."). Ela vai para a fila do rádio na frente das outras e sai no primeiro bloco de voz em que couber, pelas regras do feedback.
+   - **Iniciante:** a explicação inteira das diferenças vai para o relatório da volta lenta e dos boxes.
+   - **Sem diferença acima dos limites,** nada é dito.
+   - **Uma passagem sem a medida** (o carro saiu da pista, os boxes ou uma rodada) não é analisada.
+   - **O registro:** cada análise gera uma linha `analise`.
+   - A conferência do foco (21/11, item 4) não muda.
+
+### O escopo e as chaves
+
+5. **O escopo:**
+   - **uma curva:** a curva de foco de 21/11, com as mesmas regras;
+   - **algumas curvas:** a lista que o piloto escolhe. O foco é a de maior perda acima do ruído entre elas;
+   - **a volta inteira:** todas as curvas, e o foco entre todas.
+
+   Em "algumas" e "inteira":
+   - a ficha (amador ou pro) é só a do foco;
+   - cada curva do escopo tem o lembrete e a contagem de bipes;
+   - cada curva do escopo tem a análise depois dela.
+   - **Os lembretes de várias curvas** são planejados um a um, na ordem da pista, cada um o mais tarde possível no pedaço livre logo antes da curva, com a folga de 3,0 s. Um lembrete que encostaria em outro (menos de 0,3 s entre os dois) fica de fora, com o motivo no registro.
+6. **As chaves:**
+   - o engenheiro ligado ou desligado;
+   - o nível;
+   - o escopo, com a lista das curvas;
+   - o treino, com o número de voltas.
+
+   Elas ficam no backend (`GET` e `POST /api/radio/engenheiro/config`), guardadas em `<pasta de dados>/data/radio/engenheiro_config.json`, e são mudadas pelos botões da janela "Engenheiro" do jogo.
+   - **Desligado:** sem ficha, sem lembrete, sem bipe, sem marca e sem análise. A janela diz "engenheiro desligado".
+   - **`AT_ENGENHEIRO=desligado`** continua a desligar o engenheiro no backend.
+
+### O treino
+
+7. **O treino de X voltas** (o padrão é 5; 0 é sem treino).
+   - **O começo:** ele começa na linha seguinte ao botão.
+   - **Durante as X voltas que contam:** o engenheiro guia como estiver configurado, e cada curva do escopo é analisada (item 4).
+   - **O relatório, no fim das X voltas:**
+     - entram as curvas com diferença acima dos limites em metade ou mais das voltas;
+     - cada fase entra com a mediana das voltas;
+     - as curvas vão na ordem do tempo perdido.
+   - **O volume do relatório** é o tempo de fala para explicá-lo no nível escolhido: a duração medida pela voz, ou, antes dela, as palavras divididas por 2,5 por segundo (a voz do projeto a 1,4x).
+   - **A orientação:**
+
+     | volume | o que o engenheiro diz |
+     |---|---|
+     | até 60 s | "Fim do treino. Dê uma volta lenta." |
+     | de 60 a 180 s | "Fim do treino. Dê N voltas lentas.", com N igual ao volume dividido por 60, arredondado para cima |
+     | mais de 180 s | "Fim do treino. Dê uma volta lenta e entre nos boxes." |
+   - **Os itens do relatório** vão para a fila do rádio, um por curva, e saem pelas regras do feedback.
+   - **Nos boxes,** com o carro parado (abaixo de 5 km/h), o rádio entrega as mensagens do engenheiro uma depois da outra, sem esperar um bloco de voz. As outras mensagens continuam com a regra de antes.
+   - **O registro:** cada treino gera uma linha `treino`, com as voltas, o relatório, o volume e a orientação.
+8. **Na volta lenta** (ADR 0033, item 6), no nível iniciante, o engenheiro põe na fila do rádio a explicação longa de cada curva do escopo à frente do carro, uma por curva, uma vez por volta lenta.
+
+**O app do jogo** sobe para a 0.10.0.
