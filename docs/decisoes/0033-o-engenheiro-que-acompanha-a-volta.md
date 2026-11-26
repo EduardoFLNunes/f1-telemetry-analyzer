@@ -483,3 +483,15 @@ Esta seção é uma emenda: o texto acima dela não muda, salvo onde ela diz. Tu
 8. **Na volta lenta** (ADR 0033, item 6), no nível iniciante, o engenheiro põe na fila do rádio a explicação longa de cada curva do escopo à frente do carro, uma por curva, uma vez por volta lenta.
 
 **O app do jogo** sobe para a 0.10.0.
+
+### A decisão do Eduardo de 26/11 sobre a análise na fila
+
+A conferência de 22/11 mostrou que, na volta inteira, a análise depois de cada curva tomava o rádio: o feedback caiu de 24 para 1 em 13/10, e a orientação do fim do treino nunca foi dita. O Eduardo escolheu a opção **(A)**. Ela troca o que o item 4 diz sobre a fila:
+
+- **No máximo uma análise por volta, a da curva que mais custou.**
+  - Cada curva do escopo continua a ser analisada 30 m depois da saída, e cada análise vai para o registro (linha `analise`) e para o relatório do treino.
+  - **Na linha de uma volta que conta,** só a análise de maior custo daquela volta vai para a voz. O custo de uma curva é a soma do tempo perdido nas fases com diferença.
+  - **Uma volta que não conta** (rodada, boxes ou a IA) não tem análise falada.
+- **Amador e pro:** essa análise vai para a fila do rádio logo depois do resumo da volta, à frente do resto do feedback. Ela sai da fila se o carro voltar àquela curva antes de ela ser dita (a regra do pedido 45, C.1, item 5).
+- **Iniciante:** só essa análise vai para o relatório da volta lenta.
+- **A orientação do fim do treino passa à frente de tudo,** inclusive do resumo e da análise. Os itens do relatório vão logo atrás dela. Esse ponto valia para qualquer uma das três opções da proposta.
