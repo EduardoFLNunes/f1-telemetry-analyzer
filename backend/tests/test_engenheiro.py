@@ -1170,3 +1170,36 @@ def test_o_app_do_jogo_tem_as_chaves_e_as_contagens_de_varias_curvas():
     assert "eng.desenharAsChaves = function(W, H)" in lua and "/api/radio/engenheiro/config" in lua
     assert '{"iniciarTreino":true}' in lua and '{"pararTreino":true}' in lua
     assert "d.contagens" in lua and "foco.escritaDoNivel" in lua and "'Engenheiro desligado'" in lua
+
+
+def test_o_plano_nao_e_refeito_a_cada_quadro_na_volta_inteira():
+    """Defeito achado na conferencia de 22/11: com varias curvas no escopo, o plano era refeito em todo quadro (a
+    lista das falas medidas perdia os lembretes das outras curvas)."""
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    e, g, total = _engenheiro_que_ensina(track, escopo="inteira")
+    Engenheiro._novo_foco(e, 0, None, "teste", None)
+    Engenheiro._planejar_o_foco(e)
+    antes = sum(1 for x in e.linhas if x["tipo"] == "plano")
+    for s in np.arange(0.0, 1200.0, 10.0):
+        Engenheiro.no_quadro(e, float(s), 180.0, True, False)
+        Engenheiro.estado_publico(e)
+    assert sum(1 for x in e.linhas if x["tipo"] == "plano") == antes
+
+
+def test_a_analise_sai_da_fila_quando_o_carro_volta_a_curva():
+    """A regra do pedido 45 (C.1, item 5) nas analises do engenheiro: a mensagem leva o ponto da curva."""
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    pas = _volta_da_c02(track, freada=335.0, minima=95.0, cheio=490.0)
+    linhas = {k: [float(x) for x in pas[k]] for k in ("elapsed", "velocidade", "acelerador", "freio", "lateral")}
+    e, g, total = _engenheiro_que_ensina(track, escopo="algumas", curvas=["C02"])
+    e._volta_atual = lambda: {"volta": 3, "pontosDaGrade": int(track.size), "linhas": linhas}
+    for s in (400.0, 520.0, 535.0):
+        Engenheiro.no_quadro(e, s, 180.0, True, False)
+    msgs = Engenheiro.tirar_mensagens(e)
+    assert msgs and msgs[0]["_curvaS"] == pytest.approx(430.0)

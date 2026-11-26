@@ -1,0 +1,278 @@
+{
+ "regras": "Pedido 52, decisoes de 22/11: a conferencia fora do tempo real (o radio com o engenheiro, a voz de verdade), com as chaves de cada rodada, depois das duas correcoes (o plano refeito a cada quadro e as analises que nao saiam da fila). O feedback 'sem' e a rodada sem o engenheiro da mesma sessao.",
+ "rodadas": {
+  "2026-10-13_amador_inteira_treino5": {
+   "chaves": "amador, volta inteira, treino de 5",
+   "linhasDoRegistro": {
+    "treino": 3,
+    "config": 1,
+    "lembrete": 65,
+    "analise": 185,
+    "volta": 8,
+    "foco": 7,
+    "plano": 12,
+    "ficha": 6,
+    "corte": 5,
+    "conferencia": 7
+   },
+   "analises": 185,
+   "mensagensDoEngenheiroEntregues": {
+    "análise": 21
+   },
+   "segundosDoEngenheiro": 98.2,
+   "sairamDaFila": 158,
+   "pendentesNoFim": 47,
+   "feedbackEntregue": {
+    "com": 1,
+    "sem": 24
+   },
+   "fichasDitas": 6,
+   "lembretesDitos": 64,
+   "planos": 12,
+   "planosSemFicha": {
+    "a ficha não cabe na reta longa": 8
+   },
+   "treino": {
+    "volta": 9.0,
+    "volumeS": 58.4,
+    "orientacao": "Fim do treino. Dê uma volta lenta.",
+    "itens": [
+     "Um: mínima 100 contra 107, freou 40 metros cedo.",
+     "Doze: virou 20 metros tarde, freou 35 metros cedo.",
+     "Quatro: freou 20 metros cedo, mínima 111 contra 133.",
+     "Oito: saída mais aberta que a referência, acelerou 150 metros tarde.",
+     "Sete: virou 10 metros cedo, mínima 84 contra 92.",
+     "Três: não usou a pista toda na saída, acelerou 10 metros tarde.",
+     "Cinco: saída mais aberta que a referência, mínima 135 contra 156.",
+     "Onze: saída mais aberta que a referência, virou 25 metros cedo.",
+     "Seis: não usou a pista toda na saída, mínima 158 contra 176.",
+     "Treze: virou 5 metros tarde, não usou a pista toda na saída.",
+     "Dez: virou 20 metros cedo, não usou a pista toda na saída.",
+     "Dois: não usou a pista toda na saída, virou 50 metros cedo.",
+     "Catorze: não usou a pista toda na saída, ápice por dentro demais.",
+     "Nove: mínima 133 contra 144."
+    ]
+   },
+   "exemplos": [
+    {
+     "volta": 2,
+     "sCarro": 554,
+     "titulo": "Engenheiro · análise · C02",
+     "fala": "Dois: virou 50 metros cedo, acelerou 80 metros tarde.",
+     "duracaoS": 4.45
+    },
+    {
+     "volta": 2,
+     "sCarro": 3618,
+     "titulo": "Engenheiro · análise · C13",
+     "fala": "Treze: saída mais aberta que a referência, virou 10 metros cedo.",
+     "duracaoS": 4.27
+    },
+    {
+     "volta": 3,
+     "sCarro": 2392,
+     "titulo": "Engenheiro · análise · C07",
+     "fala": "Sete: virou 30 metros cedo, saída mais aberta que a referência.",
+     "duracaoS": 4.53
+    },
+    {
+     "volta": 4,
+     "sCarro": 2243,
+     "titulo": "Engenheiro · análise · C06",
+     "fala": "Seis: não usou a pista toda na saída, mínima 160 contra 176.",
+     "duracaoS": 5.78
+    },
+    {
+     "volta": 4,
+     "sCarro": 2243,
+     "titulo": "Engenheiro · análise · C05",
+     "fala": "Cinco: virou 15 metros tarde, mínima 136 contra 156.",
+     "duracaoS": 5.79
+    },
+    {
+     "volta": 4,
+     "sCarro": 2244,
+     "titulo": "Engenheiro · análise · C04",
+     "fala": "Quatro: mínima 115 contra 133, freou 20 metros cedo.",
+     "duracaoS": 5.1
+    },
+    {
+     "volta": 7,
+     "sCarro": 554,
+     "titulo": "Engenheiro · análise · C02",
+     "fala": "Dois: acelerou 85 metros tarde, não usou a pista toda na saída.",
+     "duracaoS": 4.94
+    },
+    {
+     "volta": 7,
+     "sCarro": 3620,
+     "titulo": "Engenheiro · análise · C12",
+     "fala": "Doze: freou 35 metros cedo.",
+     "duracaoS": 2.84
+    }
+   ]
+  },
+  "2026-11-21_iniciante_uma": {
+   "chaves": "iniciante, uma curva",
+   "linhasDoRegistro": {
+    "config": 1,
+    "volta": 3,
+    "foco": 3,
+    "plano": 5,
+    "analise": 4,
+    "conferencia": 2,
+    "lembrete": 1
+   },
+   "analises": 4,
+   "mensagensDoEngenheiroEntregues": {
+    "explicação": 2,
+    "análise": 2
+   },
+   "segundosDoEngenheiro": 53.7,
+   "sairamDaFila": 1,
+   "pendentesNoFim": 4,
+   "feedbackEntregue": {
+    "com": 11,
+    "sem": 11
+   },
+   "fichasDitas": 0,
+   "lembretesDitos": 1,
+   "planos": 5,
+   "planosSemFicha": {
+    "nível iniciante: a explicação vai para a volta lenta e os boxes": 5
+   },
+   "treino": null,
+   "exemplos": [
+    {
+     "volta": 8,
+     "sCarro": 2097,
+     "titulo": "Engenheiro · explicação · C11",
+     "fala": "Curva onze, à esquerda. Venha pelo meio da pista. Ela é de pé embaixo: não freie nem alivie. Passe a uns 190 por hora, perto da borda de dentro, e saia a uns 4 metros da borda de fora; a doze vem logo e tem frenagem.",
+     "duracaoS": 14.82
+    },
+    {
+     "volta": 8,
+     "sCarro": 4256,
+     "titulo": "Engenheiro · análise · C11",
+     "fala": "Na onze, você virou 20 metros cedo, fez a mínima de 116, contra 140 da referência e subiu na zebra de dentro. Na próxima, vire uns 25 metros depois do começo da zebra da esquerda.",
+     "duracaoS": 12.93
+    },
+    {
+     "volta": 10,
+     "sCarro": 1374,
+     "titulo": "Engenheiro · explicação · C11",
+     "fala": "Curva onze, à esquerda. Venha pelo meio da pista. Ela é de pé embaixo: não freie nem alivie. Passe a uns 190 por hora, perto da borda de dentro, e saia a uns 4 metros da borda de fora; a doze vem logo e tem frenagem.",
+     "duracaoS": 14.82
+    },
+    {
+     "volta": 10,
+     "sCarro": 1374,
+     "titulo": "Engenheiro · análise · C11",
+     "fala": "Na onze, você fez a mínima de 120, contra 140 da referência e subiu na zebra de dentro. Na próxima, leve mais velocidade para dentro: a mínima é uns 140.",
+     "duracaoS": 11.13
+    }
+   ]
+  },
+  "2026-10-21_pro_algumas_treino3": {
+   "chaves": "pro, C01, C04 e C12, treino de 3",
+   "linhasDoRegistro": {
+    "treino": 3,
+    "config": 1,
+    "lembrete": 47,
+    "analise": 60,
+    "corte": 1,
+    "volta": 7,
+    "foco": 5,
+    "plano": 9,
+    "conferencia": 6,
+    "ficha": 5
+   },
+   "analises": 60,
+   "mensagensDoEngenheiroEntregues": {
+    "análise": 54,
+    "treino": 1
+   },
+   "segundosDoEngenheiro": 236.4,
+   "sairamDaFila": 11,
+   "pendentesNoFim": 24,
+   "feedbackEntregue": {
+    "com": 16,
+    "sem": 35
+   },
+   "fichasDitas": 4,
+   "lembretesDitos": 39,
+   "planos": 9,
+   "planosSemFicha": {
+    "a ficha não cabe na reta longa": 5
+   },
+   "treino": {
+    "volta": 11.0,
+    "volumeS": 10.0,
+    "orientacao": "Fim do treino. Dê uma volta lenta.",
+    "itens": [
+     "Doze: entrada mais 19 metros, freio menos 54 metros.",
+     "Um: mínima menos 16, ápice 6 metros longe.",
+     "Quatro: mínima menos 12, freio menos 30 metros."
+    ]
+   },
+   "exemplos": [
+    {
+     "volta": 2,
+     "sCarro": 555,
+     "titulo": "Engenheiro · análise · C01",
+     "fala": "Um: freio menos 80 metros, entrada mais 18 metros.",
+     "duracaoS": 4.28
+    },
+    {
+     "volta": 2,
+     "sCarro": 1511,
+     "titulo": "Engenheiro · análise · C04",
+     "fala": "Quatro: freio mais 34 metros, entrada menos 14 metros.",
+     "duracaoS": 4.85
+    },
+    {
+     "volta": 2,
+     "sCarro": 3618,
+     "titulo": "Engenheiro · análise · C12",
+     "fala": "Doze: freio menos 58 metros, entrada mais 10 metros.",
+     "duracaoS": 4.72
+    },
+    {
+     "volta": 3,
+     "sCarro": 555,
+     "titulo": "Engenheiro · análise · C01",
+     "fala": "Um: mínima menos 6, ápice 3 metros longe.",
+     "duracaoS": 3.51
+    },
+    {
+     "volta": 3,
+     "sCarro": 1501,
+     "titulo": "Engenheiro · análise · C04",
+     "fala": "Quatro: freio menos 42 metros, entrada mais 10 metros.",
+     "duracaoS": 4.57
+    },
+    {
+     "volta": 3,
+     "sCarro": 3619,
+     "titulo": "Engenheiro · análise · C12",
+     "fala": "Doze: freio menos 58 metros, entrada mais 12 metros.",
+     "duracaoS": 4.76
+    },
+    {
+     "volta": 4,
+     "sCarro": 1510,
+     "titulo": "Engenheiro · análise · C04",
+     "fala": "Quatro: freio menos 14 metros, saída mais aberta que a referência.",
+     "duracaoS": 4.73
+    },
+    {
+     "volta": 4,
+     "sCarro": 3619,
+     "titulo": "Engenheiro · análise · C12",
+     "fala": "Doze: freio menos 36 metros, entrada mais 10 metros.",
+     "duracaoS": 4.52
+    }
+   ]
+  }
+ }
+}

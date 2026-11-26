@@ -1480,3 +1480,95 @@ A C04 é a primeira curva depois da reta oposta: uma curva à esquerda, em desci
 2. **O backend que está aberto ainda é o de antes de 22/11.** Ele subiu às 11h51 e não recarrega sozinho. Para testar o 0.10.0, eu reinicio o backend, e você instala o app do jogo 0.10.0 com o seu "pode instalar".
 3. **O teste no jogo** das chaves, dos níveis, da análise e do treino.
 
+
+
+### Depois de o jogo fechar: a conferência, os áudios e as suítes (parado para a sua decisão)
+
+O jogo fechou em 22/11, às 23h10, e rodei o resto. Nenhuma regra do ADR mudou. A conferência achou **dois defeitos meus, que corrigi**, e **um efeito das regras, que é seu de decidir**.
+
+#### Os dois defeitos corrigidos
+
+1. **O plano era refeito em todo quadro** no escopo "volta inteira" e em "algumas curvas".
+   - A lista das falas já medidas perdia os lembretes das outras curvas, e por isso o plano era refeito no quadro seguinte.
+   - Isso gerou 78.520 linhas `plano` no registro de uma sessão.
+   - Corrigido: depois da correção, foram 12 planos na mesma sessão.
+2. **As análises que não saíam ficavam na fila para sempre.** Na volta inteira, são 14 análises por volta.
+   - Em 13/10 sobraram 205 mensagens pendentes no fim, e análises da volta 2 ainda seriam ditas voltas depois.
+   - A correção usa a regra que o rádio já tem desde o pedido 45 (C.1, item 5): a mensagem de uma curva sai da fila quando o carro vai passar por ela de novo. Cada análise passa a levar o ponto da curva.
+   - Isso não vale para o relatório do treino nem para as explicações da volta lenta.
+
+Dois testes novos cobrem os dois defeitos. O engenheiro e a referência somam **63 testes passando**.
+
+#### A conferência fora do tempo real (`_conferencia_2211.json`)
+
+O rádio com o engenheiro e a voz de verdade, depois das correções, com as chaves de cada rodada:
+
+| sessão e chaves | análises | o que o engenheiro falou | fala do engenheiro | feedback entregue (sem o engenheiro / com) | pendentes no fim | saíram da fila |
+|---|---:|---|---:|---|---:|---:|
+| 13/10, amador, volta inteira, treino de 5 | 185 | 21 análises, 6 fichas, 64 lembretes | 98 s (sem fichas e lembretes) | 24 / **1** | 47 | 158 |
+| 21/10, pro, C01, C04 e C12, treino de 3 | 60 | 54 análises, a orientação do treino, 4 fichas, 39 lembretes | 236 s (sem fichas e lembretes) | 35 / **16** | 24 | 11 |
+| 21/11, iniciante, uma curva | 4 | 2 explicações e 2 análises na volta lenta, 1 lembrete | 54 s | 11 / 11 | 4 | 1 |
+
+**Exemplos do que saiu:**
+- **amador:** "Dois: virou 50 metros cedo, acelerou 80 metros tarde."; "Quatro: mínima 115 contra 133, freou 20 metros cedo.";
+- **pro:** "Doze: freio menos 58 metros, entrada mais 10 metros.";
+- **iniciante:**
+  - na volta lenta, a explicação da C11 (14,8 s): "Curva onze, à esquerda. Venha pelo meio da pista. Ela é de pé embaixo…";
+  - e a análise: "Na onze, você virou 20 metros cedo, fez a mínima de 116, contra 140 da referência e subiu na zebra de dentro. Na próxima, vire uns 25 metros depois do começo da zebra da esquerda."
+
+**O treino:**
+- **13/10:** as 14 curvas tiveram diferença em metade ou mais das 5 voltas. O volume ficou em 58 s, e a orientação foi "Fim do treino. Dê uma volta lenta.".
+- **21/10:** 3 curvas e 10 s; a mesma orientação.
+
+**A ficha na reta longa:**
+- a do amador (3,5 a 9,9 s) não coube em 8 dos 12 planos de 13/10;
+- a do pro, em 5 dos 9 de 21/10.
+
+**Os áudios** (`_d2_2211.py` e `_d2_2211.json`; em `data/radio/[teste] engenheiro que ensina 22-11/<nível>/`, fora do git):
+
+| nível | duração |
+|---|---|
+| iniciante | 14 a 25 s |
+| amador | 3,5 a 9,9 s |
+| pro | 3,7 a 16,7 s |
+
+A fala do pro é a mais longa nas curvas com frenagem (até 16,7 s), por causa dos números.
+
+**As suítes:**
+- **backend:** **1095 passando**, antes das duas correções;
+- **depois das correções:** os testes do engenheiro e da referência, 63 passando;
+- **front:** 180 testes e o `tsc` sem erro;
+- **desktop:** 4 testes;
+- **Lua:** 186 variáveis locais no ponto mais cheio; as chamadas e os métodos existem no SDK (`_conferir_lua_2211b.txt`).
+
+#### O efeito das regras, para a sua decisão (não mudei)
+
+**Na volta inteira (e em "algumas curvas"), a análise depois de cada curva toma quase todo o tempo de voz.**
+- **A causa:** pela regra do item 4, cada análise vai para a frente da fila.
+- **Em 13/10, na volta inteira:**
+  - o feedback do rádio caiu de 24 mensagens para 1;
+  - a orientação do fim do treino e os itens do relatório ficaram presos atrás das análises que vieram depois, e nunca foram ditos. Eles ainda estavam entre as 47 pendentes no fim.
+- **Em 21/10, com 3 curvas:**
+  - o feedback caiu de 35 para 16;
+  - a orientação saiu, mas os itens do relatório ficaram pendentes.
+
+**Opções:**
+- **(A)** No máximo uma análise por volta, a da curva que mais custou. As outras ficam no registro e no relatório do treino.
+- **(B)** Só uma análise na fila de cada vez: a nova substitui a que ainda não saiu.
+- **(C)** A análise entra na fila como o feedback, sem passar na frente.
+- **Em qualquer uma:** a orientação do fim do treino passa à frente de tudo, inclusive das análises. Hoje a ordem entre as mensagens da frente não está definida no ADR.
+
+**Ficam também as duas decisões anteriores:**
+- o fim da frenagem com os toques curtos da IA;
+- o "venha pelo meio" na C04.
+
+Além delas:
+- **a ficha do pro** (até 16,7 s) não cabe na reta longa;
+- **na ficha do amador e do pro, a técnica de 21/11 ficou de fora** ("com trail braking", da sua melhor passagem). O texto do nível substituiu a ficha, como no ADR.
+
+#### O que falta
+
+1. **As suas decisões** sobre a análise na fila (A, B ou C) e a ordem da orientação do treino, e, se quiser, sobre os outros pontos acima.
+2. **Reiniciar o backend** do repositório. O que está aberto ainda é o de antes de 22/11.
+3. **O seu "pode instalar"** do app do jogo 0.10.0.
+4. **O teste no jogo** das chaves, dos níveis, da análise e do treino.

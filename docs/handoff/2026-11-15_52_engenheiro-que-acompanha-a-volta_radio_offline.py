@@ -13,6 +13,8 @@ Uso (na pasta backend): python <este arquivo> <pasta da sessao> <sem|com> <saida
 Atualizacao de 21/11: com `AT_D1_REGISTRO_ANTERIOR` (o `.engenheiro.jsonl` da rodada da sessao anterior), o registro
 e copiado para a pasta de dados temporaria antes da sessao, para o foco vir da sessao anterior (ADR 0033, emenda de
 21/11, item 5).
+Decisoes de 22/11: com `AT_D1_CONFIG_DO_ENGENHEIRO` (um JSON com as chaves: nivel, escopo, curvas, treinoVoltas e
+`iniciarTreino`), as chaves sao passadas ao engenheiro antes da sessao.
 Com o engenheiro, o molde da fala vem de `AT_ENGENHEIRO_MOLDE` (a, b ou c; a emenda de 20/11). A saida traz `t0`
 (o primeiro instante da gravacao): o relogio do radio e do registro e o da gravacao menos ele.
 """
@@ -110,6 +112,11 @@ radio = RadioDoEngenheiro(
 )
 
 
+_config = os.environ.get("AT_D1_CONFIG_DO_ENGENHEIRO")
+if _config and MODO == "com":
+    print("chaves do engenheiro:", radio.mudar_config_do_engenheiro(json.loads(_config)), flush=True)
+
+
 def esperar_o_audio():
     for m in list(radio._pendentes):
         f = m.get("_futuro")
@@ -158,6 +165,8 @@ eng = radio._eng()
 resultado = {"sessao": SESSAO, "modo": MODO, "quadros": quadros, "t0": t0,
              "molde": os.environ.get("AT_ENGENHEIRO_MOLDE") if MODO == "com" else None,
              "falasPlanejadas": eng.falas if eng is not None else None,
+             "configDoEngenheiro": eng.config_publica() if eng is not None else None,
+             "ultimoTreino": eng.ultimo_treino if eng is not None else None,
              "referencia": {"tipo": modelo.reference_kind, "volta": ref_id, "tempoS": tempo_ref},
              "suaMelhor": SUA_MELHOR and SUA_MELHOR["lapId"], "melhorDoStoreAntes": MELHOR_ANTES,
              "pendentesNoFim": saida["pendentes"], "contagem": radio.contagem,

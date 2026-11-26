@@ -1,0 +1,410 @@
+{
+ "curvas": [
+  {
+   "trecho": "C01",
+   "tipo": "frenagem",
+   "medidas": {
+    "chegada": "direita",
+    "freada": 122.0,
+    "vFreadaKmh": 277.3,
+    "fimDaFrenagem": 282.0,
+    "frenagemM": 160.0,
+    "reta": false,
+    "virar": 196.0,
+    "semPedalM": 12.0,
+    "minimaKmh": 107.2,
+    "sMinima": 330.0,
+    "apiceDaBordaM": 0.04,
+    "aceleradorCheio": 342.0,
+    "saidaDaBordaM": 0.49
+   },
+   "textos": {
+    "iniciante": "Curva um, à esquerda. Venha pelo lado direito. Freie forte entre a placa de 100 e a de 50. Solte o freio e vire no ponto de entrada. Leve o carro até uns 105 por hora, perto da borda de dentro. Acelere cedo e use a pista toda na saída, porque a dois vem logo e tem frenagem.",
+    "amador": "Um: pela direita, freie entre o 100 e o 50, vire no ponto de entrada, mínima de 105, acelere cedo e abra na saída.",
+    "pro": "Um: frenagem 10 depois do 100, de 275 para 115 em 160 metros. Entrada, mínima 107 colado na borda. Gás cheio 10 metros depois da mínima, saída na borda."
+   },
+   "duracaoS": {
+    "iniciante": 18.67,
+    "amador": 7.45,
+    "pro": 12.95
+   }
+  },
+  {
+   "trecho": "C02",
+   "tipo": "frenagem",
+   "medidas": {
+    "chegada": "meio",
+    "freada": 366.0,
+    "vFreadaKmh": 131.3,
+    "fimDaFrenagem": 372.0,
+    "frenagemM": 6.0,
+    "reta": false,
+    "virar": 366.0,
+    "semPedalM": 36.0,
+    "minimaKmh": 107.2,
+    "sMinima": 330.0,
+    "apiceDaBordaM": 0.49,
+    "aceleradorCheio": 342.0,
+    "saidaDaBordaM": -0.71
+   },
+   "textos": {
+    "iniciante": "Curva dois, à direita. Venha pelo meio da pista. Freie forte no começo da zebra à direita. Solte o freio e vire no começo da zebra da direita. Deixe o carro rolar sem acelerar até uns 105 por hora, perto da borda de dentro. Acelere cedo e use a pista toda na saída, porque a três pede só um alívio.",
+    "amador": "Dois: pelo meio, freie no começo da zebra à direita, vire no começo da zebra, mínima de 105, acelere cedo e abra na saída.",
+    "pro": "Dois: frenagem no começo da zebra à direita, de 130 para 120 em 5 metros. Entrada na zebra, 1 segundo de rolagem, mínima 107 colado na borda. Gás cheio 10 metros depois da mínima, saída na borda."
+   },
+   "duracaoS": {
+    "iniciante": 19.82,
+    "amador": 7.86,
+    "pro": 14.23
+   }
+  },
+  {
+   "trecho": "C03",
+   "tipo": "alívio",
+   "medidas": {
+    "chegada": "direita",
+    "freada": null,
+    "vFreadaKmh": null,
+    "fimDaFrenagem": null,
+    "frenagemM": null,
+    "reta": null,
+    "virar": 400.0,
+    "semPedalM": 36.0,
+    "minimaKmh": 116.9,
+    "sMinima": 392.0,
+    "apiceDaBordaM": -0.71,
+    "aceleradorCheio": 410.0,
+    "saidaDaBordaM": 0.91
+   },
+   "textos": {
+    "iniciante": "Curva três, à esquerda. Venha pelo lado direito. Só alivie o acelerador antes de virar, sem frear. Deixe a velocidade cair até uns 115 por hora, em cima da zebra de dentro. Acelere depois da mínima, quando o carro já estiver apontado, e use a pista toda na saída, porque a quatro vem logo e tem frenagem.",
+    "amador": "Três: só um alívio, mínima de 115, acelere depois da mínima e abra na saída.",
+    "pro": "Três: alívio, mínima 117 ápice na zebra. Gás cheio 20 metros depois da mínima, saída na borda."
+   },
+   "duracaoS": {
+    "iniciante": 19.44,
+    "amador": 5.09,
+    "pro": 7.21
+   }
+  },
+  {
+   "trecho": "C04",
+   "tipo": "frenagem",
+   "medidas": {
+    "chegada": "meio",
+    "freada": 1216.0,
+    "vFreadaKmh": 270.4,
+    "fimDaFrenagem": 1326.0,
+    "frenagemM": 110.0,
+    "reta": false,
+    "virar": 1294.0,
+    "semPedalM": 36.0,
+    "minimaKmh": 133.2,
+    "sMinima": 1380.0,
+    "apiceDaBordaM": 2.2,
+    "aceleradorCheio": 1390.0,
+    "saidaDaBordaM": 1.19
+   },
+   "textos": {
+    "iniciante": "Curva quatro, à esquerda. Venha pelo meio da pista. Freie forte quase na placa de 100. Solte o freio e vire uns 15 metros antes do começo da zebra da esquerda. Deixe o carro rolar sem acelerar até uns 135 por hora, perto da borda de dentro. Acelere cedo e use a pista toda na saída, porque a cinco é de pé embaixo.",
+    "amador": "Quatro: pelo meio, freie quase no 100, vire 15 antes da zebra, mínima de 135, acelere cedo e abra na saída.",
+    "pro": "Quatro: frenagem a 10 do 100, de 270 para 150 em 110 metros. Entrada 15 antes da zebra, 1 segundo de rolagem, mínima 133 a dois metros da borda. Gás cheio 10 metros depois da mínima, saída na borda."
+   },
+   "duracaoS": {
+    "iniciante": 21.14,
+    "amador": 7.57,
+    "pro": 15.44
+   }
+  },
+  {
+   "trecho": "C05",
+   "tipo": "pé embaixo",
+   "medidas": {
+    "chegada": "direita",
+    "freada": null,
+    "vFreadaKmh": null,
+    "fimDaFrenagem": null,
+    "frenagemM": null,
+    "reta": null,
+    "virar": 1452.0,
+    "semPedalM": 36.0,
+    "minimaKmh": 156.5,
+    "sMinima": 1432.0,
+    "apiceDaBordaM": 1.53,
+    "aceleradorCheio": 1432.0,
+    "saidaDaBordaM": 1.2
+   },
+   "textos": {
+    "iniciante": "Curva cinco, à esquerda. Venha pelo lado direito. Ela é de pé embaixo: não freie nem alivie. Passe a uns 195 por hora, perto da borda de dentro, e use a pista toda na saída; a seis vem logo e tem frenagem.",
+    "amador": "Cinco: pé embaixo, perto da borda, abra na saída.",
+    "pro": "Cinco: pé embaixo, a um e meio da borda, saída na borda."
+   },
+   "duracaoS": {
+    "iniciante": 14.24,
+    "amador": 3.48,
+    "pro": 3.7
+   }
+  },
+  {
+   "trecho": "C06",
+   "tipo": "frenagem",
+   "medidas": {
+    "chegada": "meio",
+    "freada": 1904.0,
+    "vFreadaKmh": 235.7,
+    "fimDaFrenagem": 2080.0,
+    "frenagemM": 176.0,
+    "reta": false,
+    "virar": 1910.0,
+    "semPedalM": 36.0,
+    "minimaKmh": 175.5,
+    "sMinima": 1988.0,
+    "apiceDaBordaM": 2.15,
+    "aceleradorCheio": 1990.0,
+    "saidaDaBordaM": 1.64
+   },
+   "textos": {
+    "iniciante": "Curva seis, à direita. Venha pelo meio da pista. Freie forte logo depois da placa de 50. Solte o freio e vire uns 30 metros antes do começo da zebra da direita. Deixe o carro rolar sem acelerar até uns 175 por hora, perto da borda de dentro. Acelere cedo e saia a uns 2 metros da borda de fora, porque a sete vem logo e tem frenagem.",
+    "amador": "Seis: pelo meio, freie logo depois do 50, vire 30 antes da zebra, mínima de 175, acelere cedo e saída a 2 da borda.",
+    "pro": "Seis: frenagem 5 depois do 50, de 235 para 180 em 175 metros. Entrada 30 antes da zebra, 1 segundo de rolagem, mínima 176 a dois metros da borda. Gás cheio na mínima, saída a 2 metros da borda."
+   },
+   "duracaoS": {
+    "iniciante": 22.82,
+    "amador": 8.7,
+    "pro": 16.73
+   }
+  },
+  {
+   "trecho": "C07",
+   "tipo": "frenagem",
+   "medidas": {
+    "chegada": "esquerda",
+    "freada": 2194.0,
+    "vFreadaKmh": 191.4,
+    "fimDaFrenagem": 2266.0,
+    "frenagemM": 72.0,
+    "reta": false,
+    "virar": 2230.0,
+    "semPedalM": 18.0,
+    "minimaKmh": 91.8,
+    "sMinima": 2288.0,
+    "apiceDaBordaM": 1.31,
+    "aceleradorCheio": 2332.0,
+    "saidaDaBordaM": 1.32
+   },
+   "textos": {
+    "iniciante": "Curva sete, à direita. Venha pelo lado esquerdo. Freie forte 35 antes do começo da zebra à direita. Solte o freio e vire no começo da zebra da direita. Deixe o carro rolar sem acelerar até uns 90 por hora, perto da borda de dentro. Acelere depois da mínima, quando o carro já estiver apontado, e use a pista toda na saída, porque a oito vem logo e tem frenagem.",
+    "amador": "Sete: pela esquerda, freie 35 antes do começo da zebra à direita, vire no começo da zebra, mínima de 90, acelere depois da mínima e abra na saída.",
+    "pro": "Sete: frenagem 35 antes do começo da zebra à direita, de 190 para 100 em 70 metros. Entrada na zebra, 1 segundo de rolagem, mínima 92 a um e meio da borda. Gás cheio 45 metros depois da mínima, saída na borda."
+   },
+   "duracaoS": {
+    "iniciante": 23.52,
+    "amador": 9.35,
+    "pro": 15.78
+   }
+  },
+  {
+   "trecho": "C08",
+   "tipo": "frenagem",
+   "medidas": {
+    "chegada": "meio",
+    "freada": 2356.0,
+    "vFreadaKmh": 124.1,
+    "fimDaFrenagem": 2374.0,
+    "frenagemM": 18.0,
+    "reta": false,
+    "virar": 2356.0,
+    "semPedalM": 36.0,
+    "minimaKmh": 93.1,
+    "sMinima": 2302.0,
+    "apiceDaBordaM": 1.3,
+    "aceleradorCheio": 2332.0,
+    "saidaDaBordaM": 2.57
+   },
+   "textos": {
+    "iniciante": "Curva oito, à esquerda. Venha pelo meio da pista. Freie forte no começo da zebra à esquerda. Solte o freio e vire no começo da zebra da esquerda. Deixe o carro rolar sem acelerar até uns 95 por hora, perto da borda de dentro. Acelere depois da mínima, quando o carro já estiver apontado, e saia a uns 3 metros da borda de fora, porque a nove é de pé embaixo.",
+    "amador": "Oito: pelo meio, freie no começo da zebra à esquerda, vire no começo da zebra, mínima de 95, acelere depois da mínima e saída a 3 da borda.",
+    "pro": "Oito: frenagem no começo da zebra à esquerda, de 125 para 110 em 20 metros. Entrada na zebra, 1 segundo de rolagem, mínima 93 a um e meio da borda. Gás cheio 30 metros depois da mínima, saída a 3 metros da borda."
+   },
+   "duracaoS": {
+    "iniciante": 23.06,
+    "amador": 8.78,
+    "pro": 15.41
+   }
+  },
+  {
+   "trecho": "C09",
+   "tipo": "pé embaixo",
+   "medidas": {
+    "chegada": "meio",
+    "freada": null,
+    "vFreadaKmh": null,
+    "fimDaFrenagem": null,
+    "frenagemM": null,
+    "reta": null,
+    "virar": 2566.0,
+    "semPedalM": 36.0,
+    "minimaKmh": 144.4,
+    "sMinima": 2518.0,
+    "apiceDaBordaM": 2.83,
+    "aceleradorCheio": 2518.0,
+    "saidaDaBordaM": 3.37
+   },
+   "textos": {
+    "iniciante": "Curva nove, à direita. Venha pelo meio da pista. Ela é de pé embaixo: não freie nem alivie. Passe a uns 165 por hora, perto da borda de dentro, e saia a uns 3 metros da borda de fora; a dez vem logo e tem frenagem.",
+    "amador": "Nove: pé embaixo, perto da borda, saída a 3 da borda.",
+    "pro": "Nove: pé embaixo, a três metros da borda, saída a 3 metros da borda."
+   },
+   "duracaoS": {
+    "iniciante": 14.83,
+    "amador": 3.83,
+    "pro": 4.62
+   }
+  },
+  {
+   "trecho": "C10",
+   "tipo": "frenagem",
+   "medidas": {
+    "chegada": "meio",
+    "freada": 2622.0,
+    "vFreadaKmh": 180.7,
+    "fimDaFrenagem": 2702.0,
+    "frenagemM": 80.0,
+    "reta": true,
+    "virar": 2672.0,
+    "semPedalM": 10.0,
+    "minimaKmh": 82.7,
+    "sMinima": 2726.1,
+    "apiceDaBordaM": 3.67,
+    "aceleradorCheio": 2750.1,
+    "saidaDaBordaM": 3.87
+   },
+   "textos": {
+    "iniciante": "Curva dez, à direita. Venha pelo meio da pista. Freie forte e reto 10 antes do começo da zebra à direita. Solte o freio e vire uns 15 metros antes do começo da zebra da direita. Leve o carro até uns 85 por hora, a uns 4 metros da borda de dentro. Acelere depois da mínima, quando o carro já estiver apontado, e saia a uns 4 metros da borda de fora, porque a onze é de pé embaixo.",
+    "amador": "Dez: pelo meio, freie forte 10 antes do começo da zebra à direita, vire 15 antes da zebra, mínima de 85, acelere depois da mínima e saída a 4 da borda.",
+    "pro": "Dez: frenagem 10 antes do começo da zebra à direita, reta, de 180 para 90 em 80 metros. Entrada 15 antes da zebra, mínima 83 a 4 metros da borda. Gás cheio 25 metros depois da mínima, saída a 4 metros da borda."
+   },
+   "duracaoS": {
+    "iniciante": 24.82,
+    "amador": 9.92,
+    "pro": 16.27
+   }
+  },
+  {
+   "trecho": "C11",
+   "tipo": "pé embaixo",
+   "medidas": {
+    "chegada": "meio",
+    "freada": null,
+    "vFreadaKmh": null,
+    "fimDaFrenagem": null,
+    "frenagemM": null,
+    "reta": null,
+    "virar": 2870.1,
+    "semPedalM": 36.0,
+    "minimaKmh": 140.3,
+    "sMinima": 2802.1,
+    "apiceDaBordaM": 1.81,
+    "aceleradorCheio": 2804.1,
+    "saidaDaBordaM": 3.72
+   },
+   "textos": {
+    "iniciante": "Curva onze, à esquerda. Venha pelo meio da pista. Ela é de pé embaixo: não freie nem alivie. Passe a uns 190 por hora, perto da borda de dentro, e saia a uns 4 metros da borda de fora; a doze vem logo e tem frenagem.",
+    "amador": "Onze: pé embaixo, perto da borda, saída a 4 da borda.",
+    "pro": "Onze: pé embaixo, a dois metros da borda, saída a 4 metros da borda."
+   },
+   "duracaoS": {
+    "iniciante": 14.49,
+    "amador": 3.87,
+    "pro": 4.66
+   }
+  },
+  {
+   "trecho": "C12",
+   "tipo": "frenagem",
+   "medidas": {
+    "chegada": "meio",
+    "freada": 3124.1,
+    "vFreadaKmh": 220.6,
+    "fimDaFrenagem": 3204.1,
+    "frenagemM": 80.0,
+    "reta": false,
+    "virar": 3176.1,
+    "semPedalM": 2.0,
+    "minimaKmh": 112.0,
+    "sMinima": 3244.1,
+    "apiceDaBordaM": 1.81,
+    "aceleradorCheio": 3252.1,
+    "saidaDaBordaM": 1.48
+   },
+   "textos": {
+    "iniciante": "Curva doze, à esquerda. Venha pelo meio da pista. Freie forte entre a placa de 100 e a de 50. Solte o freio e vire no começo da zebra da esquerda. Leve o carro até uns 110 por hora, perto da borda de dentro. Acelere cedo e use a pista toda na saída, porque a treze é de pé embaixo.",
+    "amador": "Doze: pelo meio, freie entre o 100 e o 50, vire no começo da zebra, mínima de 110, acelere cedo e abra na saída.",
+    "pro": "Doze: frenagem 15 depois do 100, de 220 para 115 em 80 metros. Entrada na zebra, mínima 112 a dois metros da borda. Gás cheio 10 metros depois da mínima, saída na borda."
+   },
+   "duracaoS": {
+    "iniciante": 19.04,
+    "amador": 7.49,
+    "pro": 13.04
+   }
+  },
+  {
+   "trecho": "C13",
+   "tipo": "pé embaixo",
+   "medidas": {
+    "chegada": "direita",
+    "freada": null,
+    "vFreadaKmh": null,
+    "fimDaFrenagem": null,
+    "frenagemM": null,
+    "reta": null,
+    "virar": 3310.1,
+    "semPedalM": 36.0,
+    "minimaKmh": 137.0,
+    "sMinima": 3286.1,
+    "apiceDaBordaM": 5.6,
+    "aceleradorCheio": 3288.1,
+    "saidaDaBordaM": 2.37
+   },
+   "textos": {
+    "iniciante": "Curva treze, à esquerda. Venha pelo lado direito. Ela é de pé embaixo: não freie nem alivie. Passe a uns 165 por hora, a uns 6 metros da borda de dentro, e saia a uns 2 metros da borda de fora; a catorze é de pé embaixo.",
+    "amador": "Treze: pé embaixo, a 6 metros da borda, saída a 2 da borda.",
+    "pro": "Treze: pé embaixo, a 6 metros da borda, saída a 2 metros da borda."
+   },
+   "duracaoS": {
+    "iniciante": 15.25,
+    "amador": 4.23,
+    "pro": 4.59
+   }
+  },
+  {
+   "trecho": "C14",
+   "tipo": "pé embaixo",
+   "medidas": {
+    "chegada": "meio",
+    "freada": null,
+    "vFreadaKmh": null,
+    "fimDaFrenagem": null,
+    "frenagemM": null,
+    "reta": null,
+    "virar": 3538.1,
+    "semPedalM": 36.0,
+    "minimaKmh": 203.8,
+    "sMinima": 3530.1,
+    "apiceDaBordaM": 2.58,
+    "aceleradorCheio": 3532.1,
+    "saidaDaBordaM": 1.34
+   },
+   "textos": {
+    "iniciante": "Curva catorze, à esquerda. Venha pelo meio da pista. Ela é de pé embaixo: não freie nem alivie. Passe a uns 215 por hora, perto da borda de dentro, e use a pista toda na saída; a um vem logo e tem frenagem.",
+    "amador": "Catorze: pé embaixo, perto da borda, abra na saída.",
+    "pro": "Catorze: pé embaixo, a dois e meio da borda, saída na borda."
+   },
+   "duracaoS": {
+    "iniciante": 13.96,
+    "amador": 3.59,
+    "pro": 3.95
+   }
+  }
+ ]
+}

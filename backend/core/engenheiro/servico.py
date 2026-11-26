@@ -422,6 +422,7 @@ class Engenheiro:
             return
         if self.foco is None:
             self._planejar_as_outras_curvas([])
+            self._marcar_as_medidas()
             self.versao += 1
             return
         k = self.foco["k"]
@@ -473,13 +474,21 @@ class Engenheiro:
         if bipes:
             self.contagens = [{"trecho": ficha["trecho"], "sBipes": bipes}]
         self._planejar_as_outras_curvas(falas)
-        self._medidas_no_plano = {t for t in (ficha["fala"], ficha["lembrete"]) if self.duracao(t) is not None}
+        self._marcar_as_medidas()
         self._registrar({"tipo": "plano", "trecho": ficha["trecho"], "perfil": self.perfil.origem,
                          "ficha": {k2: pf.get(k2) for k2 in ("sFala", "duracaoS", "folgaS", "folgaAoFimDoPedacoS", "motivo")},
                          "lembrete": {k2: pl.get(k2) for k2 in ("sFala", "duracaoS", "folgaS", "motivo")},
                          "sBipes": bipes, "sAcaoPiloto": round(s_acao, 1), "sPonto": ficha["sPonto"],
                          "tecnica": ficha.get("tecnica"), "tecnicaDe": ficha.get("tecnicaDe")})
         self.versao += 1
+
+    def _marcar_as_medidas(self) -> None:
+        """As falas do plano que a voz ja mediu (a ficha, o lembrete do foco e os lembretes das outras curvas): o plano
+        so e refeito quando uma delas e medida pela primeira vez."""
+        textos = {l["texto"] for l in self.lembretes}
+        if self.ficha is not None:
+            textos |= {self.ficha["fala"], self.ficha["lembrete"]}
+        self._medidas_no_plano = {t for t in textos if self.duracao(t) is not None}
 
     def _replanejar_se_mediu(self) -> None:
         """A voz mediu a ficha ou um lembrete do plano: refaz o plano com a duracao real."""
@@ -488,7 +497,6 @@ class Engenheiro:
             textos |= {self.ficha["fala"], self.ficha["lembrete"]}
         medidas = {t for t in textos if self.duracao(t) is not None}
         if medidas - self._medidas_no_plano:
-            self._medidas_no_plano |= medidas
             self._planejar_o_foco()
 
     def _ordenada(self) -> List[Dict[str, Any]]:
@@ -821,7 +829,10 @@ class Engenheiro:
         if nivel == "iniciante":
             self.relatorio_lento = (self.relatorio_lento + [{"trecho": nome, "texto": texto}])[-20:]
         else:
-            self._mensagens.append(self._mensagem(f"análise · {nome}", texto, 8.0, frente=True))
+            # a regra do pedido 45 (C.1, item 5): a analise que nao saiu ate o carro voltar a curva sai da fila
+            m = self._mensagem(f"análise · {nome}", texto, 8.0, frente=True)
+            m["_curvaS"] = float(self.trechos[k].entrada_s)
+            self._mensagens.append(m)
 
     def _na_volta_lenta(self, s: float) -> None:
         """Item 8: no nivel iniciante, a explicacao longa de cada curva do escopo a frente do carro e as analises
