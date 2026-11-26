@@ -1572,3 +1572,15 @@ Além delas:
 2. **Reiniciar o backend** do repositório. O que está aberto ainda é o de antes de 22/11.
 3. **O seu "pode instalar"** do app do jogo 0.10.0.
 4. **O teste no jogo** das chaves, dos níveis, da análise e do treino.
+
+#### O "pode instalar" do app do jogo 0.10.0 (26/11)
+
+- **Você deu o "pode instalar" do 0.10.0**, repassado pela sessão que abriu esta com as suas palavras: "pode instalar o app do jogo 0.10.0".
+- **O que conferi antes:**
+  - o `acs.exe` está fechado;
+  - o pacote `tools/csp_app/radio_engenheiro/` está na 0.10.0;
+  - na pasta do jogo ainda está a 0.9.1 (o `manifest.ini` de 22/11, 21h58).
+- **Quem roda o `instalar.ps1` é você,** como o script e o pedido dizem: ele pede confirmação na tela e grava na pasta do jogo, onde eu não escrevo. O comando, na pasta do repositório:
+  `powershell -NoProfile -ExecutionPolicy Bypass -File tools\csp_app\instalar.ps1`
+- **Depois da instalação,** eu confiro a VERSION na pasta do jogo e registro aqui. Antes do teste, eu reinicio o backend do repositório: o que está aberto roda o código de antes de 22/11.
+- **Continua em aberto:** a regra da análise depois da curva na fila do rádio, (A) uma por volta, (B) só uma na fila ou (C) sem passar na frente. Sem essa decisão, o teste no jogo roda com a regra de hoje: na volta inteira, a análise toma o rádio, e o feedback cai de 24 para 1 em 13/10.
