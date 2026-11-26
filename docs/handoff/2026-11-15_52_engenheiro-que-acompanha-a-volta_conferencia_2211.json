@@ -274,5 +274,111 @@
     }
    ]
   }
+ },
+ "depoisDaDecisaoA": {
+  "regras": "A decisao de 26/11 (A): so a analise que mais custou na volta vai para a voz, na linha; a orientacao do treino na frente de tudo.",
+  "rodadas": {
+   "2026-10-13_amador_inteira_treino5": {
+    "analises": 185,
+    "analisesFaladasNaLinha": 8,
+    "mensagensDoEngenheiroEntregues": {
+     "treino": 7
+    },
+    "feedbackEntregue": {
+     "sem": 24,
+     "com": 13
+    },
+    "pendentesNoFim": 23,
+    "sairamDaFila": 12,
+    "treino": {
+     "volta": 9.0,
+     "orientacao": "Fim do treino. Dê uma volta lenta.",
+     "itens": 14
+    },
+    "exemplos": [
+     {
+      "volta": 10,
+      "titulo": "Engenheiro · treino",
+      "fala": "Fim do treino. Dê uma volta lenta."
+     },
+     {
+      "volta": 10,
+      "titulo": "Engenheiro · treino · C01",
+      "fala": "Um: mínima 100 contra 107, freou 40 metros cedo."
+     },
+     {
+      "volta": 11,
+      "titulo": "Engenheiro · treino · C12",
+      "fala": "Doze: virou 20 metros tarde, freou 35 metros cedo."
+     },
+     {
+      "volta": 11,
+      "titulo": "Engenheiro · treino · C04",
+      "fala": "Quatro: freou 20 metros cedo, mínima 111 contra 133."
+     },
+     {
+      "volta": 14,
+      "titulo": "Engenheiro · treino · C08",
+      "fala": "Oito: saída mais aberta que a referência, acelerou 150 metros tarde."
+     },
+     {
+      "volta": 15,
+      "titulo": "Engenheiro · treino · C07",
+      "fala": "Sete: virou 10 metros cedo, mínima 84 contra 92."
+     },
+     {
+      "volta": 15,
+      "titulo": "Engenheiro · treino · C03",
+      "fala": "Três: não usou a pista toda na saída, acelerou 10 metros tarde."
+     }
+    ]
+   },
+   "2026-10-21_pro_algumas_treino3": {
+    "analises": 60,
+    "analisesFaladasNaLinha": 7,
+    "mensagensDoEngenheiroEntregues": {
+     "análise": 1,
+     "treino": 4
+    },
+    "feedbackEntregue": {
+     "sem": 35,
+     "com": 42
+    },
+    "pendentesNoFim": 4,
+    "sairamDaFila": 13,
+    "treino": {
+     "volta": 11.0,
+     "orientacao": "Fim do treino. Dê uma volta lenta.",
+     "itens": 3
+    },
+    "exemplos": [
+     {
+      "volta": 10,
+      "titulo": "Engenheiro · análise · C12",
+      "fala": "Doze: freio menos 76 metros, entrada mais 22 metros."
+     },
+     {
+      "volta": 12,
+      "titulo": "Engenheiro · treino",
+      "fala": "Fim do treino. Dê uma volta lenta."
+     },
+     {
+      "volta": 12,
+      "titulo": "Engenheiro · treino · C12",
+      "fala": "Doze: entrada mais 19 metros, freio menos 54 metros."
+     },
+     {
+      "volta": 12,
+      "titulo": "Engenheiro · treino · C01",
+      "fala": "Um: mínima menos 16, ápice 6 metros longe."
+     },
+     {
+      "volta": 12,
+      "titulo": "Engenheiro · treino · C04",
+      "fala": "Quatro: mínima menos 12, freio menos 30 metros."
+     }
+    ]
+   }
+  }
  }
 }

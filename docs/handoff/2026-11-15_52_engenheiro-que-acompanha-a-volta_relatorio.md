@@ -1584,3 +1584,36 @@ Além delas:
   `powershell -NoProfile -ExecutionPolicy Bypass -File tools\csp_app\instalar.ps1`
 - **Depois da instalação,** eu confiro a VERSION na pasta do jogo e registro aqui. Antes do teste, eu reinicio o backend do repositório: o que está aberto roda o código de antes de 22/11.
 - **Continua em aberto:** a regra da análise depois da curva na fila do rádio, (A) uma por volta, (B) só uma na fila ou (C) sem passar na frente. Sem essa decisão, o teste no jogo roda com a regra de hoje: na volta inteira, a análise toma o rádio, e o feedback cai de 24 para 1 em 13/10.
+
+### A decisão de 26/11 sobre a análise na fila: (A), uma por volta
+
+**A decisão:** você escolheu a **(A)**. Ela foi registrada no ADR 0033 antes do código (`4714c110`) e aplicada em `87d6cdab`.
+- Cada curva continua a ser analisada e registrada.
+- Na linha de uma volta que conta, só a análise que mais custou vai para a voz:
+  - no amador e no pro, logo depois do resumo da volta;
+  - no iniciante, no relatório da volta lenta.
+- A volta que não conta não tem análise falada.
+- A orientação do fim do treino passa à frente de tudo na fila, e os itens do relatório vão logo atrás dela.
+
+**Os testes:** 65 passando, os do engenheiro e os da referência. Dois são novos: só a análise que mais custou vai para a voz, e a ordem da fila.
+
+**A conferência de novo** (`_conferencia_2211.json`, bloco `depoisDaDecisaoA`):
+
+| sessão e chaves | análises / faladas na linha | o que o engenheiro falou | feedback entregue (sem o engenheiro / antes da A / agora) | pendentes no fim (antes da A / agora) |
+|---|---|---|---|---|
+| 13/10, amador, volta inteira, treino de 5 | 185 / 8 | a orientação e 6 dos 14 itens do treino; nenhuma análise | 24 / 1 / **13** | 47 / 23 |
+| 21/10, pro, C01, C04 e C12, treino de 3 | 60 / 7 | 1 análise, a orientação e os 3 itens do treino | 35 / 16 / **42** | 24 / 4 |
+
+**O que mudou com a (A):**
+- **A orientação do fim do treino sai.** Em 13/10, "Fim do treino. Dê uma volta lenta." saiu na volta 10, logo depois de o treino acabar, com os itens do relatório atrás dela.
+- **O feedback do rádio voltou.** Em 21/10, ficou acima do número sem o engenheiro, porque a fila não fica mais presa.
+- **Em 13/10, nenhuma análise da volta chegou a ser dita.** A análise escolhida saiu da fila antes do primeiro bloco de voz em que coubesse: quando o carro volta à curva, a regra do pedido 45 a tira da fila. Isso acontece porque, na volta inteira, a curva que mais custou costuma ser a C01, a C02 ou a C04, que vêm logo depois da linha, e na frente dela estavam o resumo e os itens do treino. Só relato: a regra é a decidida.
+
+### A instalação do 0.10.0
+
+- **A pasta do jogo ainda tem a 0.9.1** (conferido em 26/11, 20h40: a VERSION do `manifest.ini` e o arquivo `.lua` de 22/11, 21h58). O `instalar.ps1` da 0.10.0 ainda não foi rodado.
+- **Falta:**
+  1. você rodar o `instalar.ps1`;
+  2. eu conferir a VERSION instalada e reiniciar o backend do repositório;
+  3. o teste no jogo das chaves, dos níveis, da análise e do treino.
+
