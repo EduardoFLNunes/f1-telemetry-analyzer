@@ -370,13 +370,9 @@ class RadioDoEngenheiro:
                         from core.engenheiro.plano import LATENCIA_NO_JOGO_S
                         self._ocupado_ate = max(self._ocupado_ate, agora + LATENCIA_NO_JOGO_S + float(fala["duracaoS"])
                                                 + FOLGA_ENTRE_MENSAGENS_S)
-                    # ADR 0033, decisoes de 22/11, itens 4, 7 e 8: as mensagens do engenheiro (a analise na frente)
+                    # ADR 0033, decisoes de 22/11 e de 26/11: as mensagens do engenheiro na fila, pela ordem delas
                     for m in eng.tirar_mensagens():
-                        nova = self._nova(m)
-                        if m.get("_frente"):
-                            self._pendentes.appendleft(nova)
-                        else:
-                            self._pendentes.append(nova)
+                        self._por_na_fila_do_engenheiro(self._nova(m))
             if not self._pendentes or agora < self._ocupado_ate:
                 return
             proxima = self._pendentes[0]
@@ -405,6 +401,24 @@ class RadioDoEngenheiro:
             if tempo_que_resta(self._janelas, s, L, self._velocidade_kmh) < duracao + FOLGA_NA_JANELA_S:
                 return
             self._entregar(self._pendentes.popleft(), agora, pos)
+
+    def _por_na_fila_do_engenheiro(self, nova: Dict[str, Any]) -> None:
+        """A decisao de 26/11: a orientacao do treino (ordem 0) na frente de tudo, os itens do relatorio (1) logo atras,
+        a analise da volta (2) depois do resumo; sem ordem, o fim da fila."""
+        ordem = nova.get("_ordem")
+        if ordem is None:
+            self._pendentes.append(nova)
+            return
+
+        def peso(m: Dict[str, Any]) -> int:
+            if m.get("_ordem") is not None:
+                return int(m["_ordem"])
+            return 2 if m.get("origem") == "resumo" else 99
+
+        i = 0
+        while i < len(self._pendentes) and peso(self._pendentes[i]) <= int(ordem):
+            i += 1
+        self._pendentes.insert(i, nova)
 
     def _cortar_o_feedback(self, eng, fala: Dict[str, Any], agora: float, s: float) -> None:
         """ADR 0033, emenda de 20/11, item 1: um feedback em andamento e cortado pelo aviso (o app do jogo para a

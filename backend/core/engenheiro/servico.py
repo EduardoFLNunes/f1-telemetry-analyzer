@@ -41,6 +41,8 @@ logger = logging.getLogger(__name__)
 
 PISTA = "vhe_interlagos"
 VOLTAS_SEM_APLICAR = 3            # ADR 0033, emenda de 21/11, item 4
+# a decisao de 26/11: a ordem das mensagens do engenheiro na fila do radio (menor na frente; o resumo vale 2)
+ORDEM_DO_TREINO, ORDEM_DO_RELATORIO, ORDEM_DA_ANALISE = 0, 1, 2
 ACAO_DA_FICHA = {F.FRENAGEM: "freie", F.PE_EMBAIXO: R.SEM_TIRAR_O_PE, F.ALIVIO: "vire"}
 
 
@@ -169,6 +171,7 @@ class Engenheiro:
         self.lembretes: List[Dict[str, Any]] = []
         self._mensagens: List[Dict[str, Any]] = []
         self._analises_da_volta: Dict[str, List[Dict[str, Any]]] = {}
+        self._textos_da_volta: Dict[str, Dict[str, Any]] = {}      # trecho -> o texto e o custo (decisao de 26/11)
         self.relatorio_lento: List[Dict[str, Any]] = []
         self._lenta_vista = False
         self.treino: Optional[Dict[str, Any]] = None
@@ -229,7 +232,7 @@ class Engenheiro:
         """ADR 0033, emenda de 21/11, item 5: a volta que nao conta; a janela mostra o motivo enquanto nao ha foco."""
         with self._lock:
             self._na_linha_do_treino(volta, conta=False)
-            self._analises_da_volta = {}
+            self._analises_da_volta, self._textos_da_volta = {}, {}
             n = int(volta) if isinstance(volta, (int, float)) and float(volta).is_integer() else volta
             self.esperando = f"volta {n}: {motivo}" if motivo else (f"volta {n}: não contou" if n is not None else None)
             self.versao += 1
@@ -305,7 +308,8 @@ class Engenheiro:
             self.esperando = None if self.foco is not None else "nenhuma curva acima do ruído na última volta que contou"
             # o treino (decisoes de 22/11, item 7) e as analises desta volta
             self._na_linha_do_treino(volta, conta=True)
-            self._analises_da_volta = {}
+            self._falar_a_analise_da_volta(volta)
+            self._analises_da_volta, self._textos_da_volta = {}, {}
             # a melhor passagem, o perfil e o plano das falas (emenda de 20/11, item 5; emenda de 21/11, itens 9 a 12)
             self._considerar_passagens(grade, total, f"volta {volta}")
             self._usar_o_perfil(grade, total, f"volta {self._n(volta)} da sessão")
@@ -788,9 +792,14 @@ class Engenheiro:
                 self.contagens.append({"trecho": nome, "sBipes": P.pontos_da_contagem(self.perfil, float(fb["sFreada"]))})
         self.falas.sort(key=lambda f: f["sFala"])
 
-    def _mensagem(self, titulo: str, texto: str, maximo_s: float, frente: bool) -> Dict[str, Any]:
-        return {"origem": "engenheiro", "titulo": f"Engenheiro · {titulo}", "texto": texto, "fala": texto, "falas": [texto],
-                "falaMaxS": float(maximo_s), "_frente": bool(frente)}
+    def _mensagem(self, titulo: str, texto: str, maximo_s: float, ordem: Optional[int] = None) -> Dict[str, Any]:
+        """Uma mensagem do engenheiro para a fila do radio. `ordem` (a decisao de 26/11): 0 a orientacao do treino,
+        1 os itens do relatorio, 2 a analise da volta (depois do resumo); sem ordem, o fim da fila."""
+        m = {"origem": "engenheiro", "titulo": f"Engenheiro · {titulo}", "texto": texto, "fala": texto, "falas": [texto],
+             "falaMaxS": float(maximo_s)}
+        if ordem is not None:
+            m["_ordem"] = int(ordem)
+        return m
 
     def tirar_mensagens(self) -> List[Dict[str, Any]]:
         """As mensagens novas do engenheiro para a fila do radio (a analise, a explicacao e o treino)."""
@@ -826,13 +835,25 @@ class Engenheiro:
                                                             "saidaDaBordaM")}})
         if not texto:
             return
-        if nivel == "iniciante":
-            self.relatorio_lento = (self.relatorio_lento + [{"trecho": nome, "texto": texto}])[-20:]
-        else:
-            # a regra do pedido 45 (C.1, item 5): a analise que nao saiu ate o carro voltar a curva sai da fila
-            m = self._mensagem(f"análise · {nome}", texto, 8.0, frente=True)
-            m["_curvaS"] = float(self.trechos[k].entrada_s)
-            self._mensagens.append(m)
+        # a decisao de 26/11 (A): so a analise de maior custo da volta vai para a voz, na linha
+        custo = sum(max(float(x.get("custoS") or 0.0), 0.0) for x in difs)
+        self._textos_da_volta[nome] = {"k": k, "texto": texto, "custoS": round(custo, 3), "nivel": nivel}
+
+    def _falar_a_analise_da_volta(self, volta: Optional[Any]) -> None:
+        """A decisao de 26/11 (A): na linha de uma volta que conta, a analise da curva que mais custou vai para a voz
+        (amador e pro: logo depois do resumo; iniciante: o relatorio da volta lenta). As outras ficam no registro."""
+        if not self._textos_da_volta:
+            return
+        nome, x = max(self._textos_da_volta.items(), key=lambda kv: kv[1]["custoS"])
+        self._registrar({"tipo": "analise da volta", "volta": volta, "trecho": nome, "custoS": x["custoS"], "texto": x["texto"],
+                         "analisadas": len(self._textos_da_volta)})
+        if x["nivel"] == "iniciante":
+            self.relatorio_lento = (self.relatorio_lento + [{"trecho": nome, "texto": x["texto"]}])[-20:]
+            return
+        m = self._mensagem(f"análise · {nome}", x["texto"], 8.0, ordem=ORDEM_DA_ANALISE)
+        # a regra do pedido 45 (C.1, item 5): a analise que nao saiu ate o carro voltar a curva sai da fila
+        m["_curvaS"] = float(self.trechos[x["k"]].entrada_s)
+        self._mensagens.append(m)
 
     def _na_volta_lenta(self, s: float) -> None:
         """Item 8: no nivel iniciante, a explicacao longa de cada curva do escopo a frente do carro e as analises
@@ -845,9 +866,9 @@ class Engenheiro:
         for n in sorted(self.escopo(), key=frente):
             exp = self.explicacoes.get(n)
             if exp is not None:
-                self._mensagens.append(self._mensagem(f"explicação · {n}", exp["textos"]["iniciante"], 30.0, frente=False))
+                self._mensagens.append(self._mensagem(f"explicação · {n}", exp["textos"]["iniciante"], 30.0))
         for item in self.relatorio_lento:
-            self._mensagens.append(self._mensagem(f"análise · {item['trecho']}", item["texto"], 30.0, frente=False))
+            self._mensagens.append(self._mensagem(f"análise · {item['trecho']}", item["texto"], 30.0))
         self.relatorio_lento = []
 
     def _na_linha_do_treino(self, volta: Optional[Any], conta: bool) -> None:
@@ -884,7 +905,7 @@ class Engenheiro:
         self.ultimo_treino = {"volta": volta, "voltas": t["voltas"], "itens": itens, "volumeS": round(volume, 1), "orientacao": ori}
         self._registrar({"tipo": "treino", "evento": "fim", "volta": volta, "voltas": t["voltas"], "relatorio": rel,
                          "itens": itens, "volumeS": round(volume, 1), "orientacao": ori})
-        self._mensagens.append(self._mensagem("treino", ori["texto"], 8.0, frente=True))
+        self._mensagens.append(self._mensagem("treino", ori["texto"], 8.0, ordem=ORDEM_DO_TREINO))
         for i in itens:
-            self._mensagens.append(self._mensagem(f"treino · {i['trecho']}", i["texto"], 30.0, frente=False))
+            self._mensagens.append(self._mensagem(f"treino · {i['trecho']}", i["texto"], 30.0, ordem=ORDEM_DO_RELATORIO))
 

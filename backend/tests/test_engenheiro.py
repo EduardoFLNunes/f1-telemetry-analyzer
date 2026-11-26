@@ -243,6 +243,7 @@ def _engenheiro_sem_arquivos(blocos, lista, Lt=1000.0, falas=None):
     e.config, e.config_path, e._volta_atual = dict(Engenheiro.CONFIG_PADRAO), None, (lambda: None)
     e.lados, e.explicacoes, e.fichas_base, e.contagens, e.lembretes = {}, {}, {}, [], []
     e._mensagens, e._analises_da_volta, e.relatorio_lento, e._lenta_vista = [], {}, [], False
+    e._textos_da_volta = {}
     e.treino, e.ultimo_treino = None, None
     return e
 
@@ -1114,8 +1115,9 @@ def test_o_escopo_algumas_curvas_e_volta_inteira():
 
 
 def test_a_analise_sai_depois_da_curva_e_o_iniciante_guarda_para_a_volta_lenta():
-    """Itens 4 e 8: 30 m depois da saida da curva, a passagem da volta em andamento e comparada; amador: a mensagem
-    vai para a frente da fila; iniciante: fica para a volta lenta, junto com a explicacao longa."""
+    """Itens 4 e 8, com a decisao de 26/11: 30 m depois da saida da curva, a passagem da volta em andamento e
+    comparada; na linha, amador: a mensagem vai para a fila logo depois do resumo; iniciante: fica para a volta lenta,
+    junto com a explicacao longa."""
     from core.engenheiro.servico import Engenheiro
     from test_lap_origin import circular_track
 
@@ -1129,9 +1131,11 @@ def test_a_analise_sai_depois_da_curva_e_o_iniciante_guarda_para_a_volta_lenta()
             Engenheiro.no_quadro(e, s, 180.0, True, False)
         assert [x["fase"] for x in e._analises_da_volta["C02"]]
         assert any(x["tipo"] == "analise" and x["trecho"] == "C02" for x in e.linhas)
+        assert Engenheiro.tirar_mensagens(e) == [] and e.relatorio_lento == []      # nada antes da linha
+        Engenheiro._falar_a_analise_da_volta(e, 3)                             # a linha
         msgs = Engenheiro.tirar_mensagens(e)
         if nivel == "amador":
-            assert len(msgs) == 1 and msgs[0]["_frente"] and msgs[0]["origem"] == "engenheiro"
+            assert len(msgs) == 1 and msgs[0]["_ordem"] == 2 and msgs[0]["origem"] == "engenheiro"
             assert msgs[0]["fala"].startswith("Dois: ")
         else:
             assert msgs == [] and e.relatorio_lento and e.relatorio_lento[0]["texto"].startswith("Na dois, você ")
@@ -1159,7 +1163,7 @@ def test_o_treino_comeca_na_linha_conta_as_voltas_e_orienta_no_fim():
         Engenheiro._na_linha_do_treino(e, volta, conta=True)
     assert e.treino is None and e.ultimo_treino["orientacao"]["tipo"] == "uma volta lenta"
     msgs = Engenheiro.tirar_mensagens(e)
-    assert msgs[0]["fala"] == "Fim do treino. Dê uma volta lenta." and msgs[0]["_frente"]
+    assert msgs[0]["fala"] == "Fim do treino. Dê uma volta lenta." and msgs[0]["_ordem"] == 0
     assert msgs[1]["titulo"] == "Engenheiro · treino · C02" and "45 metros cedo" in msgs[1]["fala"]
     assert any(x["tipo"] == "treino" and x.get("evento") == "fim" for x in e.linhas)
 
@@ -1201,5 +1205,43 @@ def test_a_analise_sai_da_fila_quando_o_carro_volta_a_curva():
     e._volta_atual = lambda: {"volta": 3, "pontosDaGrade": int(track.size), "linhas": linhas}
     for s in (400.0, 520.0, 535.0):
         Engenheiro.no_quadro(e, s, 180.0, True, False)
+    Engenheiro._falar_a_analise_da_volta(e, 3)
     msgs = Engenheiro.tirar_mensagens(e)
     assert msgs and msgs[0]["_curvaS"] == pytest.approx(430.0)
+
+
+def test_so_a_analise_que_mais_custou_na_volta_vai_para_a_voz():
+    """A decisao de 26/11 (A): cada curva e analisada e registrada, mas na linha so a de maior custo vai para a voz; a
+    volta que nao conta nao tem analise falada."""
+    from core.engenheiro.servico import Engenheiro
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    e, g, total = _engenheiro_que_ensina(track, escopo="inteira")
+    e._textos_da_volta = {"C01": {"k": 0, "texto": "Um: freou 20 metros cedo.", "custoS": 0.15, "nivel": "amador"},
+                          "C02": {"k": 1, "texto": "Dois: mínima 95 contra 110.", "custoS": 0.42, "nivel": "amador"}}
+    Engenheiro._falar_a_analise_da_volta(e, 4)
+    msgs = Engenheiro.tirar_mensagens(e)
+    assert [m["fala"] for m in msgs] == ["Dois: mínima 95 contra 110."]
+    falada = [x for x in e.linhas if x["tipo"] == "analise da volta"][-1]
+    assert falada["trecho"] == "C02" and falada["analisadas"] == 2
+    e._textos_da_volta = {"C01": {"k": 0, "texto": "Um: freou 20 metros cedo.", "custoS": 0.15, "nivel": "amador"}}
+    Engenheiro.na_linha(e, 5, None, None, conta=False, motivo="rodada")        # a volta que nao conta
+    assert Engenheiro.tirar_mensagens(e) == [] and e._textos_da_volta == {}
+
+
+def test_a_orientacao_do_treino_vai_na_frente_de_tudo_na_fila_do_radio(tmp_path):
+    """A decisao de 26/11: a orientacao do treino (0) na frente de tudo, os itens do relatorio (1) logo atras, a
+    analise da volta (2) depois do resumo; sem ordem, o fim da fila."""
+    from collections import deque
+
+    from core.radio.servico import RadioDoEngenheiro
+
+    radio = RadioDoEngenheiro(tmp_path, lambda: None, lambda: None, lambda: None, lambda: {}, lambda: None, engenheiro=False)
+    radio._pendentes = deque([{"origem": "resumo", "titulo": "r"}, {"origem": "coach", "titulo": "c"}])
+    radio._por_na_fila_do_engenheiro({"origem": "engenheiro", "titulo": "analise", "_ordem": 2})
+    radio._por_na_fila_do_engenheiro({"origem": "engenheiro", "titulo": "orientacao", "_ordem": 0})
+    radio._por_na_fila_do_engenheiro({"origem": "engenheiro", "titulo": "item", "_ordem": 1})
+    radio._por_na_fila_do_engenheiro({"origem": "engenheiro", "titulo": "explicacao"})
+    assert [m["titulo"] for m in radio._pendentes] == ["orientacao", "item", "r", "analise", "c", "explicacao"]
+
