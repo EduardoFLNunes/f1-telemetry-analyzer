@@ -495,3 +495,110 @@ A conferência de 22/11 mostrou que, na volta inteira, a análise depois de cada
 - **Amador e pro:** essa análise vai para a fila do rádio logo depois do resumo da volta, à frente do resto do feedback. Ela sai da fila se o carro voltar àquela curva antes de ela ser dita (a regra do pedido 45, C.1, item 5).
 - **Iniciante:** só essa análise vai para o relatório da volta lenta.
 - **A orientação do fim do treino passa à frente de tudo,** inclusive do resumo e da análise. Os itens do relatório vão logo atrás dela. Esse ponto valia para qualquer uma das três opções da proposta.
+
+## Decisões do Eduardo de 26/11, depois do teste no jogo
+
+O teste de 26/11, com o app do jogo 0.10.0, mostrou cinco problemas:
+- a ficha da C12 dita na saída do S do Senna, 46 a 49 s antes da ação;
+- nenhuma análise dita depois da curva;
+- só a curva que mais custou;
+- nenhum retorno sobre o que foi pedido;
+- a voz.
+
+A leitura está no relatório do pedido 52, na seção "Atualização de 26/11". Esta seção é uma emenda: o texto acima dela não muda, salvo onde ela diz. Tudo vale para qualquer pista, nível e escopo; Interlagos é só o exemplo. Onde a decisão deixava lacuna, a regra está marcada com **(lacuna)**.
+
+### 1. O engenheiro fala de uma curva logo antes dela
+
+1. **O trecho da fala de uma curva:**
+   - **O começo:** a retomada da curva anterior (ADR 0030; a curva anterior é o trecho com curva antes dela, e antes da C01 é a última da volta), no perfil (a volta da emenda de 20/11, item 5).
+     - **(lacuna)** Sem retomada na curva anterior, o trecho começa na saída dela.
+     - **(lacuna)** Se o freio passar de 0,15 dentro do trecho, o trecho começa depois do último ponto com o freio pisado.
+   - **O fim:** a ação da curva, a mesma da emenda de 20/11, item 5.
+   - **Onde a fala nunca acontece:** antes da curva anterior, nem na reta longa de outra curva.
+   - **O que deixa de valer:** a "reta longa antes" (21/11, item 9) e o "pedaço livre logo antes" (21/11, item 11).
+2. **A folga continua 3,0 s** até o mais cedo destes dois pontos: a ação esperada e o ponto dito. A fala começa o mais tarde possível dentro do trecho.
+3. **Uma fala por curva, nesta ordem:**
+   - o texto do nível;
+   - se ele não couber, o lembrete;
+   - se nada couber, só a contagem de bipes e a janela.
+
+   O motivo vai para o registro. A explicação completa vai para o debriefing (item 7). Vale para a curva de foco e para cada curva do escopo.
+4. **O iniciante continua sem o texto longo na volta rápida:** ele fica com o lembrete (ou só os bipes). O texto longo vai para o debriefing.
+
+### 2. As orientações: a volta de delta e os boxes
+
+5. **O bloco:** são as x voltas que contam da chave de treino (`treinoVoltas`; com x = 0, não há blocos).
+   - **(lacuna)** Os blocos correm sozinhos, desde a primeira volta que conta da sessão, e recomeçam depois de cada orientação.
+   - O botão "treinar" passa a recomeçar o bloco.
+6. **Na linha que fecha um bloco, o engenheiro orienta.** Há uma de duas orientações:
+   - **"Mantenha o delta nesta volta",** quando o debriefing cabe numa volta de delta: o volume, pela regra de 22/11, é de até 60 s.
+     - A volta de delta é uma volta lenta, pela regra da volta lenta (5,0 s ou mais atrás da melhor da sessão).
+     - Nela, o engenheiro faz o debriefing.
+     - A janela mostra o delta ao vivo contra o alvo. O alvo (`ALVO_DO_DELTA_S`) é **+8,0 s** sobre a melhor volta da sessão **(lacuna)**: 3 s acima do limite da volta lenta, para ela não virar rápida por engano.
+   - **"Box, box, venha para os boxes para a análise",** quando o debriefing passa de 60 s.
+     - Nos boxes, com o carro parado (abaixo de 5 km/h), ele fala o debriefing inteiro.
+     - A janela oferece o "Abrir no app" da última volta do bloco.
+   - **Se o piloto não obedecer** e a volta seguinte for rápida (uma volta que conta), o debriefing não é dito durante ela. Na linha seguinte, a orientação se repete uma vez.
+     - **(lacuna)** Se ele não obedecer de novo, o debriefing fica só na janela e no app, e o bloco recomeça.
+   - **A orientação passa à frente de tudo na fila,** como na decisão de 26/11 sobre a análise na fila.
+
+### 3. As curvas de maior perda, sem um número fixo
+
+7. **O debriefing** é feito no nível escolhido e, nesta ordem, diz:
+   1. **o retorno do bloco:** o resumo das curvas que receberam instrução (item 8);
+   2. **todas as curvas com perda acima do ruído do trecho:** a soma das perdas das voltas do bloco, na ordem do tempo perdido, com quanto cada uma custou no bloco e as diferenças medidas (a análise de 22/11, com a mediana das voltas).
+   - **O limite é só o tempo:**
+     - na volta de delta, o que não couber em 60 s fica para a janela e o app;
+     - nos boxes, é dito tudo.
+   - **A janela do jogo e o app mostram a lista inteira** (a rota `GET /api/radio/engenheiro`, campo `debriefing`).
+   - Não há mais limite de número de curvas.
+
+### 4. O retorno sobre o que foi pedido
+
+8. **O retorno:** para cada curva que recebeu uma instrução na volta (o texto do nível ou o lembrete), o engenheiro compara o que o piloto fez com a instrução principal da ficha. A medida é a mesma da conferência de 21/11: se aplicou, quanto falta e em que direção ("Quatro: freou 20 metros antes do ponto.").
+   - **Quando:** a passagem é medida 110 m depois da saída da curva **(lacuna)**, quando a volta em andamento já tem os dados da saída (a medida da saída vai até 100 m depois dela).
+     - **Corrigido nesta emenda:** a análise de 22/11 media 30 m depois da saída, ainda sem esses dados.
+   - **Logo depois da curva:** o retorno é dito no trecho da curva seguinte, antes da fala dela, se couber. Ele acaba 0,3 s antes da fala da curva seguinte (ou, sem ela, 3,0 s antes da ação dessa curva) e começa no mais cedo entre o começo do trecho e o fim da geração do áudio.
+   - **A fala antes da próxima curva tem prioridade.** Se o retorno não couber com ela, ele vai só para o debriefing.
+   - **O retorno depois da curva é tocado pelo app do jogo, pelo `s`,** como a ficha. Ele não passa pela fila do rádio, e a regra do pedido 45 (C.1, item 5) não vale para ele.
+9. **Na linha, a fala do engenheiro é o retorno da curva de foco** (o que ela recebeu, ou "sem retorno" se não houve medida), se ele não foi dito depois da curva. Isso muda a decisão (A) de 26/11:
+   - a curva que mais custou vai para a lista do debriefing;
+   - a fala da linha vai para a fila logo depois do resumo, e não sai da fila sem ser dita.
+10. **Nenhum retorno sai da fila sem ser dito.** No debriefing (na volta de delta ou nos boxes), a regra do pedido 45 não vale.
+11. **O pedido de mais voltas** ("Me dê mais três voltas nessa frenagem"; nas curvas sem frenagem, "nessa curva"), dito na linha, junto com o retorno. Vale em dois casos:
+    - **a diferença está dentro do ruído:** a instrução não foi aplicada, mas a perda do trecho contra a referência não passou do ruído do trecho **(lacuna)**. O ruído é em segundos; a diferença da instrução é em metros ou km/h. Essa volta conta para as 3 sem aplicar;
+    - **aplicou numa volta e não na outra:** a instrução foi aplicada nesta volta, mas não na anterior em foco.
+      - **(lacuna)** Nesse caso, o foco não sai por ter aplicado. Ele fica por mais 3 voltas que contam (`VOLTAS_A_MAIS`, que começa em 3).
+      - **(lacuna)** Sai como aplicada se aplicar em 2 voltas seguidas, ou ao fim das 3 voltas pela regra de antes.
+
+    A regra da troca do foco (3 voltas sem aplicar) continua.
+
+### 5. A voz
+
+12. **O teste das vozes,** para o Eduardo escolher ouvindo. Três vozes ficam frente a frente:
+    - a Daniel (OneCore, a 1,4x), a de hoje;
+    - duas vozes neurais da Microsoft, pela API oficial da Azure AI Speech (REST, com o `requests` que o projeto já tem): a `pt-BR-AntonioNeural` e mais uma pt-BR da mesma família;
+    - as vozes pt_BR do Piper, sem internet.
+
+    O que vale para cada uma:
+    - **A chave da Azure** fica só nas variáveis de ambiente `AZURE_SPEECH_KEY` e `AZURE_SPEECH_REGION`. Ela nunca aparece no chat, num arquivo, num log, num commit nem no relatório. Sem ela, a sessão para e avisa.
+    - **O Piper:**
+      - o pacote `piper-tts`, com o que ele exigir, pode ser instalado no ambiente do backend (só neste pedido);
+      - os modelos ficam em `data/`, fora do git;
+      - a licença de cada voz, pelo cartão do modelo, é registrada neste ADR quando o modelo é baixado.
+    - **As falas do teste** são iguais em todas as vozes:
+      - a C04 nos três níveis;
+      - um lembrete;
+      - um retorno com números;
+      - "Mantenha o delta nesta volta";
+      - "Box, box, venha para os boxes para a análise".
+
+      Cada voz é gravada na velocidade normal, e também a 1,2x se a normal ficar longa, numa pasta "[teste]" fora da pasta do jogo, com a duração de cada arquivo.
+13. **A voz vira uma chave da configuração** (`voz`), com a Daniel como reserva.
+    - **O cache:** o áudio gerado fica num cache, pelo texto e pela voz.
+    - **A reserva:** se a voz escolhida falhar (sem internet ou sem chave), a fala sai na Daniel, e a troca vai para o registro (linha `voz`).
+    - **A mesma voz vale para todo o rádio:** o engenheiro, o resumo e o coach.
+    - **As durações das regras** (a folga, o trecho e os blocos) são as medidas com a voz escolhida. Isso já vale hoje, porque as durações são medidas no áudio gerado.
+    - **O padrão é a Daniel** até a escolha do Eduardo, que entra neste ADR.
+
+**O app do jogo** sobe para a 0.11.0.
