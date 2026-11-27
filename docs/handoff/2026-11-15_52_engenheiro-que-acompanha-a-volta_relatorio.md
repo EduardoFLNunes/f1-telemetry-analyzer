@@ -1617,3 +1617,13 @@ Além delas:
   2. eu conferir a VERSION instalada e reiniciar o backend do repositório;
   3. o teste no jogo das chaves, dos níveis, da análise e do treino.
 
+
+**A instalação do 0.10.0 (26/11, 21h27):**
+
+- **O app do jogo:** a pasta do jogo tem a **VERSION = 0.10.0**, e os quatro arquivos (`radio_engenheiro.lua`, `manifest.ini`, `bipe.wav` e `bipe_agudo.wav`) são iguais aos do repositório. Conferi pelo hash, só lendo.
+- **O app do repositório,** aberto de novo às 21h30: o backend na porta 8000 (agora com o código de 22/11 e de 26/11), o front na 5180 e a janela.
+- **O que conferi no backend:**
+  - `GET /api/radio/engenheiro/config` responde com as chaves: ligado, nível amador, escopo "uma curva" e treino de 5 voltas;
+  - o engenheiro está disponível, com o molde (b), o bipe ligado e 0,5 s entre os bipes;
+  - o cache da pista não mudou.
+- **Falta:** o teste no jogo das chaves (o pé da janela "Engenheiro"), dos níveis, da análise e do treino.
