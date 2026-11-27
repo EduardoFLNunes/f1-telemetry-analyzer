@@ -1689,3 +1689,13 @@ Além delas:
 - 8 medidas de latência: a mediana é 0,07 s, e a maior é 0,48 s (a primeira fala da sessão).
 - Uma linha "App radio_engenheiro is not allowed to load" logo depois de o app carregar. O app funcionou em seguida.
 - A cada 2 s, as cinco janelas aparecem como "fora da tela" e são trazidas de volta, numa tela de 3440 × 1440. Não mexi nisso; fica como item de backlog.
+
+### Parada no meio do código (26/11, limite de uso)
+
+Feito até aqui, sem commit (o código ainda não passa nos testes antigos):
+- `plano.py`: o trecho logo antes da curva (`curva_anterior`, `curva_seguinte`, `inicio_do_trecho_da_fala`, `planejar_no_trecho`).
+- `ficha.py`: `fala_do_retorno`, `fala_do_pedido`, `fala_do_retorno_do_bloco`.
+- `explicacao.py`: a análise na saída + 110 m, `segundos_falados`, `texto_da_curva_no_bloco`.
+- `servico.py`: o plano por curva (texto do nível, lembrete ou só bipes), o retorno depois da curva, a fala da linha com o pedido de mais voltas, o bloco, o debriefing e a orientação de delta ou box. O módulo importa.
+
+Falta, na ordem do item 14: o roteador de vozes (`core/radio/vozes.py`) e a chave `voz`; o app do jogo 0.11.0; os testes; o D.1; o D.2 (a Azure precisa de `AZURE_SPEECH_KEY` e `AZURE_SPEECH_REGION`, que não estão no ambiente); as suítes. Nenhuma decisão pendente além da voz, que fica para depois do D.2.
