@@ -312,3 +312,134 @@ Faça como uma atualização deste pedido, e não como um pedido novo. Registre 
     - **A leitura** repete as tabelas da D.1 nesta sessão, com a latência, o FPS, os logs do CSP e o meu cartão. Se a minha frenagem na curva de foco se moveu na direção do ponto, entra só relatado: o veredito é do protocolo de avaliação.
 16. **O merge em `develop` e o instalador 0.9.0** continuam parados até depois desse teste e da conferência, como na Parte F.
 17. **No relatório,** uma seção "Atualização de 21/11" com o commit do ADR, os testes, a D.1, a D.2, as suítes e o cartão. Depois do teste, a leitura.
+
+## Atualização de 26/11 — as minhas decisões depois do teste do engenheiro que ensina
+
+Testei no jogo o app do jogo 0.10.0, com as chaves, os níveis, a análise e o treino que pedi em 22/11. Achei cinco problemas, e as decisões abaixo resolvem cada um.
+
+Registre as decisões no ADR 0033 numa seção "Decisões do Eduardo de 26/11, depois do teste no jogo", como emenda, sem mudar o texto acima dela. Commite o ADR e só depois mude o código. Tudo vale para qualquer pista, qualquer nível e qualquer escopo (uma curva, algumas curvas ou a volta inteira). Interlagos e as curvas citadas são só o exemplo.
+
+### Antes do código: a leitura do meu teste
+
+1. **Leia a sessão do meu teste de 26/11** (a primeira gravada depois da instalação do 0.10.0) e registre no relatório, com o foco nos cinco problemas abaixo:
+   - **cada fala do engenheiro:** o tipo, a curva de que ela fala, o `s` em que começou e quantos segundos e metros antes da ação dessa curva ela acabou;
+   - **o que foi dito depois de cada curva** e o que ficou na fila sem ser dito;
+   - **de onde veio o limite de 3 curvas** que eu ouvi (uma regra, o escopo ou outra coisa).
+
+   Essa leitura não muda nenhuma das decisões abaixo: ela só mostra o antes.
+
+### 1. O engenheiro fala de uma curva logo antes dela
+
+No teste, ele falou da C12 na saída do S do Senna. Isso está errado.
+
+2. **Toda fala sobre uma curva acontece só no trecho logo antes dela.**
+   - **Que falas:** o texto do nível, o lembrete e a ficha.
+   - **Onde começa o trecho:** na retomada da curva anterior (ADR 0030), quando o acelerador volta a subir. Ele passa por qualquer trecho de velocidade constante, sempre sem freio, e acaba na ação da curva.
+   - **Onde a fala nunca acontece:** antes da curva anterior, nem na reta longa de outra curva.
+   - **O que deixa de valer:** a "reta longa antes" (item 9 de 21/11) e o "pedaço logo antes" com o acelerador em 0,90 ou mais (item 10 de 21/11). O lugar da fala passa a ser este trecho.
+3. **A folga mínima continua 3,0 s** até o mais cedo destes dois pontos: a ação esperada e o ponto dito.
+4. **O que cabe no trecho, nesta ordem:**
+   - o texto do nível;
+   - se ele não couber, o lembrete;
+   - se nada couber, só a contagem de bipes e a janela.
+
+   A explicação completa vai para o debriefing (item 7), e o motivo fica no registro.
+5. **O iniciante continua sem o texto longo na volta rápida.** O texto dele (14 a 25 s) vai só para o debriefing.
+
+### 2. As orientações: a volta de delta e os boxes
+
+6. **Depois de cada bloco de voltas rápidas, o engenheiro orienta na linha.**
+   - **O bloco** tem as x voltas que contam da chave de treino. Com x = 1, a orientação vem depois de cada volta rápida.
+   - **A orientação é uma de duas:**
+     - **"Mantenha o delta nesta volta":** a volta de delta é uma volta lenta, pela regra da volta lenta (5,0 s ou mais acima da volta que contou). Nela, o engenheiro faz o debriefing. A janela mostra o delta ao vivo contra o alvo, para eu manter o ritmo. O alvo é um parâmetro do ADR.
+     - **"Box, box, venha para os boxes para a análise":** vale quando o debriefing não cabe numa volta de delta, pelo volume medido com a regra de 22/11. Nos boxes, com o carro parado, ele fala o debriefing inteiro, e a janela oferece o "Abrir no app" daquela volta.
+   - **Se eu não obedecer** e continuar em volta rápida, o debriefing não é dito durante ela. A orientação se repete uma vez na linha seguinte.
+   - **A orientação passa à frente de tudo na fila,** como já decidido.
+
+### 3. As curvas de maior perda, sem um número fixo
+
+7. **No debriefing, o engenheiro diz todas as curvas com perda acima do ruído do trecho,** na ordem do tempo perdido, com quanto cada uma custou no bloco.
+   - **O limite é só o tempo:** o que não couber na volta de delta vai para os boxes, ou fica na janela e no app.
+   - **A janela e o app mostram a lista inteira.**
+   - **Não há mais limite de 3 curvas,** nem de outro número fixo.
+
+### 4. O retorno sobre o que foi pedido
+
+8. **Para cada curva que recebeu uma instrução no bloco, o engenheiro compara o que eu fiz com o que ele pediu** e me diz o resultado.
+   - **A medida** é a mesma da conferência de 21/11: se apliquei, quanto falta e em que direção.
+   - **Onde ele diz:** logo depois da curva, se couber pela regra do item 2, e de novo no debriefing, com o resumo do bloco.
+   - **A fala antes da próxima curva tem prioridade.** Se o retorno não couber junto com ela, ele vai só para o debriefing.
+9. **O retorno da curva instruída vem antes da análise da curva que mais custou.** Isso muda a decisão (A) de 26/11:
+   - a fala da linha é o retorno da curva instruída;
+   - a curva que mais custou entra na lista do debriefing.
+10. **Nenhum retorno sai da fila sem ter sido dito.** Em 13/10, nenhuma análise chegou a ser dita, porque a regra do pedido 45 tirava da fila a análise da curva por onde o carro ia passar de novo.
+    - **O retorno depois da curva** é dito no trecho depois dela, sem passar pela fila da linha.
+    - **No debriefing,** na volta de delta ou nos boxes, essa regra do pedido 45 não vale.
+11. **Quando uma volta não basta, ele pede mais voltas** ("Me dê mais três voltas nessa frenagem"). Isso vale em dois casos:
+    - a diferença entre o que fiz e o que ele pediu está dentro do ruído do trecho;
+    - apliquei numa volta e não na outra.
+
+    O número de voltas é um parâmetro do ADR, com 3 no começo. A regra da troca do foco (3 voltas sem aplicar) continua.
+
+### 5. Uma voz melhor
+
+12. **Teste a voz neural da Microsoft e a do Piper contra a Daniel de hoje,** e pare para eu escolher ouvindo.
+    - **A Microsoft:** a pt-BR-AntonioNeural (a do vídeo do TCC de 08/11) e mais uma voz pt-BR da mesma família, pela API oficial da Azure AI Speech. Não use o serviço de leitura do Edge por fora da API.
+      - Eu crio a conta e a chave e ponho a chave em variáveis de ambiente (`AZURE_SPEECH_KEY` e `AZURE_SPEECH_REGION`).
+      - A sessão nunca pede a chave no chat e nunca a escreve em arquivo, log, commit ou relatório.
+      - Se a chave não estiver lá, pare e me avise.
+    - **O Piper:** as vozes pt_BR disponíveis, sem internet.
+      - **Autorizo instalar neste pedido** só o pacote `piper-tts`, com o que ele exigir, no ambiente do backend. Para a Azure, use a API REST com o que o projeto já tem; se ela pedir um pacote novo, pare e me avise.
+      - Os modelos de voz ficam em `data/`, fora do git.
+      - Registre no ADR a licença de cada voz, pelo cartão do modelo.
+    - **As falas do teste,** iguais em todas as vozes:
+      - a C04 nos três níveis;
+      - um lembrete;
+      - um retorno com números;
+      - "Mantenha o delta nesta volta";
+      - "Box, box, venha para os boxes para a análise".
+
+      Use cada voz na velocidade normal, e também a 1,2x se a normal ficar longa. Deixe tudo numa pasta "[teste]" fora da pasta do jogo, com a duração de cada arquivo.
+13. **A voz vira uma chave da configuração,** com a Daniel como reserva.
+    - **O áudio gerado** fica num cache, pelo texto e pela voz.
+    - **Se a voz escolhida falhar** (sem internet ou sem chave), a fala sai na Daniel, e a troca fica no registro.
+    - **A mesma voz vale para todo o rádio:** o engenheiro, o resumo e o coach.
+    - **As durações das regras** (folga, trecho e blocos) passam a ser as medidas com a voz escolhida.
+
+### A ordem
+
+14. **Primeiro a leitura do item 1, depois o ADR 0033 com as decisões de 26/11,** commitado antes do código. Em seguida:
+    - **o código** no backend e no app do jogo, cuja versão sobe;
+    - **os testes,** com dados sintéticos:
+      - o trecho que começa na retomada da curva anterior e a fala que nunca vem antes dela;
+      - o texto do nível, o lembrete e "só bipes", nessa ordem;
+      - a orientação de delta e a de boxes, pelo volume, e a orientação repetida;
+      - o debriefing com todas as curvas acima do ruído, em ordem;
+      - o retorno depois da curva, a prioridade da fala da curva seguinte e o retorno que vai para o debriefing;
+      - o retorno que não sai da fila sem ser dito;
+      - o pedido de mais voltas;
+      - a chave da voz, o cache e a reserva na Daniel;
+    - **a D.1 de novo,** nas sessões de antes e na do meu teste de 26/11, com o nível amador e a volta inteira, e com o treino de 1 e de 5 voltas. Por sessão:
+      - quantos segundos e metros antes da ação cada fala acabou (nenhuma antes da curva anterior);
+      - quantas curvas tiveram o texto do nível, o lembrete ou só os bipes;
+      - as orientações e o tempo do debriefing;
+      - quantas curvas o debriefing citou;
+      - os retornos ditos depois da curva e os que foram para o debriefing;
+      - os pedidos de mais voltas;
+      - os segundos de fala por volta, antes e depois desta emenda;
+    - **a D.2:**
+      - os áudios do item 12;
+      - a prévia da janela com o delta ao vivo e com a lista do debriefing;
+    - **as suítes,** o `tsc` e o `conferir_lua.py`, com o limite das variáveis locais do Lua.
+15. **Pare antes do teste no jogo.** Eu ouço as vozes e escolho uma, e a escolha entra no ADR. Depois, o instalador do app do jogo só roda com o meu "pode instalar", e quem roda sou eu.
+16. **O teste no jogo, de novo,** com o roteiro da Parte E: pelo menos 10 voltas, até 45 minutos, na pista original.
+    - **Antes,** deixe no relatório um cartão com uma linha por volta:
+      - a fala veio antes da curva certa;
+      - entendi;
+      - deu tempo;
+      - o retorno depois da curva;
+      - a orientação (delta ou boxes) fez sentido;
+      - uma anotação.
+    - **A leitura** repete as medidas da D.1 nesta sessão, com a latência, o FPS e os logs do CSP.
+17. **O merge em `develop` e o instalador 0.9.0** continuam parados até depois desse teste e da conferência, como na Parte F.
+18. **No relatório,** uma seção "Atualização de 26/11" com a leitura do item 1, o commit do ADR, os testes, a D.1, a D.2, as suítes e o cartão. Depois do teste, a leitura dele.

@@ -1627,3 +1627,65 @@ Além delas:
   - o engenheiro está disponível, com o molde (b), o bipe ligado e 0,5 s entre os bipes;
   - o cache da pista não mudou.
 - **Falta:** o teste no jogo das chaves (o pé da janela "Engenheiro"), dos níveis, da análise e do treino.
+
+
+## Atualização de 26/11: as suas decisões depois do teste do engenheiro que ensina
+
+### A leitura do seu teste (item 1)
+
+**A sessão** é a `2026-11-26_21-49-14_vhe_interlagos`, de 21h49 a 22h17, com o app do jogo 0.10.0 e o backend de 22/11 e 26/11.
+- **As chaves:** nível amador, escopo "uma curva".
+  - Às 22h02, você mudou o treino para 8 voltas.
+  - Às 22h16, começou o treino. A sessão acabou um minuto depois, sem nenhuma volta de treino.
+- **O que conta:** foram 6 voltas, e contaram as voltas 3, 4 e 5. A volta 6 teve rodada.
+- **O foco:**
+  - começou na C04, que veio da sessão anterior;
+  - a C04 foi aplicada na volta 3: você freou a 4 m do ponto;
+  - depois, o foco foi para a C12, a maior perda acima do ruído, 0,53 s.
+- **A leitura** está em `_e_2611.py` e `_e_2611.json`, e usa uma cópia do log do CSP desta sessão.
+
+**Cada fala do engenheiro.** A medida vai do fim da fala até a sua ação naquela passagem, a frenagem. A fala começa no disparo mais a latência mediana medida no log do CSP, de 0,07 s.
+
+| fala | curva | começou em s | duração | acabou antes da sua ação | do começo até a entrada da curva |
+|---|---|---:|---:|---|---:|
+| ficha | C04 | 522 | 7,6 s | 3,1 s (200 m) | 790 m |
+| ficha (calada: volta de saída dos boxes) | C04 | 522 | 7,6 s | 4,3 s (287 m) | 790 m |
+| ficha | C04 | 522 | 7,6 s | 3,8 s (257 m) | 790 m |
+| ficha | **C12** | 555 | 7,5 s | **45,7 s (2.061 m)** | **2.634 m** |
+| ficha | **C12** | 530 | 7,5 s | **46,1 s (2.099 m)** | **2.658 m** |
+| lembrete | C12 | 2.814 | 2,0 s | 3,1 s (176 m) | 374 m |
+| ficha | **C12** | 492 | 7,5 s | **48,8 s (2.203 m)** | **2.696 m** |
+| lembrete | C12 | 2.817 | 2,0 s | 4,1 s (217 m) | 371 m |
+| ficha | C12 | 493 | 7,5 s | (a sessão acabou) | 2.695 m |
+
+- **A ficha da C12 foi dita na saída do S do Senna,** de 2,6 a 2,7 km antes da curva, de 46 a 49 s antes da sua ação. A causa é a regra do item 9 de 21/11: a ficha vai na reta longa antes da curva. Para a C12, a reta longa mais perto para trás é a reta oposta, que acaba na C04. Era o problema que você ouviu.
+- **A ficha da C04 e os lembretes da C12** acabaram de 3,1 a 4,3 s antes da ação, dentro da folga de 3,0 s.
+
+**O que foi dito depois de cada curva:** nada.
+- O engenheiro analisou 5 passagens, todas da curva de foco, e mandou 3 análises para a voz na linha, uma por volta que contou (a decisão A).
+- **Nenhuma das 3 foi entregue pelo rádio,** e as outras 5 análises nem entraram na fila.
+- **A causa:** a análise entrava na fila logo depois do resumo da volta. O resumo saía na reta oposta (s ≈ 1.510). A regra do pedido 45 tirava a análise da fila quando o carro passava de novo pela curva dela: a C04 em 1.312 m, a C12 em 3.188 m. Isso acontecia antes do bloco de voz seguinte em que ela coubesse.
+- **As análises que ficaram sem ser ditas:**
+  - volta 3: "Quatro: mínima 125 contra 133.";
+  - volta 4: "Doze: freou 45 metros cedo, virou 10 metros tarde.";
+  - volta 5: "Doze: freou 40 metros cedo, virou 25 metros cedo.".
+- **O que o rádio disse:** 10 mensagens, todas do feedback de antes:
+  - 2 do coach, sobre a C12;
+  - 4 resumos;
+  - 3 da curva da volta (C03, C01 e C04);
+  - a análise das voltas 3 a 5 ("Curva 4: perde 6 décimos por volta.").
+
+**De onde veio o limite de 3 curvas:** não existe, no engenheiro, um limite de 3 curvas.
+- No escopo "uma curva", ele fala de uma curva por vez. Nesta sessão, foram duas: a C04 e depois a C12.
+- **O que existe com o número 3:**
+  - **a análise do rádio,** do pedido 45, sai a cada 3 voltas válidas e cita no máximo 2 curvas (em `core/radio/analise.py`). Nesta sessão: "Análise das voltas 3 a 5: Curva 4.";
+  - **o foco do engenheiro** troca depois de 3 voltas sem aplicar;
+  - **a análise falada do amador e do pro** cita no máximo 2 diferenças por curva.
+- **O que você ouviu sobre curvas,** contando o engenheiro e o rádio: C04 e C12 do engenheiro; C12, C03, C01 e C04 do rádio.
+- **O número de curvas que o engenheiro cita** saiu do escopo "uma curva" e da regra (A): uma análise por volta.
+
+**Outros pontos do log do CSP:**
+- 18 bipes, todos da curva de foco.
+- 8 medidas de latência: a mediana é 0,07 s, e a maior é 0,48 s (a primeira fala da sessão).
+- Uma linha "App radio_engenheiro is not allowed to load" logo depois de o app carregar. O app funcionou em seguida.
+- A cada 2 s, as cinco janelas aparecem como "fora da tela" e são trazidas de volta, numa tela de 3440 × 1440. Não mexi nisso; fica como item de backlog.

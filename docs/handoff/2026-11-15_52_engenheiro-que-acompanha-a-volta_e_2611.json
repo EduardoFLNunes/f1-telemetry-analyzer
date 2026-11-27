@@ -1,0 +1,1057 @@
+{
+ "sessao": "2026-11-26_21-49-14_vhe_interlagos",
+ "latenciaMedianaS": 0.07,
+ "latencias": [
+  0.48,
+  0.07,
+  0.09,
+  0.06,
+  0.06,
+  0.07,
+  0.07,
+  0.06
+ ],
+ "bipesNoLog": [
+  {
+   "bipe": 1,
+   "de": 3,
+   "curva": "C04",
+   "s": 1145.6
+  },
+  {
+   "bipe": 2,
+   "de": 3,
+   "curva": "C04",
+   "s": 1181.1
+  },
+  {
+   "bipe": 3,
+   "de": 3,
+   "curva": "C04",
+   "s": 1216.6
+  },
+  {
+   "bipe": 1,
+   "de": 3,
+   "curva": "C04",
+   "s": 1146.1
+  },
+  {
+   "bipe": 2,
+   "de": 3,
+   "curva": "C04",
+   "s": 1181.2
+  },
+  {
+   "bipe": 3,
+   "de": 3,
+   "curva": "C04",
+   "s": 1217.0
+  },
+  {
+   "bipe": 1,
+   "de": 3,
+   "curva": "C04",
+   "s": 1146.6
+  },
+  {
+   "bipe": 2,
+   "de": 3,
+   "curva": "C04",
+   "s": 1181.4
+  },
+  {
+   "bipe": 3,
+   "de": 3,
+   "curva": "C04",
+   "s": 1216.7
+  },
+  {
+   "bipe": 1,
+   "de": 3,
+   "curva": "C12",
+   "s": 3071.1
+  },
+  {
+   "bipe": 2,
+   "de": 3,
+   "curva": "C12",
+   "s": 3098.9
+  },
+  {
+   "bipe": 3,
+   "de": 3,
+   "curva": "C12",
+   "s": 3124.3
+  },
+  {
+   "bipe": 1,
+   "de": 3,
+   "curva": "C12",
+   "s": 3069.7
+  },
+  {
+   "bipe": 2,
+   "de": 3,
+   "curva": "C12",
+   "s": 3098.5
+  },
+  {
+   "bipe": 3,
+   "de": 3,
+   "curva": "C12",
+   "s": 3124.1
+  },
+  {
+   "bipe": 1,
+   "de": 3,
+   "curva": "C12",
+   "s": 3067.0
+  },
+  {
+   "bipe": 2,
+   "de": 3,
+   "curva": "C12",
+   "s": 3096.7
+  },
+  {
+   "bipe": 3,
+   "de": 3,
+   "curva": "C12",
+   "s": 3124.8
+  }
+ ],
+ "falas": [
+  {
+   "tipo": "ficha",
+   "curva": "C04",
+   "voz": true,
+   "porqueCalada": null,
+   "sComeco": 521.9,
+   "duracaoS": 7.57,
+   "fala": "Quatro: pelo meio, freie quase no 100, vire 15 antes da zebra, mínima de 135, acelere cedo e abra na saída.",
+   "aSuaAcao": "frenagem",
+   "acabouAntesDaAcaoS": 3.1,
+   "acabouAntesDaAcaoM": 199.5,
+   "metrosDoComecoAteACurva": 790.1
+  },
+  {
+   "tipo": "ficha",
+   "curva": "C04",
+   "voz": false,
+   "porqueCalada": "volta de saída dos boxes",
+   "sComeco": 521.8,
+   "duracaoS": 7.57,
+   "fala": "Quatro: pelo meio, freie quase no 100, vire 15 antes da zebra, mínima de 135, acelere cedo e abra na saída.",
+   "aSuaAcao": "frenagem",
+   "acabouAntesDaAcaoS": 4.31,
+   "acabouAntesDaAcaoM": 286.6,
+   "metrosDoComecoAteACurva": 790.2
+  },
+  {
+   "tipo": "ficha",
+   "curva": "C04",
+   "voz": true,
+   "porqueCalada": null,
+   "sComeco": 521.6,
+   "duracaoS": 7.57,
+   "fala": "Quatro: pelo meio, freie quase no 100, vire 15 antes da zebra, mínima de 135, acelere cedo e abra na saída.",
+   "aSuaAcao": "frenagem",
+   "acabouAntesDaAcaoS": 3.81,
+   "acabouAntesDaAcaoM": 257.2,
+   "metrosDoComecoAteACurva": 790.4
+  },
+  {
+   "tipo": "ficha",
+   "curva": "C12",
+   "voz": true,
+   "porqueCalada": null,
+   "sComeco": 554.6,
+   "duracaoS": 7.49,
+   "fala": "Doze: pelo meio, freie entre o 100 e o 50, vire no começo da zebra, mínima de 110, acelere cedo e abra na saída.",
+   "aSuaAcao": "frenagem",
+   "acabouAntesDaAcaoS": 45.66,
+   "acabouAntesDaAcaoM": 2060.7,
+   "metrosDoComecoAteACurva": 2633.5
+  },
+  {
+   "tipo": "ficha",
+   "curva": "C12",
+   "voz": true,
+   "porqueCalada": null,
+   "sComeco": 530.4,
+   "duracaoS": 7.49,
+   "fala": "Doze: pelo meio, freie entre o 100 e o 50, vire no começo da zebra, mínima de 110, acelere cedo e abra na saída.",
+   "aSuaAcao": "frenagem",
+   "acabouAntesDaAcaoS": 46.12,
+   "acabouAntesDaAcaoM": 2099.2,
+   "metrosDoComecoAteACurva": 2657.7
+  },
+  {
+   "tipo": "lembrete",
+   "curva": "C12",
+   "voz": true,
+   "porqueCalada": null,
+   "sComeco": 2814.0,
+   "duracaoS": 2.0,
+   "fala": "Doze: entre o 100 e o 50.",
+   "aSuaAcao": "frenagem",
+   "acabouAntesDaAcaoS": 3.12,
+   "acabouAntesDaAcaoM": 176.4,
+   "metrosDoComecoAteACurva": 374.1
+  },
+  {
+   "tipo": "ficha",
+   "curva": "C12",
+   "voz": true,
+   "porqueCalada": null,
+   "sComeco": 491.7,
+   "duracaoS": 7.49,
+   "fala": "Doze: pelo meio, freie entre o 100 e o 50, vire no começo da zebra, mínima de 110, acelere cedo e abra na saída.",
+   "aSuaAcao": "frenagem",
+   "acabouAntesDaAcaoS": 48.77,
+   "acabouAntesDaAcaoM": 2202.6,
+   "metrosDoComecoAteACurva": 2696.4
+  },
+  {
+   "tipo": "lembrete",
+   "curva": "C12",
+   "voz": true,
+   "porqueCalada": null,
+   "sComeco": 2817.1,
+   "duracaoS": 2.0,
+   "fala": "Doze: entre o 100 e o 50.",
+   "aSuaAcao": "frenagem",
+   "acabouAntesDaAcaoS": 4.1,
+   "acabouAntesDaAcaoM": 217.0,
+   "metrosDoComecoAteACurva": 371.0
+  },
+  {
+   "tipo": "ficha",
+   "curva": "C12",
+   "voz": true,
+   "porqueCalada": null,
+   "sComeco": 493.3,
+   "duracaoS": 7.49,
+   "fala": "Doze: pelo meio, freie entre o 100 e o 50, vire no começo da zebra, mínima de 110, acelere cedo e abra na saída.",
+   "aSuaAcao": null,
+   "acabouAntesDaAcaoS": null,
+   "acabouAntesDaAcaoM": null,
+   "metrosDoComecoAteACurva": 2694.8
+  }
+ ],
+ "depoisDaCurva": [
+  {
+   "volta": 2.0,
+   "curva": "C04",
+   "tipo": "analise",
+   "texto": "Quatro: freou 60 metros cedo, virou 10 metros tarde.",
+   "entregue": false
+  },
+  {
+   "volta": 3.0,
+   "curva": "C04",
+   "tipo": "analise",
+   "texto": "Quatro: mínima 125 contra 133.",
+   "entregue": false
+  },
+  {
+   "volta": 3.0,
+   "curva": "C04",
+   "tipo": "analise da volta",
+   "texto": "Quatro: mínima 125 contra 133.",
+   "entregue": false
+  },
+  {
+   "volta": 4.0,
+   "curva": "C12",
+   "tipo": "analise",
+   "texto": "Doze: freou 45 metros cedo, virou 10 metros tarde.",
+   "entregue": false
+  },
+  {
+   "volta": 4.0,
+   "curva": "C12",
+   "tipo": "analise da volta",
+   "texto": "Doze: freou 45 metros cedo, virou 10 metros tarde.",
+   "entregue": false
+  },
+  {
+   "volta": 5.0,
+   "curva": "C12",
+   "tipo": "analise",
+   "texto": "Doze: freou 40 metros cedo, virou 25 metros cedo.",
+   "entregue": false
+  },
+  {
+   "volta": 5.0,
+   "curva": "C12",
+   "tipo": "analise da volta",
+   "texto": "Doze: freou 40 metros cedo, virou 25 metros cedo.",
+   "entregue": false
+  },
+  {
+   "volta": 6.0,
+   "curva": "C12",
+   "tipo": "analise",
+   "texto": "Doze: virou 45 metros cedo, mínima 94 contra 112.",
+   "entregue": false
+  }
+ ],
+ "mensagensDoRadio": [
+  {
+   "em": "21:54:08",
+   "origem": "coach",
+   "volta": 2,
+   "sCarro": 3618.2,
+   "titulo": "C12, esquerda",
+   "fala": "Curva 12, esquerda: 7 décimos atrás da referência. Freou 36 metros antes da referência.",
+   "duracaoS": 7.03
+  },
+  {
+   "em": "21:55:37",
+   "origem": "coach",
+   "volta": 2,
+   "sCarro": 3618.6,
+   "titulo": "C12, esquerda",
+   "fala": "Curva 12, esquerda: 7 décimos atrás da referência. Freou 50 metros antes da referência.",
+   "duracaoS": 6.88
+  },
+  {
+   "em": "21:57:47",
+   "origem": "resumo",
+   "volta": 4,
+   "sCarro": 1510.1,
+   "titulo": "Volta 3: 1:29,454",
+   "fala": "Melhor da sessão. Curva 3: 8 décimos.",
+   "duracaoS": 3.82
+  },
+  {
+   "em": "21:58:35",
+   "origem": "curva",
+   "volta": 4,
+   "sCarro": 3619.6,
+   "titulo": "C03, esquerda",
+   "fala": "Curva 3: 8 décimos, mínima 19 quilômetros por hora abaixo da referência.",
+   "duracaoS": 5.23
+  },
+  {
+   "em": "21:59:15",
+   "origem": "resumo",
+   "volta": 5,
+   "sCarro": 1510.7,
+   "titulo": "Volta 4: 1:27,883",
+   "fala": "Melhor da sessão, 1,6 segundo mais rápida.",
+   "duracaoS": 3.52
+  },
+  {
+   "em": "22:00:03",
+   "origem": "curva",
+   "volta": 5,
+   "sCarro": 3618.9,
+   "titulo": "C01, esquerda",
+   "fala": "Curva 1: 6 décimos, freou 28 metros antes da referência.",
+   "duracaoS": 4.57
+  },
+  {
+   "em": "22:00:43",
+   "origem": "resumo",
+   "volta": 6,
+   "sCarro": 1511.0,
+   "titulo": "Volta 5: 1:27,970",
+   "fala": "1 décimo atrás da melhor da sessão. Curva 4: 8 décimos.",
+   "duracaoS": 4.85
+  },
+  {
+   "em": "22:01:26",
+   "origem": "analise",
+   "volta": 6,
+   "sCarro": 3306.4,
+   "titulo": "Análise das voltas 3 a 5",
+   "fala": "Curva 4: perde 6 décimos por volta.",
+   "duracaoS": 3.15
+  },
+  {
+   "em": "22:01:32",
+   "origem": "curva",
+   "volta": 6,
+   "sCarro": 3620.0,
+   "titulo": "C04, esquerda",
+   "fala": "Curva 4: 8 décimos, freou 60 metros antes da referência.",
+   "duracaoS": 4.61
+  },
+  {
+   "em": "22:17:11",
+   "origem": "resumo",
+   "volta": 7,
+   "sCarro": 1510.1,
+   "titulo": "Volta 6: 1:37,170",
+   "fala": "Volta com rodada: 9,3 segundos atrás da melhor da sessão.",
+   "duracaoS": 4.42
+  }
+ ],
+ "registro": [
+  {
+   "em": "2026-11-26T21:52:14",
+   "tipo": "foco",
+   "volta": null,
+   "trecho": "C04",
+   "origem": "sessão 2026-11-22_21-42-31_vhe_interlagos",
+   "motivo": "o foco com que a sessão terminou"
+  },
+  {
+   "em": "2026-11-26T21:52:14",
+   "tipo": "plano",
+   "trecho": "C04",
+   "perfil": "sua melhor volta",
+   "ficha": {
+    "sFala": 499.5,
+    "duracaoS": 8.0,
+    "folgaS": 3.14,
+    "folgaAoFimDoPedacoS": 3.0,
+    "motivo": null
+   },
+   "lembrete": {
+    "sFala": null,
+    "duracaoS": null,
+    "folgaS": null,
+    "motivo": "a ficha já é dita neste pedaço livre"
+   },
+   "sBipes": [
+    1145.6,
+    1180.9,
+    1216.0
+   ],
+   "sAcaoPiloto": 1200.0,
+   "sPonto": 1216.0,
+   "tecnica": "com trail braking",
+   "tecnicaDe": "sua melhor passagem"
+  },
+  {
+   "em": "2026-11-26T21:52:15",
+   "tipo": "plano",
+   "trecho": "C04",
+   "perfil": "sua melhor volta",
+   "ficha": {
+    "sFala": 521.4,
+    "duracaoS": 7.57,
+    "folgaS": 3.14,
+    "folgaAoFimDoPedacoS": 3.0,
+    "motivo": null
+   },
+   "lembrete": {
+    "sFala": null,
+    "duracaoS": null,
+    "folgaS": null,
+    "motivo": "a ficha já é dita neste pedaço livre"
+   },
+   "sBipes": [
+    1145.6,
+    1180.9,
+    1216.0
+   ],
+   "sAcaoPiloto": 1200.0,
+   "sPonto": 1216.0,
+   "tecnica": "com trail braking",
+   "tecnicaDe": "sua melhor passagem"
+  },
+  {
+   "em": "2026-11-26T21:52:16",
+   "tipo": "plano",
+   "trecho": "C04",
+   "perfil": "sua melhor volta",
+   "ficha": {
+    "sFala": 521.4,
+    "duracaoS": 7.57,
+    "folgaS": 3.14,
+    "folgaAoFimDoPedacoS": 3.0,
+    "motivo": null
+   },
+   "lembrete": {
+    "sFala": null,
+    "duracaoS": null,
+    "folgaS": null,
+    "motivo": "a ficha já é dita neste pedaço livre"
+   },
+   "sBipes": [
+    1145.6,
+    1180.9,
+    1216.0
+   ],
+   "sAcaoPiloto": 1200.0,
+   "sPonto": 1216.0,
+   "tecnica": "com trail braking",
+   "tecnicaDe": "sua melhor passagem"
+  },
+  {
+   "em": "2026-11-26T21:52:27",
+   "tipo": "ficha",
+   "trecho": "C04",
+   "fala": "Quatro: pelo meio, freie quase no 100, vire 15 antes da zebra, mínima de 135, acelere cedo e abra na saída.",
+   "sFala": 521.4,
+   "sCarro": 521.9,
+   "t": 1795740747.368,
+   "velocidadeKmh": 170.7,
+   "voz": true,
+   "porqueCalada": null,
+   "duracaoS": 7.57,
+   "folgaPlanejadaS": 3.14,
+   "sAcaoPiloto": 1200.0,
+   "sPonto": 1216.0,
+   "sBipes": [
+    1145.6,
+    1180.9,
+    1216.0
+   ],
+   "perfil": "sua melhor volta"
+  },
+  {
+   "em": "2026-11-26T21:52:44",
+   "tipo": "analise",
+   "trecho": "C04",
+   "volta": 2.0,
+   "nivel": "amador",
+   "t": 1795740764.195,
+   "texto": "Quatro: freou 60 metros cedo, virou 10 metros tarde."
+  },
+  {
+   "em": "2026-11-26T21:54:29",
+   "tipo": "ficha",
+   "trecho": "C04",
+   "fala": "Quatro: pelo meio, freie quase no 100, vire 15 antes da zebra, mínima de 135, acelere cedo e abra na saída.",
+   "sFala": 521.4,
+   "sCarro": 521.8,
+   "t": 1795740869.864,
+   "velocidadeKmh": 147.2,
+   "voz": false,
+   "porqueCalada": "volta de saída dos boxes",
+   "duracaoS": 7.57,
+   "folgaPlanejadaS": 3.14,
+   "sAcaoPiloto": 1200.0,
+   "sPonto": 1216.0,
+   "sBipes": [
+    1145.6,
+    1180.9,
+    1216.0
+   ],
+   "perfil": "sua melhor volta"
+  },
+  {
+   "em": "2026-11-26T21:56:00",
+   "tipo": "ficha",
+   "trecho": "C04",
+   "fala": "Quatro: pelo meio, freie quase no 100, vire 15 antes da zebra, mínima de 135, acelere cedo e abra na saída.",
+   "sFala": 521.4,
+   "sCarro": 521.6,
+   "t": 1795740960.693,
+   "velocidadeKmh": 162.5,
+   "voz": true,
+   "porqueCalada": null,
+   "duracaoS": 7.57,
+   "folgaPlanejadaS": 3.14,
+   "sAcaoPiloto": 1200.0,
+   "sPonto": 1216.0,
+   "sBipes": [
+    1145.6,
+    1180.9,
+    1216.0
+   ],
+   "perfil": "sua melhor volta"
+  },
+  {
+   "em": "2026-11-26T21:56:17",
+   "tipo": "analise",
+   "trecho": "C04",
+   "volta": 3.0,
+   "nivel": "amador",
+   "t": 1795740977.041,
+   "texto": "Quatro: mínima 125 contra 133."
+  },
+  {
+   "em": "2026-11-26T21:57:18",
+   "tipo": "conferencia",
+   "volta": 3.0,
+   "trecho": "C04",
+   "acao": "freie",
+   "aplicada": true,
+   "valor": 1212.0,
+   "difM": -4.0,
+   "difKmh": null,
+   "sPonto": 1216.0,
+   "texto": "Curva 4: freou no ponto",
+   "voltasEmFoco": 1
+  },
+  {
+   "em": "2026-11-26T21:57:18",
+   "tipo": "volta",
+   "volta": 3.0,
+   "tempoS": 89.454,
+   "foco": "C04"
+  },
+  {
+   "em": "2026-11-26T21:57:18",
+   "tipo": "foco",
+   "volta": 3.0,
+   "trecho": null,
+   "saiu": "C04",
+   "motivo": "aplicada na volta 3",
+   "voltasEmFoco": 1
+  },
+  {
+   "em": "2026-11-26T21:57:18",
+   "tipo": "foco",
+   "volta": 3.0,
+   "trecho": "C12",
+   "origem": "volta 3 da sessão",
+   "motivo": "a maior perda acima do ruído (0,53 s)"
+  },
+  {
+   "em": "2026-11-26T21:57:18",
+   "tipo": "analise da volta",
+   "volta": 3.0,
+   "trecho": "C04",
+   "custoS": 0.225,
+   "texto": "Quatro: mínima 125 contra 133.",
+   "analisadas": 1
+  },
+  {
+   "em": "2026-11-26T21:57:18",
+   "tipo": "plano",
+   "trecho": "C12",
+   "perfil": "volta 3 da sessão",
+   "ficha": {
+    "sFala": 530.2,
+    "duracaoS": 8.0,
+    "folgaS": 46.1,
+    "folgaAoFimDoPedacoS": 3.0,
+    "motivo": null
+   },
+   "lembrete": {
+    "sFala": null,
+    "duracaoS": null,
+    "folgaS": null,
+    "motivo": "o lembrete não cabe no pedaço livre antes da curva"
+   },
+   "sBipes": [
+    3070.4,
+    3098.4,
+    3124.1
+   ],
+   "sAcaoPiloto": 3086.1,
+   "sPonto": 3124.1,
+   "tecnica": "frenagem em linha reta",
+   "tecnicaDe": "sua melhor passagem"
+  },
+  {
+   "em": "2026-11-26T21:57:19",
+   "tipo": "plano",
+   "trecho": "C12",
+   "perfil": "volta 3 da sessão",
+   "ficha": {
+    "sFala": 554.5,
+    "duracaoS": 7.49,
+    "folgaS": 46.1,
+    "folgaAoFimDoPedacoS": 3.0,
+    "motivo": null
+   },
+   "lembrete": {
+    "sFala": null,
+    "duracaoS": null,
+    "folgaS": null,
+    "motivo": "o lembrete não cabe no pedaço livre antes da curva"
+   },
+   "sBipes": [
+    3070.4,
+    3098.4,
+    3124.1
+   ],
+   "sAcaoPiloto": 3086.1,
+   "sPonto": 3124.1,
+   "tecnica": "frenagem em linha reta",
+   "tecnicaDe": "sua melhor passagem"
+  },
+  {
+   "em": "2026-11-26T21:57:19",
+   "tipo": "plano",
+   "trecho": "C12",
+   "perfil": "volta 3 da sessão",
+   "ficha": {
+    "sFala": 554.5,
+    "duracaoS": 7.49,
+    "folgaS": 46.1,
+    "folgaAoFimDoPedacoS": 3.0,
+    "motivo": null
+   },
+   "lembrete": {
+    "sFala": null,
+    "duracaoS": null,
+    "folgaS": null,
+    "motivo": "o lembrete não cabe no pedaço livre antes da curva"
+   },
+   "sBipes": [
+    3070.4,
+    3098.4,
+    3124.1
+   ],
+   "sAcaoPiloto": 3086.1,
+   "sPonto": 3124.1,
+   "tecnica": "frenagem em linha reta",
+   "tecnicaDe": "sua melhor passagem"
+  },
+  {
+   "em": "2026-11-26T21:57:30",
+   "tipo": "ficha",
+   "trecho": "C12",
+   "fala": "Doze: pelo meio, freie entre o 100 e o 50, vire no começo da zebra, mínima de 110, acelere cedo e abra na saída.",
+   "sFala": 554.5,
+   "sCarro": 554.6,
+   "t": 1795741050.206,
+   "velocidadeKmh": 183.3,
+   "voz": true,
+   "porqueCalada": null,
+   "duracaoS": 7.49,
+   "folgaPlanejadaS": 46.1,
+   "sAcaoPiloto": 3086.1,
+   "sPonto": 3124.1,
+   "sBipes": [
+    3070.4,
+    3098.4,
+    3124.1
+   ],
+   "perfil": "volta 3 da sessão"
+  },
+  {
+   "em": "2026-11-26T21:58:28",
+   "tipo": "analise",
+   "trecho": "C12",
+   "volta": 4.0,
+   "nivel": "amador",
+   "t": 1795741108.958,
+   "texto": "Doze: freou 45 metros cedo, virou 10 metros tarde."
+  },
+  {
+   "em": "2026-11-26T21:58:46",
+   "tipo": "conferencia",
+   "volta": 4.0,
+   "trecho": "C12",
+   "acao": "freie",
+   "aplicada": false,
+   "valor": 3078.1,
+   "difM": -46.0,
+   "difKmh": null,
+   "sPonto": 3124.1,
+   "texto": "Curva 12: freou 46 m antes do ponto",
+   "voltasEmFoco": 1
+  },
+  {
+   "em": "2026-11-26T21:58:46",
+   "tipo": "volta",
+   "volta": 4.0,
+   "tempoS": 87.883,
+   "foco": "C12"
+  },
+  {
+   "em": "2026-11-26T21:58:46",
+   "tipo": "analise da volta",
+   "volta": 4.0,
+   "trecho": "C12",
+   "custoS": 1.034,
+   "texto": "Doze: freou 45 metros cedo, virou 10 metros tarde.",
+   "analisadas": 1
+  },
+  {
+   "em": "2026-11-26T21:58:46",
+   "tipo": "plano",
+   "trecho": "C12",
+   "perfil": "volta 4 da sessão",
+   "ficha": {
+    "sFala": 529.6,
+    "duracaoS": 7.49,
+    "folgaS": 46.08,
+    "folgaAoFimDoPedacoS": 3.0,
+    "motivo": null
+   },
+   "lembrete": {
+    "sFala": 2813.6,
+    "duracaoS": 2.0,
+    "folgaS": 3.0,
+    "motivo": null
+   },
+   "sBipes": [
+    3069.0,
+    3098.0,
+    3124.1
+   ],
+   "sAcaoPiloto": 3078.1,
+   "sPonto": 3124.1,
+   "tecnica": "frenagem em linha reta",
+   "tecnicaDe": "sua melhor passagem"
+  },
+  {
+   "em": "2026-11-26T21:58:57",
+   "tipo": "ficha",
+   "trecho": "C12",
+   "fala": "Doze: pelo meio, freie entre o 100 e o 50, vire no começo da zebra, mínima de 110, acelere cedo e abra na saída.",
+   "sFala": 529.6,
+   "sCarro": 530.4,
+   "t": 1795741137.554,
+   "velocidadeKmh": 177.0,
+   "voz": true,
+   "porqueCalada": null,
+   "duracaoS": 7.49,
+   "folgaPlanejadaS": 46.08,
+   "sAcaoPiloto": 3078.1,
+   "sPonto": 3124.1,
+   "sBipes": [
+    3069.0,
+    3098.0,
+    3124.1
+   ],
+   "perfil": "volta 4 da sessão"
+  },
+  {
+   "em": "2026-11-26T21:59:46",
+   "tipo": "lembrete",
+   "trecho": "C12",
+   "fala": "Doze: entre o 100 e o 50.",
+   "sFala": 2813.6,
+   "sCarro": 2814.0,
+   "t": 1795741186.048,
+   "velocidadeKmh": 144.5,
+   "voz": true,
+   "porqueCalada": null,
+   "duracaoS": 2.0,
+   "folgaPlanejadaS": 3.0,
+   "sAcaoPiloto": 3078.1,
+   "sPonto": 3124.1,
+   "sBipes": [
+    3069.0,
+    3098.0,
+    3124.1
+   ],
+   "perfil": "volta 4 da sessão"
+  },
+  {
+   "em": "2026-11-26T21:59:56",
+   "tipo": "analise",
+   "trecho": "C12",
+   "volta": 5.0,
+   "nivel": "amador",
+   "t": 1795741196.716,
+   "texto": "Doze: freou 40 metros cedo, virou 25 metros cedo."
+  },
+  {
+   "em": "2026-11-26T22:00:14",
+   "tipo": "conferencia",
+   "volta": 5.0,
+   "trecho": "C12",
+   "acao": "freie",
+   "aplicada": false,
+   "valor": 3086.1,
+   "difM": -38.0,
+   "difKmh": null,
+   "sPonto": 3124.1,
+   "texto": "Curva 12: freou 38 m antes do ponto",
+   "voltasEmFoco": 2
+  },
+  {
+   "em": "2026-11-26T22:00:14",
+   "tipo": "volta",
+   "volta": 5.0,
+   "tempoS": 87.97,
+   "foco": "C12"
+  },
+  {
+   "em": "2026-11-26T22:00:14",
+   "tipo": "analise da volta",
+   "volta": 5.0,
+   "trecho": "C12",
+   "custoS": 1.02,
+   "texto": "Doze: freou 40 metros cedo, virou 25 metros cedo.",
+   "analisadas": 1
+  },
+  {
+   "em": "2026-11-26T22:00:14",
+   "tipo": "plano",
+   "trecho": "C12",
+   "perfil": "volta 5 da sessão",
+   "ficha": {
+    "sFala": 491.6,
+    "duracaoS": 7.49,
+    "folgaS": 46.86,
+    "folgaAoFimDoPedacoS": 3.0,
+    "motivo": null
+   },
+   "lembrete": {
+    "sFala": 2816.6,
+    "duracaoS": 2.0,
+    "folgaS": 3.0,
+    "motivo": null
+   },
+   "sBipes": [
+    3066.3,
+    3096.6,
+    3124.1
+   ],
+   "sAcaoPiloto": 3086.1,
+   "sPonto": 3124.1,
+   "tecnica": "frenagem em linha reta",
+   "tecnicaDe": "sua melhor passagem"
+  },
+  {
+   "em": "2026-11-26T22:00:25",
+   "tipo": "ficha",
+   "trecho": "C12",
+   "fala": "Doze: pelo meio, freie entre o 100 e o 50, vire no começo da zebra, mínima de 110, acelere cedo e abra na saída.",
+   "sFala": 491.6,
+   "sCarro": 491.7,
+   "t": 1795741225.125,
+   "velocidadeKmh": 155.2,
+   "voz": true,
+   "porqueCalada": null,
+   "duracaoS": 7.49,
+   "folgaPlanejadaS": 46.86,
+   "sAcaoPiloto": 3086.1,
+   "sPonto": 3124.1,
+   "sBipes": [
+    3066.3,
+    3096.6,
+    3124.1
+   ],
+   "perfil": "volta 5 da sessão"
+  },
+  {
+   "em": "2026-11-26T22:01:15",
+   "tipo": "lembrete",
+   "trecho": "C12",
+   "fala": "Doze: entre o 100 e o 50.",
+   "sFala": 2816.6,
+   "sCarro": 2817.1,
+   "t": 1795741275.276,
+   "velocidadeKmh": 143.4,
+   "voz": true,
+   "porqueCalada": null,
+   "duracaoS": 2.0,
+   "folgaPlanejadaS": 3.0,
+   "sAcaoPiloto": 3086.1,
+   "sPonto": 3124.1,
+   "sBipes": [
+    3066.3,
+    3096.6,
+    3124.1
+   ],
+   "perfil": "volta 5 da sessão"
+  },
+  {
+   "em": "2026-11-26T22:01:26",
+   "tipo": "analise",
+   "trecho": "C12",
+   "volta": 6.0,
+   "nivel": "amador",
+   "t": 1795741286.127,
+   "texto": "Doze: virou 45 metros cedo, mínima 94 contra 112."
+  },
+  {
+   "em": "2026-11-26T22:02:21",
+   "tipo": "config",
+   "ligado": true,
+   "nivel": "amador",
+   "escopo": "uma",
+   "curvas": [],
+   "treinoVoltas": 8
+  },
+  {
+   "em": "2026-11-26T22:02:21",
+   "tipo": "plano",
+   "trecho": "C12",
+   "perfil": "volta 5 da sessão",
+   "ficha": {
+    "sFala": 491.6,
+    "duracaoS": 7.49,
+    "folgaS": 46.86,
+    "folgaAoFimDoPedacoS": 3.0,
+    "motivo": null
+   },
+   "lembrete": {
+    "sFala": 2816.6,
+    "duracaoS": 2.0,
+    "folgaS": 3.0,
+    "motivo": null
+   },
+   "sBipes": [
+    3066.3,
+    3096.6,
+    3124.1
+   ],
+   "sAcaoPiloto": 3086.1,
+   "sPonto": 3124.1,
+   "tecnica": "frenagem em linha reta",
+   "tecnicaDe": "sua melhor passagem"
+  },
+  {
+   "em": "2026-11-26T22:16:41",
+   "tipo": "treino",
+   "evento": "começou",
+   "voltas": 8
+  },
+  {
+   "em": "2026-11-26T22:16:41",
+   "tipo": "config",
+   "ligado": true,
+   "nivel": "amador",
+   "escopo": "uma",
+   "curvas": [],
+   "treinoVoltas": 8
+  },
+  {
+   "em": "2026-11-26T22:16:41",
+   "tipo": "plano",
+   "trecho": "C12",
+   "perfil": "volta 5 da sessão",
+   "ficha": {
+    "sFala": 491.6,
+    "duracaoS": 7.49,
+    "folgaS": 46.86,
+    "folgaAoFimDoPedacoS": 3.0,
+    "motivo": null
+   },
+   "lembrete": {
+    "sFala": 2816.6,
+    "duracaoS": 2.0,
+    "folgaS": 3.0,
+    "motivo": null
+   },
+   "sBipes": [
+    3066.3,
+    3096.6,
+    3124.1
+   ],
+   "sAcaoPiloto": 3086.1,
+   "sPonto": 3124.1,
+   "tecnica": "frenagem em linha reta",
+   "tecnicaDe": "sua melhor passagem"
+  },
+  {
+   "em": "2026-11-26T22:16:52",
+   "tipo": "ficha",
+   "trecho": "C12",
+   "fala": "Doze: pelo meio, freie entre o 100 e o 50, vire no começo da zebra, mínima de 110, acelere cedo e abra na saída.",
+   "sFala": 491.6,
+   "sCarro": 493.3,
+   "t": 1795742212.39,
+   "velocidadeKmh": 142.1,
+   "voz": true,
+   "porqueCalada": null,
+   "duracaoS": 7.49,
+   "folgaPlanejadaS": 46.86,
+   "sAcaoPiloto": 3086.1,
+   "sPonto": 3124.1,
+   "sBipes": [
+    3066.3,
+    3096.6,
+    3124.1
+   ],
+   "perfil": "volta 5 da sessão"
+  }
+ ]
+}
